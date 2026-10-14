@@ -1,0 +1,54 @@
+.category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: transparent;
+  cursor: pointer;
+  min-width: 180px;
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-6px);
+}
+
+.category-photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--peach) 0%, var(--orange) 55%, var(--orange-dark) 100%);
+  border: 2px solid var(--brown-dark);
+  box-shadow: 6px 6px 0 var(--brown-dark);
+  overflow: hidden;
+}
+
+.category-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.category-card:nth-child(2n) .category-photo {
+  background: linear-gradient(160deg, var(--cream) 0%, var(--peach) 60%, var(--orange) 100%);
+}
+
+.category-card:nth-child(3n) .category-photo {
+  background: linear-gradient(160deg, var(--brown-card) 0%, var(--brown-deep) 100%);
+}
+
+.category-pill {
+  background: var(--brown-dark);
+  color: var(--orange);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+}
+
+.category-card:hover .category-pill {
+  background: var(--orange);
+  color: var(--brown-dark);
+}

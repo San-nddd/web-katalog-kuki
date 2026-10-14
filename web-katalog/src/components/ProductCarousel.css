@@ -1,0 +1,305 @@
+/* ============ Product Carousel ============ */
+
+.product-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.product-carousel-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.product-carousel-track {
+  display: flex;
+  gap: 1.75rem;
+  will-change: transform;
+}
+
+.product-carousel-track.shake {
+  animation: carousel-shake 0.3s ease;
+}
+
+@keyframes carousel-shake {
+  0%, 100% { transform: translateX(var(--translate-x, 0)); }
+  10% { transform: translateX(calc(var(--translate-x, 0) - 8px)); }
+  20% { transform: translateX(calc(var(--translate-x, 0) + 6px)); }
+  30% { transform: translateX(calc(var(--translate-x, 0) - 4px)); }
+  40% { transform: translateX(calc(var(--translate-x, 0) + 3px)); }
+  50% { transform: translateX(calc(var(--translate-x, 0) - 2px)); }
+  60% { transform: translateX(calc(var(--translate-x, 0) + 1px)); }
+}
+
+/* CSS variable for shake animation */
+.product-carousel-track.shake {
+  --translate-x: 0;
+}
+
+/* Link wrapper - no visual change */
+.product-carousel-item-link {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 280px;
+  max-width: 320px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Card styles */
+.product-carousel-card {
+  background: var(--cream-card);
+  border: 2px solid var(--brown-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 6px 6px 0 var(--brown-dark);
+  transition: all 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-carousel-card:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 10px 10px 0 var(--brown-dark);
+}
+
+.product-carousel-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--peach);
+  border-bottom: 2px solid var(--brown-dark);
+}
+
+.product-carousel-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.product-carousel-card:hover .product-carousel-image img {
+  transform: scale(1.08);
+}
+
+.product-carousel-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 246, 217, 0.55) 0%, transparent 45%),
+    linear-gradient(150deg, var(--peach) 0%, var(--orange) 100%);
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.product-carousel-card:hover .product-carousel-image-placeholder {
+  transform: scale(1.08);
+}
+
+.product-carousel-tag {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  background: var(--brown-dark);
+  color: var(--orange);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+.product-carousel-content {
+  padding: 1.25rem 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex-grow: 1;
+}
+
+.product-carousel-name {
+  font-family: 'Lilita One', 'Arial Narrow', Impact, sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: 1.25rem;
+  letter-spacing: 0.01em;
+  color: var(--brown-dark);
+}
+
+.product-carousel-description {
+  font-size: 0.85rem;
+  color: var(--muted-cream);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-carousel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.product-carousel-price {
+  font-family: 'Lilita One', 'Arial Narrow', Impact, sans-serif;
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: var(--brown-card);
+  letter-spacing: 0.01em;
+}
+
+.product-carousel-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: var(--brown-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.product-carousel-card:hover .product-carousel-action {
+  background: var(--brown-dark);
+  color: var(--orange);
+}
+
+/* Navigation arrows */
+.carousel-arrow {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--brown-dark);
+  color: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  border: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.carousel-arrow:hover {
+  background: var(--orange);
+  color: var(--brown-dark);
+  transform: scale(1.08);
+}
+
+.carousel-arrow:active {
+  transform: scale(0.94);
+}
+
+.carousel-arrow:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+
+.carousel-prev {
+  margin-right: -1.5rem;
+}
+
+.carousel-next {
+  margin-left: -1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .product-carousel-item-link {
+    min-width: 260px;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 900px) {
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .carousel-prev {
+    margin-right: -1rem;
+    left: -1rem;
+  }
+
+  .carousel-next {
+    margin-left: -1rem;
+    right: -1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-carousel-wrapper {
+    gap: 0.5rem;
+  }
+
+  .product-carousel-item-link {
+    min-width: 240px;
+    max-width: 280px;
+  }
+
+  .carousel-prev {
+    margin-right: 0;
+    position: absolute;
+    left: -0.5rem;
+  }
+
+  .carousel-next {
+    margin-left: 0;
+    position: absolute;
+    right: -0.5rem;
+  }
+
+  .product-carousel-viewport {
+    padding: 0 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-carousel-item-link {
+    min-width: 220px;
+    max-width: 260px;
+  }
+
+  .carousel-arrow {
+    width: 36px;
+    height: 36px;
+  }
+
+  .carousel-prev {
+    left: -0.25rem;
+  }
+
+  .carousel-next {
+    right: -0.25rem;
+  }
+
+  .product-carousel-viewport {
+    padding: 0 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-carousel-track,
+  .product-carousel-card,
+  .product-carousel-image img,
+  .product-carousel-image-placeholder {
+    transition: none;
+    animation: none;
+  }
+
+  .product-carousel-track.shake {
+    animation: none;
+  }
+}
