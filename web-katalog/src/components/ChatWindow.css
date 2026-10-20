@@ -78,14 +78,29 @@
 }
 
 .chat-body {
-  flex-grow: 1;
+  /* Penting untuk scroll di dalam flex-column parent */
+  flex: 1 1 0;
+  height: 0;
   min-height: 0;
   padding: 1rem;
+
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+
   background: var(--cream);
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
+}
+
+/* Jangan biarkan item-item chat ikut mengecil untuk menghindari overflow.
+   Kalau item bisa shrink, browser kadang tidak membentuk scrollable area
+   seperti yang kita harapkan di flex-column. */
+.chat-body > * {
+  flex-shrink: 0;
 }
 
 /* Visible scrollbar */
@@ -361,4 +376,177 @@
 .chat-message.escalated {
   border-color: #4c7a2f;
   background: #eaf7e4;
+}
+
+/* ===== Chat lifecycle additions ===== */
+.chat-message.system {
+  align-self: center;
+  max-width: 92%;
+  background: rgba(124, 97, 72, 0.08);
+  border: 1px dashed var(--brown-deep);
+  color: var(--brown-dark);
+  text-align: center;
+}
+
+.chat-message.system .chat-sender {
+  text-align: center;
+}
+
+.chat-status-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--brown-dark);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.chat-status-notice.pending {
+  background: #fff3e0;
+  color: #7a4512;
+  border-color: var(--orange);
+}
+
+.chat-status-notice.waiting {
+  background: #fff8e1;
+  color: #7a4512;
+  border-color: #d89a28;
+}
+
+.chat-status-notice.active {
+  background: #eaf7e4;
+  color: #2f5117;
+  border-color: #4c7a2f;
+}
+
+.chat-status-notice.closed {
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--cream-card);
+  color: var(--brown-dark);
+}
+
+.chat-new-conversation-btn {
+  border: 2px solid var(--brown-dark);
+  border-radius: var(--radius-sm);
+  background: var(--orange);
+  color: var(--brown-dark);
+  padding: 0.55rem 0.8rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-new-conversation-btn:hover {
+  transform: translateY(-1px);
+}
+
+.chat-input-area {
+  flex-shrink: 0;
+}
+
+
+/* ===== Mouse wheel / trackpad scroll reliability ===== */
+.chat-body {
+  scrollbar-gutter: stable;
+}
+
+.chat-window.open .chat-body {
+  pointer-events: auto;
+}
+
+
+/* ===== FINAL CHAT WINDOW LAYOUT FIX =====
+   Header | scrollable messages | composer
+   Grid prevents the input from being pushed/clipped below the widget. */
+.chat-window {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.chat-body {
+  height: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.chat-input-area {
+  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 64px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 20;
+  visibility: visible;
+  opacity: 1;
+}
+
+.chat-input-area input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  display: block;
+}
+
+.chat-send {
+  flex: 0 0 auto;
+}
+
+/* Lifecycle messages are represented by the status notice, not chat bubbles. */
+.chat-status-notice {
+  flex-shrink: 0;
+}
+
+
+/* ===== CUSTOMER COMPOSER PIN FIX =====
+   Paksa textbox selalu terlihat di bagian bawah chat selama conversation belum CLOSED. */
+.chat-window {
+  position: fixed;
+}
+
+.chat-body {
+  padding-bottom: 5.75rem;
+}
+
+.chat-input-area {
+  position: absolute !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+
+  width: 100%;
+  min-height: 68px;
+  margin: 0;
+  padding: 0.75rem;
+
+  box-sizing: border-box;
+  background: var(--cream-card);
+  border-top: 1px solid var(--brown-deep);
+
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.chat-input-area input {
+  display: block !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.chat-input-area .chat-send {
+  flex: 0 0 auto;
+  height: 42px;
 }

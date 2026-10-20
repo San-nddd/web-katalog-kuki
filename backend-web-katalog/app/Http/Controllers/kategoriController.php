@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\kategori;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class kategoriController extends Controller
 {
+    private const AI_CATALOG_CACHE_KEY = 'kuki:ai:catalog_context';
+
     /**
      * Display a listing of the resource.
      */
@@ -35,6 +38,8 @@ class kategoriController extends Controller
 
         $validated['slug'] = ($validated['slug'] ?? null) ?: Str::slug($validated['nama']);
         $kategori = kategori::create($validated);
+
+        Cache::forget(self::AI_CATALOG_CACHE_KEY);
 
         return response()->json([
             'success' => true,
@@ -80,6 +85,8 @@ class kategoriController extends Controller
         $validated['slug'] = ($validated['slug'] ?? null) ?: Str::slug($validated['nama']);
         $kategori->update($validated);
 
+        Cache::forget(self::AI_CATALOG_CACHE_KEY);
+
         return response()->json([
             'success' => true,
             'message' => 'Kategori berhasil diperbarui.',
@@ -103,6 +110,8 @@ class kategoriController extends Controller
         }
 
         $kategori->delete();
+
+        Cache::forget(self::AI_CATALOG_CACHE_KEY);
 
         return response()->json([
             'success' => true,

@@ -44,7 +44,7 @@ class KatalogSeeder extends Seeder
 
     private function kategori(): array
     {
-        return ['Cookies', 'Breads', 'Pastries', 'Cakes', 'Tarts & Pies', 'Seasonal'];
+        return ['Soft Cookies', 'Breads', 'Pastries', 'Cakes', 'Tiramisu', 'Bar Cookie'];
     }
 
     private function produk(): array

@@ -6,6 +6,7 @@ use App\Models\produk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -22,13 +23,33 @@ class produkController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
+        // Validation errors (422) are safe to return to the frontend.
         $validated = $request->validate($this->rules());
 
-        $produk = produk::create($this->prepare($validated));
+        try {
+            $produk = produk::create($this->prepare($validated));
 
-        return response()->json($produk, 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil ditambahkan.',
+                'data' => $produk->fresh('kategori'),
+            ], 201);
+        } catch (\Throwable $e) {
+            Log::error('Gagal menambahkan produk.', [
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk gagal disimpan. Silakan coba lagi.',
+                'data' => null,
+            ], 500);
+        }
     }
 
     /**
@@ -61,13 +82,30 @@ class produkController extends Controller
         }
 
         $validated = $request->validate($this->rules($produk->id));
-        $produk->update($this->prepare($validated));
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Produk berhasil diperbarui.',
-            'data' => $produk->fresh('kategori'),
-        ]);
+        try {
+            $produk->update($this->prepare($validated));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil diperbarui.',
+                'data' => $produk->fresh('kategori'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal memperbarui produk.', [
+                'produk_id' => $produk->id,
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk gagal diperbarui. Silakan coba lagi.',
+                'data' => null,
+            ], 500);
+        }
     }
 
     /**

@@ -12,6 +12,7 @@ import ProdukAdminPage from './pages/admin/ProdukAdminPage'
 import ProdukFormPage from './pages/admin/ProdukFormPage'
 import KategoriAdminPage from './pages/admin/KategoriAdminPage'
 import ChatAdminPage from './pages/admin/ChatAdminPage'
+import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import AdminRoute from './pages/admin/AdminRoute'
 import './pages/sections.css'
 import './App.css'
@@ -84,6 +85,15 @@ function App() {
           element={
             <AdminRoute>
               <ChatAdminPage />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/settings"
+          element={
+            <AdminRoute>
+              <AdminSettingsPage />
             </AdminRoute>
           }
         />

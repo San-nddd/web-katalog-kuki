@@ -4,13 +4,16 @@ import { ArrowLeftIcon, ArrowRightIcon } from './icons'
 import { formatRupiah } from '../utils/mockData'
 import './ProductCarousel.css'
 
-// Jeda (ms) sebelum putar otomatis lanjut lagi setelah kursor pergi / interaksi selesai
 const RESUME_DELAY = 1500
 
-/**
- * Product Carousel dengan infinite loop, swipe, shake effect, dan SVG icons
- */
-function ProductCarousel({ products = [], title = 'Produk Unggulan', subtitle, showNav = true, autoPlay = false, autoPlayInterval = 4000 }) {
+function ProductCarousel({
+  products = [],
+  title = 'Produk Unggulan',
+  subtitle,
+  showNav = true,
+  autoPlay = false,
+  autoPlayInterval = 4000,
+}) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartX, setDragStartX] = useState(0)
@@ -21,14 +24,62 @@ function ProductCarousel({ products = [], title = 'Produk Unggulan', subtitle, s
   const [jumping, setJumping] = useState(false)
 
   const trackRef = useRef(null)
-  const autoPlayRef = useRef(null)
   const itemWidthRef = useRef(0)
+  const currentIndexRef = useRef(0)
   const resumeTimeoutRef = useRef(null)
+  const loopTimeoutRef = useRef(null)
 
-  // Calculate items per view based on screen width
+  const duplicatedProducts = products.length > 0
+    ? [
+        ...products.slice(-itemsPerView),
+        ...products,
+        ...products.slice(0, itemsPerView),
+      ]
+    : []
+
+  const baseIndex = itemsPerView
+
+  const setIndexAndTranslate = useCallback((index, animate = true) => {
+    if (animate) {
+      setShake(true)
+      window.setTimeout(() => setShake(false), 300)
+    }
+
+    currentIndexRef.current = index
+    setCurrentIndex(index)
+    setTranslateX(-index * itemWidthRef.current)
+  }, [])
+
+  const jumpTo = useCallback((index) => {
+    setJumping(true)
+    currentIndexRef.current = index
+    setCurrentIndex(index)
+    setTranslateX(-index * itemWidthRef.current)
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setJumping(false))
+    })
+  }, [])
+
+  const measureAndSync = useCallback(() => {
+    const track = trackRef.current
+    if (!track || track.children.length === 0) return
+
+    const firstChild = track.children[0]
+    const style = window.getComputedStyle(track)
+    const gap = Number.parseFloat(style.columnGap || style.gap || '0') || 0
+    const width = firstChild.getBoundingClientRect().width
+
+    if (!width) return
+
+    itemWidthRef.current = width + gap
+    setTranslateX(-currentIndexRef.current * itemWidthRef.current)
+  }, [])
+
   useEffect(() => {
     const updateItemsPerView = () => {
       const width = window.innerWidth
+
       if (width >= 1200) setItemsPerView(4)
       else if (width >= 900) setItemsPerView(3)
       else if (width >= 600) setItemsPerView(2)
@@ -37,166 +88,175 @@ function ProductCarousel({ products = [], title = 'Produk Unggulan', subtitle, s
 
     updateItemsPerView()
     window.addEventListener('resize', updateItemsPerView)
+
     return () => window.removeEventListener('resize', updateItemsPerView)
   }, [])
 
-  // Duplicate items for infinite loop effect
-  const duplicatedProducts = products.length > 0
-    ? [...products.slice(-itemsPerView), ...products, ...products.slice(0, itemsPerView)]
-    : []
-
-  const baseIndex = itemsPerView // Start at first real item
-
-  // Calculate item width
+  // Penting: produk dari API datang setelah render pertama.
+  // Karena itu ukuran kartu diukur lagi setiap products/itemsPerView berubah.
   useEffect(() => {
-    if (trackRef.current && trackRef.current.children.length > 0) {
-      const firstChild = trackRef.current.children[0]
-      itemWidthRef.current = firstChild.offsetWidth + 28 // width + gap (1.75rem = 28px)
+    if (!products.length) return undefined
+
+    const frame = requestAnimationFrame(() => {
+      measureAndSync()
+      jumpTo(baseIndex)
+    })
+
+    const track = trackRef.current
+    const observer =
+      track && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => measureAndSync())
+        : null
+
+    if (track && observer) observer.observe(track)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      observer?.disconnect()
     }
-  }, [itemsPerView])
+  }, [products.length, itemsPerView, baseIndex, measureAndSync, jumpTo])
 
-  // Go to specific index with shake effect
-  const goToIndex = useCallback((index, animate = true) => {
-    if (animate) {
-      setShake(true)
-      setTimeout(() => setShake(false), 300)
+  const stepNext = useCallback((withShake = false) => {
+    if (!products.length || itemWidthRef.current <= 0) return
+
+    const nextIndex = currentIndexRef.current + 1
+    setIndexAndTranslate(nextIndex, withShake)
+
+    if (loopTimeoutRef.current) {
+      clearTimeout(loopTimeoutRef.current)
     }
 
-    const targetTranslate = -index * itemWidthRef.current
-    setTranslateX(targetTranslate)
-    setCurrentIndex(index)
-  }, [])
-
-  // Pindah ke index tanpa animasi (dipakai untuk lompat mulus saat loop)
-  const jumpTo = useCallback((index) => {
-    setJumping(true)
-    setTranslateX(-index * itemWidthRef.current)
-    setCurrentIndex(index)
-    requestAnimationFrame(() => requestAnimationFrame(() => setJumping(false)))
-  }, [])
-
-  // Next / Prev (withShake = true untuk klik manual, false untuk putar otomatis)
-  const stepNext = useCallback((withShake) => {
-    const nextIndex = currentIndex + 1
-    goToIndex(nextIndex, withShake)
-
-    // Loop back to start after last real item
     if (nextIndex >= baseIndex + products.length) {
-      setTimeout(() => jumpTo(baseIndex), 450) // Wait for transition
+      loopTimeoutRef.current = window.setTimeout(() => {
+        jumpTo(baseIndex)
+      }, 430)
     }
-  }, [currentIndex, goToIndex, products.length, baseIndex, jumpTo])
+  }, [products.length, baseIndex, setIndexAndTranslate, jumpTo])
 
-  const goNext = useCallback(() => stepNext(true), [stepNext])
+  const stepPrev = useCallback((withShake = true) => {
+    if (!products.length || itemWidthRef.current <= 0) return
 
-  const goPrev = useCallback(() => {
-    const prevIndex = currentIndex - 1
-    goToIndex(prevIndex)
+    const prevIndex = currentIndexRef.current - 1
+    setIndexAndTranslate(prevIndex, withShake)
 
-    // Loop to end before first real item
+    if (loopTimeoutRef.current) {
+      clearTimeout(loopTimeoutRef.current)
+    }
+
     if (prevIndex < baseIndex) {
-      setTimeout(() => jumpTo(baseIndex + products.length - 1), 450)
+      loopTimeoutRef.current = window.setTimeout(() => {
+        jumpTo(baseIndex + products.length - 1)
+      }, 430)
     }
-  }, [currentIndex, goToIndex, products.length, baseIndex, jumpTo])
+  }, [products.length, baseIndex, setIndexAndTranslate, jumpTo])
 
-  // Interaction handlers - pause auto-play for 5 seconds after any interaction
   const pauseAutoPlay = useCallback(() => {
-    if (autoPlayRef.current) clearInterval(autoPlayRef.current)
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current)
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current)
+    }
+
     setIsInteracting(true)
   }, [])
 
   const scheduleResumeAutoPlay = useCallback(() => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current)
-    resumeTimeoutRef.current = setTimeout(() => {
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current)
+    }
+
+    resumeTimeoutRef.current = window.setTimeout(() => {
       setIsInteracting(false)
     }, RESUME_DELAY)
   }, [])
 
-  const handleInteractionStart = useCallback(() => {
+  const handleDragStart = useCallback((event) => {
+    if (event.type === 'mousedown' && event.button !== 0) return
+
+    const clientX =
+      event.type === 'mousedown'
+        ? event.clientX
+        : event.touches?.[0]?.clientX
+
+    if (clientX == null) return
+
+    setIsDragging(true)
+    setDragStartX(clientX)
     pauseAutoPlay()
   }, [pauseAutoPlay])
 
-  const handleInteractionEnd = useCallback(() => {
-    scheduleResumeAutoPlay()
-  }, [scheduleResumeAutoPlay])
-
-  // Drag / Swipe handlers
-  const handleDragStart = useCallback((e) => {
-    if (e.type === 'mousedown' && e.button !== 0) return
-
-    setIsDragging(true)
-    setDragStartX(e.type === 'mousedown' ? e.clientX : e.touches[0].clientX)
-    if (trackRef.current) trackRef.current.style.transition = 'none'
-    handleInteractionStart()
-  }, [handleInteractionStart])
-
-  const handleDragMove = useCallback((e) => {
+  const handleDragMove = useCallback((event) => {
     if (!isDragging) return
-    const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX
+
+    const clientX =
+      event.type === 'mousemove'
+        ? event.clientX
+        : event.touches?.[0]?.clientX
+
+    if (clientX == null) return
+
     const deltaX = clientX - dragStartX
-    const currentTranslate = -currentIndex * itemWidthRef.current
+    const currentTranslate = -currentIndexRef.current * itemWidthRef.current
+
     setTranslateX(currentTranslate + deltaX)
-  }, [isDragging, dragStartX, currentIndex])
+  }, [isDragging, dragStartX])
 
   const handleDragEnd = useCallback(() => {
     if (!isDragging) return
-    setIsDragging(false)
-    if (trackRef.current) trackRef.current.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1)'
 
-    const dragDistance = translateX - (-currentIndex * itemWidthRef.current)
+    setIsDragging(false)
+
+    const baseTranslate = -currentIndexRef.current * itemWidthRef.current
+    const dragDistance = translateX - baseTranslate
     const threshold = itemWidthRef.current * 0.15
 
     if (dragDistance < -threshold) {
-      goNext()
+      stepNext(true)
     } else if (dragDistance > threshold) {
-      goPrev()
+      stepPrev(true)
     } else {
-      // Snap back
-      goToIndex(currentIndex, false)
+      setTranslateX(baseTranslate)
     }
 
-    handleInteractionEnd()
-  }, [isDragging, translateX, currentIndex, goNext, goPrev, handleInteractionEnd, goToIndex])
+    scheduleResumeAutoPlay()
+  }, [isDragging, translateX, stepNext, stepPrev, scheduleResumeAutoPlay])
 
-  const handleTrackMouseLeave = useCallback(() => {
-    if (isDragging) {
-      handleDragEnd()
-    } else {
-      handleInteractionEnd()
-    }
-  }, [isDragging, handleDragEnd, handleInteractionEnd])
-
-  // Auto-play per langkah: geser satu kartu, berputar tanpa putus, berhenti saat hover/interaksi
+  // Autoplay sengaja TIDAK pause hanya karena mouse sedang berada di atas carousel.
+  // Pause hanya saat user benar-benar drag/touch/klik tombol navigasi.
   useEffect(() => {
-    if (!autoPlay || products.length === 0 || isInteracting) return undefined
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    if (!autoPlay || !products.length || isInteracting) return undefined
 
-    const id = setInterval(() => {
-      if (!document.hidden) stepNext(false)
+    const id = window.setInterval(() => {
+      if (!document.hidden) {
+        stepNext(false)
+      }
     }, autoPlayInterval)
 
-    return () => clearInterval(id)
+    return () => window.clearInterval(id)
   }, [autoPlay, autoPlayInterval, products.length, isInteracting, stepNext])
 
-  // Initialize position
   useEffect(() => {
-    jumpTo(baseIndex)
-  }, [baseIndex, products.length, jumpTo])
-
-  // Bersihkan timeout saat komponen dilepas
-  useEffect(() => () => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current)
+    return () => {
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current)
+      if (loopTimeoutRef.current) clearTimeout(loopTimeoutRef.current)
+    }
   }, [])
 
-  if (products.length === 0) return null
+  if (!products.length) return null
 
   return (
-    <section className="section section-dark products-section" onMouseEnter={handleInteractionStart} onMouseLeave={handleInteractionEnd}>
+    <section className="section section-dark products-section">
       <div className="container">
         {(title || subtitle) && (
-          <div className="products-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            {subtitle && <span className="products-subtitle">{subtitle}</span>}
-            {title && <h2 className="products-title display-font">{title}</h2>}
+          <div
+            className="products-header"
+            style={{ textAlign: 'center', marginBottom: '2.5rem' }}
+          >
+            {subtitle && (
+              <span className="products-subtitle">{subtitle}</span>
+            )}
+
+            {title && (
+              <h2 className="products-title display-font">{title}</h2>
+            )}
           </div>
         )}
 
@@ -205,10 +265,11 @@ function ProductCarousel({ products = [], title = 'Produk Unggulan', subtitle, s
             <button
               type="button"
               className="carousel-arrow carousel-prev"
-              onClick={goPrev}
-              onMouseDown={handleInteractionStart}
-              onMouseUp={handleInteractionEnd}
-              onMouseLeave={handleInteractionEnd}
+              onClick={() => stepPrev(true)}
+              onMouseDown={pauseAutoPlay}
+              onMouseUp={scheduleResumeAutoPlay}
+              onTouchStart={pauseAutoPlay}
+              onTouchEnd={scheduleResumeAutoPlay}
               aria-label="Produk sebelumnya"
             >
               <ArrowLeftIcon width="20" height="20" />
@@ -220,39 +281,61 @@ function ProductCarousel({ products = [], title = 'Produk Unggulan', subtitle, s
               ref={trackRef}
               className={`product-carousel-track ${shake ? 'shake' : ''}`}
               style={{
-                transform: `translateX(${translateX}px)`,
+                transform: `translate3d(${translateX}px, 0, 0)`,
                 '--translate-x': `${translateX}px`,
-                transition: (isDragging || jumping) ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1)',
+                transition:
+                  isDragging || jumping
+                    ? 'none'
+                    : 'transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1)',
               }}
               onMouseDown={handleDragStart}
               onMouseMove={handleDragMove}
               onMouseUp={handleDragEnd}
-              onMouseLeave={handleTrackMouseLeave}
-              onMouseEnter={handleInteractionStart}
+              onMouseLeave={handleDragEnd}
               onTouchStart={handleDragStart}
               onTouchMove={handleDragMove}
               onTouchEnd={handleDragEnd}
             >
-              {duplicatedProducts.map((product, i) => (
+              {duplicatedProducts.map((product, index) => (
                 <Link
-                  key={`carousel-${i}-${product.id}`}
+                  key={`carousel-${index}-${product.id}`}
                   to={`/produk/${product.id}`}
                   className="product-carousel-item-link"
+                  draggable="false"
                 >
                   <article className="product-carousel-card">
                     <div className="product-carousel-image">
                       {product.gambar ? (
-                        <img src={product.gambar} alt={product.nama} loading="lazy" />
+                        <img
+                          src={product.gambar}
+                          alt={product.nama}
+                          loading="lazy"
+                          draggable="false"
+                        />
                       ) : (
-                        <div className="product-carousel-image-placeholder" role="img" aria-label={product.nama} />
+                        <div
+                          className="product-carousel-image-placeholder"
+                          role="img"
+                          aria-label={product.nama}
+                        />
                       )}
-                      <span className="product-carousel-tag">{product.kategori}</span>
+
+                      <span className="product-carousel-tag">
+                        {product.kategori}
+                      </span>
                     </div>
+
                     <div className="product-carousel-content">
                       <h3 className="product-carousel-name">{product.nama}</h3>
-                      <p className="product-carousel-description">{product.deskripsi}</p>
+                      <p className="product-carousel-description">
+                        {product.deskripsi}
+                      </p>
+
                       <div className="product-carousel-footer">
-                        <span className="product-carousel-price">{formatRupiah(product.harga)}</span>
+                        <span className="product-carousel-price">
+                          {formatRupiah(product.harga)}
+                        </span>
+
                         <span className="product-carousel-action" aria-hidden="true">
                           <ArrowRightIcon width="16" height="16" />
                         </span>
@@ -268,10 +351,11 @@ function ProductCarousel({ products = [], title = 'Produk Unggulan', subtitle, s
             <button
               type="button"
               className="carousel-arrow carousel-next"
-              onClick={goNext}
-              onMouseDown={handleInteractionStart}
-              onMouseUp={handleInteractionEnd}
-              onMouseLeave={handleInteractionEnd}
+              onClick={() => stepNext(true)}
+              onMouseDown={pauseAutoPlay}
+              onMouseUp={scheduleResumeAutoPlay}
+              onTouchStart={pauseAutoPlay}
+              onTouchEnd={scheduleResumeAutoPlay}
               aria-label="Produk berikutnya"
             >
               <ArrowRightIcon width="20" height="20" />

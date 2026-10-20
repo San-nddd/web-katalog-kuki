@@ -1,0 +1,37 @@
+{
+  "name": "Kuki Bakehouse",
+  "short_name": "Kuki",
+  "description": "Web Catalog dan layanan Kuki Bakehouse.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6ebdd",
+  "theme_color": "#3b2417",
+  "orientation": "any",
+  "lang": "id-ID",
+  "categories": [
+    "food",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "/assets/Kuki.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/Kuki.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/Kuki.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
