@@ -26,16 +26,8 @@ function Hero() {
           </div>
         </div>
 
-        <div className="hero-gallery" aria-hidden="true">
-          <div className="hero-photo hero-photo-1"></div>
-          <div className="hero-photo hero-photo-2"></div>
-          <div className="hero-photo hero-photo-3"></div>
-          <div className="hero-photo hero-photo-4"></div>
-          <div className="hero-badge">
-            <span className="hero-badge-number">50+</span>
-            <span className="hero-badge-text">Varietas<br />Dipanggang Harian</span>
-          </div>
-        </div>
+        
+        
       </div>
     </section>
   )

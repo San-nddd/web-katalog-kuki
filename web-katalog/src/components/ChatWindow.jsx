@@ -335,7 +335,6 @@ function ChatWindow({
                 : 'Tulis pertanyaan...'
             }
             aria-label="Tulis pesan"
-            disabled={loading || handoverLoading}
           />
 
           <button

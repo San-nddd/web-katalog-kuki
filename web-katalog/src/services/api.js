@@ -1,7 +1,7 @@
 
-export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/$/, '')
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
-export const ASSET_URL = API_URL.replace(/\/api$/, '')
+export const ASSET_URL = API_BASE_URL.replace(/\/api$/, '')
 
 const TOKEN_KEY = 'kuki_admin_token'
 const USER_KEY = 'kuki_admin_user'
@@ -47,7 +47,7 @@ export async function request(path, { method = 'GET', body, formData, token, aut
   let response
 
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
       body: formData || (body ? JSON.stringify(body) : undefined),

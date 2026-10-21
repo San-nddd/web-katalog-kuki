@@ -5,6 +5,8 @@ import './index.css'
 import App from './App.jsx'
 
 function pasangMetadataPwa() {
+  console.log("URL API Saat Ini:", import.meta.env.VITE_API_BASE_URL);
+
   if (!document.querySelector('link[rel="manifest"]')) {
     const manifest = document.createElement('link')
     manifest.rel = 'manifest'

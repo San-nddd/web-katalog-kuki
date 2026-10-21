@@ -6,28 +6,21 @@
 export const POLLING_INTERVAL = 3000
 
 /*
-  Alamat endpoint obrolan harus ke server Laravel (mis. :8000), BUKAN ke origin Vite (:5173).
-  - Bila ada VITE_API_URL di .env, itu yang dipakai (akhiran "/api" otomatis dibuang).
-  - Saat development tanpa env: host yang sama dengan halaman + port 8000
-    (jadi tetap jalan di HP lewat IP laptop, mis. 192.168.x.x:8000).
-  - Production tanpa env: relatif (/api/...), dengan asumsi web dan API satu domain.
-  Idealnya fungsi ini dipindah ke assistantService agar memakai base URL yang sama persis.
+  ngrok -> Vite proxy -> Laravel.
+  Gunakan path relatif agar polling memakai domain yang sama dengan web,
+  baik di localhost:5173 maupun lewat ngrok-free.dev.
+  Pastikan vite.config.js mem-proxy /api ke http://127.0.0.1:8000.
 */
-function apiOrigin() {
-  const fromEnv = import.meta.env?.VITE_API_URL
-  if (fromEnv) return String(fromEnv).replace(/\/+$/, '').replace(/\/api$/, '')
-  if (import.meta.env?.DEV) return `${window.location.protocol}//${window.location.hostname}:8000`
-  return ''
-}
-
 export const obrolanUrl = (sessionId) =>
-  `${apiOrigin()}/api/assistant/obrolan/${encodeURIComponent(sessionId)}`
+  `/api/assistant/obrolan/${encodeURIComponent(sessionId)}`
 
 // Status lifecycle yang valid: AI_ACTIVE -> WAITING_ADMIN -> ADMIN_ACTIVE -> CLOSED
-const VALID_STATUS = ['AI_ACTIVE', 'WAITING_ADMIN', 'ADMIN_ACTIVE', 'CLOSED']
+const VALID_STATUS = ['AI_ACTIVE', 'HANDOVER_PENDING', 'WAITING_ADMIN', 'ADMIN_ACTIVE', 'CLOSED']
 
 export function normalizeMessage(message) {
-  const rawSender = String(message.sender ?? message.pengirim ?? message.role ?? 'user').toLowerCase()
+  const rawSender = String(
+    message.sender ?? message.pengirim ?? message.tipe_pengirim ?? message.role ?? 'user',
+  ).trim().toLowerCase()
 
   let sender = 'user'
 
@@ -37,6 +30,8 @@ export function normalizeMessage(message) {
     sender = 'admin'
   } else if (['user', 'customer', 'pengunjung', 'pelanggan'].includes(rawSender)) {
     sender = 'user'
+  } else if (['system', 'sistem'].includes(rawSender)) {
+    sender = 'system'
   }
 
   const text = message.text ?? message.isi ?? message.message ?? message.pesan ?? ''
@@ -62,27 +57,45 @@ export function getMessagesFromResponse(response) {
   return []
 }
 
-// Hanya menerima nilai yang persis salah satu status resmi; selain itu diabaikan (null).
+// Konversi status internal dan status Laravel menjadi lifecycle UI yang sama.
 export function normalizeStatus(value) {
   if (!value) return null
 
   const key = String(value).trim().toUpperCase().replace(/[\s-]+/g, '_')
 
   if (VALID_STATUS.includes(key)) return key
-  if (key === 'SELESAI') return 'CLOSED'
+  if (['SELESAI', 'DITUTUP', 'CLOSED'].includes(key)) return 'CLOSED'
+  if (['MENUNGGU', 'MEMBUTUHKAN_ADMIN', 'BUTUH_ADMIN'].includes(key)) return 'WAITING_ADMIN'
+  if (['DITANGANI', 'ADMIN'].includes(key)) return 'ADMIN_ACTIVE'
+  if (['AKTIF', 'TIDAK_PERLU'].includes(key)) return 'AI_ACTIVE'
 
   return null
 }
 
 export function getStatusFromResponse(response) {
   const payload = response?.data ?? response
+  const rawStatus =
+    payload?.status ?? payload?.obrolan?.status ?? payload?.conversation?.status
+  const rawHandover =
+    payload?.status_handover ??
+    payload?.obrolan?.status_handover ??
+    payload?.conversation?.status_handover
 
-  return normalizeStatus(
-    payload?.status ??
-      payload?.obrolan?.status ??
-      payload?.conversation?.status ??
-      response?.status,
-  )
+  const status = normalizeStatus(rawStatus)
+  const handover = String(rawHandover ?? '').trim().toUpperCase().replace(/[\s-]+/g, '_')
+
+  // Status selesai harus menang atas status handover yang mungkin masih tersimpan.
+  if (status === 'CLOSED') return 'CLOSED'
+
+  // Di Laravel: status='aktif' juga digunakan saat Admin sudah membalas.
+  // Oleh karena itu status_handover lebih spesifik daripada status='aktif'.
+  if (['DITANGANI', 'ADMIN_ACTIVE'].includes(handover)) return 'ADMIN_ACTIVE'
+  if (['MEMBUTUHKAN_ADMIN', 'BUTUH_ADMIN', 'WAITING_ADMIN'].includes(handover)) {
+    return 'WAITING_ADMIN'
+  }
+  if (handover === 'HANDOVER_PENDING') return 'HANDOVER_PENDING'
+
+  return status
 }
 
 /*

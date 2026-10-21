@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom'
 import { MapPinIcon, PhoneIcon, MailIcon } from './icons'
 import './Footer.css'
 
+import logo from '../assets/Kuki.png'
+
+const LOGO_SRC = logo
 function Footer() {
   return (
     <footer className="footer" id="contact">
@@ -27,7 +30,15 @@ function Footer() {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <span className="footer-logo display-font">Kuki</span>
+              <Link to="/" className="footer-logo" aria-label="Kuki Bakehouse, ke beranda">
+                          {LOGO_SRC ? (
+                            <img src={LOGO_SRC} alt="" />
+                          ) : (
+                            <span className="footer-logo-text display-font" aria-hidden="true">
+                              kuki
+                            </span>
+                          )}
+                        </Link>
               <p className="footer-description">
                 Freshly baked with love. Hadirkan kebahagiaan dalam setiap gigitan.
               </p>
@@ -45,7 +56,7 @@ function Footer() {
               
               <div className="footer-badges">
                 <span className="badge-item display-font">Since 2021</span>
-                <span className="badge-item display-font">HALAL MUI ✨</span>
+                <span className="badge-item display-font">HALAL MUI </span>
                 <span className="badge-item display-font">#1 Tiramisu Sodok di Sumedang</span>
               </div>
             </div>

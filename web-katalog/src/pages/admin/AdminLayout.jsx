@@ -337,6 +337,7 @@ function AdminLayout({ title, children }) {
           <NavLink to="/admin/produk">{copy.products}</NavLink>
           <NavLink to="/admin/kategori">{copy.categories}</NavLink>
           <NavLink to="/admin/chat">
+          <NavLink to="/admin/blog">Blog</NavLink>
             {copy.chat}
             {notificationCount > 0 && (
               <span className="admin-nav-chat-badge">

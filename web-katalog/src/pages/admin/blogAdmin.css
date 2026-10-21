@@ -1,0 +1,93 @@
+/* src/pages/admin/blogAdmin.css
+   Semua class diawali kblog- supaya tidak mengubah halaman web lain.
+   Warna mengikuti variabel existing admin.css Kuki Bakehouse. */
+.kblog-admin { --kblog-ink: var(--brown-dark, #321e16); --kblog-card: var(--cream-card, #fff9ef); --kblog-accent: var(--orange, #ffb87c); --kblog-muted: #7b6a60; display: grid; gap: 1.35rem; color: var(--kblog-ink); min-width: 0; }
+.kblog-admin *, .kblog-admin *::before, .kblog-admin *::after { box-sizing: border-box; }
+.kblog-admin button, .kblog-admin input, .kblog-admin textarea, .kblog-admin select { font: inherit; }
+.kblog-admin button { cursor: pointer; }
+.kblog-admin button:disabled { cursor: not-allowed; opacity: .6; }
+.kblog-heading { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 1rem; }
+.kblog-eyebrow { color: #ab6f4c; letter-spacing: .12em; font-weight: 800; font-size: .68rem; }
+.kblog-heading h2 { margin: .3rem 0; font-size: clamp(1.35rem, 2.8vw, 1.85rem); line-height: 1.2; }
+.kblog-heading p { margin: .25rem 0 0; font-size: .93rem; color: var(--kblog-muted); }
+.kblog-stat-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
+.kblog-stat { background: var(--kblog-card); border: 2px solid var(--kblog-ink); border-radius: 14px; padding: 1rem 1.2rem; box-shadow: 4px 4px 0 rgba(50,30,22,.14); display: flex; flex-direction: column; gap: .25rem; }
+.kblog-stat span { color: #785d51; font-size: .8rem; font-weight: 650; }
+.kblog-stat strong { font-size: 2rem; font-weight: 850; line-height: 1.1; }
+.kblog-stat small { color: var(--kblog-muted); font-size: .74rem; }
+.kblog-panel { background: var(--kblog-card); border: 2px solid var(--kblog-ink); border-radius: 16px; overflow: hidden; box-shadow: 5px 5px 0 rgba(50,30,22,.14); }
+.kblog-toolbar { display: flex; align-items: center; gap: .75rem; padding: 1.05rem; flex-wrap: wrap; border-bottom: 1px solid #e8d9cd; }
+.kblog-toolbar .kblog-search { flex: 1 1 300px; }
+.kblog-toolbar input, .kblog-toolbar select, .kblog-field input, .kblog-field select, .kblog-field textarea, .kblog-pending-file input { width: 100%; min-width: 0; background: #fffdf9; color: var(--kblog-ink); border: 1.5px solid #d6c1b2; border-radius: 10px; outline: 0; padding: .75rem .85rem; transition: border .15s ease, box-shadow .15s ease; }
+.kblog-toolbar select { width: auto; min-width: 150px; }
+.kblog-admin input:focus-visible, .kblog-admin select:focus-visible, .kblog-admin textarea:focus-visible, .kblog-admin button:focus-visible, .kblog-admin a:focus-visible { outline: 3px solid #d98b5c; outline-offset: 2px; }
+.kblog-admin .admin-btn { white-space: nowrap; }
+.kblog-empty { text-align: center; padding: 3.5rem 1rem; color: var(--kblog-muted); }
+.kblog-empty strong { display: block; color: var(--kblog-ink); font-size: 1.1rem; }
+.kblog-empty p { margin: .5rem 0 0; }
+.kblog-table-wrap { overflow-x: auto; }
+.kblog-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+.kblog-table th { text-align: left; padding: .85rem 1rem; color: #785d51; background: #f7ede2; font-size: .78rem; font-weight: 800; }
+.kblog-table td { padding: 1rem; border-top: 1px solid #e9d9cc; font-size: .84rem; vertical-align: middle; }
+.kblog-article-cell { display: flex; align-items: center; gap: .8rem; min-width: 230px; }
+.kblog-article-cell strong { display: block; font-weight: 800; line-height: 1.4; }
+.kblog-article-cell small { display: block; font-size: .72rem; margin-top: .15rem; color: var(--kblog-muted); overflow-wrap: anywhere; }
+.kblog-thumb { width: 60px; height: 56px; flex-shrink: 0; overflow: hidden; background: #eee0d2; display: grid; place-items: center; font-size: .78rem; font-weight: 850; color: #9c6d51; border-radius: 10px; }
+.kblog-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.kblog-status { display: inline-flex; border-radius: 30px; padding: .3rem .7rem; font-size: .73rem; font-weight: 750; white-space: nowrap; }
+.kblog-status-published { background: #e7f6e9; color: #23703d; }
+.kblog-status-draft { background: #f7ebd6; color: #925d1d; }
+.kblog-table-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
+.kblog-link-button { color: #814b2d; padding: 0; border: 0; background: transparent; text-decoration: underline; text-underline-offset: 3px; font-size: .79rem; font-weight: 750; }
+.kblog-link-button:hover { color: #bf6437; }
+.kblog-danger-text { color: #a33f33; }
+.kblog-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .8rem; padding: .9rem 1rem; color: var(--kblog-muted); font-size: .82rem; border-top: 1px solid #e9d9cc; }
+.kblog-pagination > div { display: flex; gap: .5rem; }
+.kblog-alert { margin: 0; border: 1.5px solid #d5b59e; background: #fff5e7; padding: .8rem 1rem; border-radius: 10px; font-size: .88rem; overflow-wrap: anywhere; }
+.kblog-alert-error { background: #fcece7; border-color: #dc9890; color: #922e27; }
+.kblog-alert-success { background: #eaf6eb; border-color: #9bcea9; color: #286638; }
+.kblog-editor { display: grid; gap: 1rem; min-width: 0; }
+.kblog-editor-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .8rem; }
+.kblog-back { color: #734d3d; background: none; border: 0; padding: .5rem 0; font-weight: 800; }
+.kblog-editor-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+.kblog-editor-layout { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr); align-items: start; gap: 1rem; }
+.kblog-editor-main, .kblog-editor-sidebar { min-width: 0; display: grid; gap: 1rem; }
+.kblog-form-panel { padding: 1.25rem; display: grid; gap: 1rem; }
+.kblog-panel-title { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .6rem; }
+.kblog-panel-title h3 { font-size: 1.13rem; margin: .2rem 0 0; }
+.kblog-pill { border-radius: 999px; border: 1px solid #dcc9b7; padding: .3rem .65rem; background: #f7eadc; color: #704b3b; font-size: .76rem; font-weight: 700; }
+.kblog-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.kblog-field > span { font-weight: 750; font-size: .84rem; }
+.kblog-field b { color: #c25945; }
+.kblog-field textarea { resize: vertical; line-height: 1.65; }
+.kblog-field small { font-size: .74rem; color: var(--kblog-muted); }
+.kblog-body-editor { min-height: 240px; }
+.kblog-upload { min-height: 120px; border: 2px dashed #c7a892; background: #fff8f0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: .35rem; padding: 1rem; cursor: pointer; }
+.kblog-upload strong { font-size: .9rem; }
+.kblog-upload span { font-size: .75rem; color: var(--kblog-muted); }
+.kblog-upload input { max-width: 100%; font-size: .75rem; margin-top: .4rem; }
+.kblog-upload-sm { min-height: 90px; }
+.kblog-file-list { display: grid; gap: .65rem; }
+.kblog-file-list h4 { margin: 0; font-size: .9rem; }
+.kblog-pending-file { display: flex; gap: .75rem; align-items: flex-start; border: 1px solid #e5d4c6; padding: .75rem; border-radius: 10px; min-width: 0; }
+.kblog-pending-file > span { width: 28px; height: 28px; background: #f5e2d1; display: grid; place-items: center; border-radius: 8px; flex-shrink: 0; }
+.kblog-pending-file > div { min-width: 0; flex: 1; }
+.kblog-pending-file strong { font-size: .79rem; display: block; overflow-wrap: anywhere; }
+.kblog-pending-file small { font-size: .73rem; color: var(--kblog-muted); display: block; margin: .2rem 0 .4rem; }
+.kblog-pending-file input { padding: .55rem .65rem; font-size: .8rem; }
+.kblog-gallery { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+.kblog-gallery-item { border: 1px solid #e5d4c6; border-radius: 10px; overflow: hidden; }
+.kblog-gallery-item img, .kblog-gallery-item video { width: 100%; height: 160px; object-fit: cover; display: block; background: #2b211b; }
+.kblog-gallery-caption { display: flex; justify-content: space-between; gap: .4rem; align-items: center; padding: .65rem; }
+.kblog-gallery-caption span { color: #61473b; font-size: .74rem; overflow-wrap: anywhere; }
+.kblog-cover-preview { border-radius: 10px; background: #f3e5d5; min-height: 100px; display: grid; place-items: center; overflow: hidden; color: var(--kblog-muted); font-size: .78rem; padding: .5rem; }
+.kblog-cover-preview img { width: 100%; max-height: 220px; object-fit: cover; }
+.kblog-cover-empty { min-height: 120px; background: #f4e7da; border-radius: 10px; display: grid; place-items: center; color: #977864; font-size: .8rem; }
+.kblog-add-category { display: grid; gap: .5rem; }
+.kblog-muted { font-size: .76rem; line-height: 1.6; margin: 0; color: var(--kblog-muted); }
+.kblog-info-panel { background: #fff2e4; }
+.kblog-info-panel strong { font-size: .92rem; }
+.kblog-info-panel p { margin: 0; font-size: .78rem; color: #785d51; }
+.kblog-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+@media (max-width: 1080px) { .kblog-editor-layout { grid-template-columns: 1fr; } .kblog-editor-sidebar { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; } .kblog-editor-sidebar .kblog-info-panel { grid-column: 1 / -1; } }
+@media (max-width: 680px) { .kblog-stat-grid { grid-template-columns: 1fr; } .kblog-editor-sidebar { grid-template-columns: 1fr; } .kblog-editor-sidebar .kblog-info-panel { grid-column: auto; } .kblog-gallery { grid-template-columns: 1fr; } .kblog-toolbar select { flex: 1; } .kblog-editor-top .admin-btn { flex: 1; } .kblog-editor-actions { width: 100%; } .kblog-pagination > div { flex-wrap: wrap; } }

@@ -17,8 +17,10 @@ import AdminRoute from './pages/admin/AdminRoute'
 import './pages/sections.css'
 import './App.css'
 import SmoothScroll from './components/SmoothScroll'
-
+import BlogAdminPage from './pages/admin/BlogAdminPage'
 function App() {
+  console.log("URL API Saat Ini:", import.meta.env.VITE_API_BASE_URL);
+
   return (
     <div className="App">
       <SmoothScroll />
@@ -30,7 +32,7 @@ function App() {
         <Route path="/bakers" element={<BakersPage />} />
         <Route path="/katalog" element={<KatalogPage />} />
         <Route path="/produk/:id" element={<DetailProdukPage />} />
-
+        <Route path="/admin/blog" element={<AdminRoute><BlogAdminPage /></AdminRoute>}/>
         <Route path="/admin/login" element={<LoginPage />} />
         <Route
           path="/admin"

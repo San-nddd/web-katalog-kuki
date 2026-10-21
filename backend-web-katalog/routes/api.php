@@ -31,21 +31,6 @@ Route::get('/blog/{slug}', [BlogController::class, 'show']);
 Route::get('/blog/{slug}/komentar', [BlogCommentController::class, 'index']);
 Route::post('/blog/{slug}/komentar', [BlogCommentController::class, 'store'])->middleware('throttle:5,1');
 
-Route::get('/admin/blog', [BlogController::class, 'adminIndex']);
-Route::post('/admin/blog', [BlogController::class, 'store']);
-Route::put('/admin/blog/{post}', [BlogController::class, 'update']);
-Route::delete('/admin/blog/{post}', [BlogController::class, 'destroy']);
-Route::post('/admin/blog/kategori', [BlogCategoryController::class, 'store']);
-Route::put('/admin/blog/kategori/{category}', [BlogCategoryController::class, 'update']);
-Route::delete('/admin/blog/kategori/{category}', [BlogCategoryController::class, 'destroy']);
-Route::get('/admin/blog/komentar', [BlogCommentController::class, 'adminIndex']);
-Route::patch('/admin/blog/komentar/{comment}', [BlogCommentController::class, 'moderate']);
-Route::delete('/admin/blog/komentar/{comment}', [BlogCommentController::class, 'destroy']);
-Route::post('/admin/blog/{post}/balas', [BlogCommentController::class, 'adminReply']);
-Route::post('/admin/blog/{post}/media', [BlogMediaController::class, 'upload']);
-Route::delete('/admin/blog/media/{media}', [BlogMediaController::class, 'destroy']);
-Route::post('/admin/blog/{post}/set-sampul', [BlogMediaController::class, 'uploadSampul']);
-
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -81,4 +66,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/push/subscribe', [PushSubscriptionController::class, 'store']);
         Route::delete('/push/subscribe', [PushSubscriptionController::class, 'destroy']);
     });
+    
+Route::get('/admin/blog', [BlogController::class, 'adminIndex']);
+Route::post('/admin/blog', [BlogController::class, 'store']);
+Route::put('/admin/blog/{post}', [BlogController::class, 'update']);
+Route::delete('/admin/blog/{post}', [BlogController::class, 'destroy']);
+Route::post('/admin/blog/kategori', [BlogCategoryController::class, 'store']);
+Route::put('/admin/blog/kategori/{category}', [BlogCategoryController::class, 'update']);
+Route::delete('/admin/blog/kategori/{category}', [BlogCategoryController::class, 'destroy']);
+Route::get('/admin/blog/komentar', [BlogCommentController::class, 'adminIndex']);
+Route::patch('/admin/blog/komentar/{comment}', [BlogCommentController::class, 'moderate']);
+Route::delete('/admin/blog/komentar/{comment}', [BlogCommentController::class, 'destroy']);
+Route::post('/admin/blog/{post}/balas', [BlogCommentController::class, 'adminReply']);
+Route::post('/admin/blog/{post}/media', [BlogMediaController::class, 'upload']);
+Route::delete('/admin/blog/media/{media}', [BlogMediaController::class, 'destroy']);
+Route::post('/admin/blog/{post}/set-sampul', [BlogMediaController::class, 'uploadSampul']);
+
 });

@@ -66,6 +66,7 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
 
       const response = await fetch(obrolanUrl(sessionId), {
         headers: { Accept: 'application/json' },
+        cache: 'no-store',
       })
 
       if (response.status === 404) {
@@ -82,9 +83,11 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
 
       const json = await response.json()
       const serverMessages = getMessagesFromResponse(json).map(normalizeMessage)
-      const directStatus = json?.data?.status
-      const serverStatus = directStatus || getStatusFromResponse(json)
+      const serverStatus = getStatusFromResponse(json)
       const expiresAt = json?.data?.handover_expires_at ?? null
+
+      // Jangan masukkan hasil polling dari sesi lama setelah mulai obrolan baru.
+      if (getSessionId() !== sessionId) return
 
       setMessages((prev) => mergeMessages(prev, serverMessages))
 
@@ -130,7 +133,7 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
         productId: product?.id,
       })
 
-      const nextStatus = result.status ?? status
+      const nextStatus = getStatusFromResponse(result) ?? status
       const needsHandover = result.metadata?.needs_handover === true
       const escalated = result.metadata?.escalated === true
 
@@ -161,7 +164,10 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
         setShowHandover(false)
       }
 
-      await syncObrolan()
+      // Respons chat sudah diterima. Polling hanya untuk sinkronisasi riwayat,
+      // bukan bagian dari waktu tunggu jawaban AI.
+      setLoading(false)
+      void syncObrolan()
     } catch (error) {
       if (!aiLocked) {
         const teks =
@@ -210,7 +216,8 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
       setHandoverExpiresAt(result.handover_expires_at ?? null)
       setShowHandover(false)
 
-      await syncObrolan()
+      // Status handover sudah diterima; sinkronisasi berjalan di background.
+      void syncObrolan()
     } catch (error) {
       setHandoverError(
         error.message || 'Gagal meminta handover ke admin. Silakan coba lagi.',
