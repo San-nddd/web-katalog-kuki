@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
+import './styles/fileUpload.css'
 
 function pasangMetadataPwa() {
   console.log("URL API Saat Ini:", import.meta.env.VITE_API_BASE_URL);

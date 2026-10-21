@@ -1,7 +1,6 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import CategoryPage from './pages/CategoryPage'
-import BlogPage from './pages/BlogPage'
 import ContactPage from './pages/ContactPage'
 import BakersPage from './pages/BakersPage'
 import KatalogPage from './pages/KatalogPage'
@@ -17,7 +16,6 @@ import AdminRoute from './pages/admin/AdminRoute'
 import './pages/sections.css'
 import './App.css'
 import SmoothScroll from './components/SmoothScroll'
-import BlogAdminPage from './pages/admin/BlogAdminPage'
 function App() {
   console.log("URL API Saat Ini:", import.meta.env.VITE_API_BASE_URL);
 
@@ -27,12 +25,10 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/category" element={<CategoryPage />} />
-        <Route path="/blog" element={<BlogPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/bakers" element={<BakersPage />} />
         <Route path="/katalog" element={<KatalogPage />} />
         <Route path="/produk/:id" element={<DetailProdukPage />} />
-        <Route path="/admin/blog" element={<AdminRoute><BlogAdminPage /></AdminRoute>}/>
         <Route path="/admin/login" element={<LoginPage />} />
         <Route
           path="/admin"
@@ -99,6 +95,7 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   )

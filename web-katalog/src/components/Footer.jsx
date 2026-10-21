@@ -83,9 +83,6 @@ function Footer() {
                   <Link to="/contact">Contact</Link>
                 </li>
                 <li>
-                  <Link to="/blog">Blog</Link>
-                </li>
-                <li>
                   <Link to="/contact">Terms & Conditions</Link>
                 </li>
               </ul>

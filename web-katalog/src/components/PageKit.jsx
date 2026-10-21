@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { ArrowRightIcon } from './icons'
 import { useInView } from '../hooks/useInView'
 
 /* Elemen yang muncul (fade + naik/geser) saat di-scroll. delay dalam ms untuk efek bertahap */
@@ -70,23 +69,5 @@ export function CategoryTile({ category }) {
       </span>
       <span className="category-label display-font">{category.name}</span>
     </Link>
-  )
-}
-
-export function BlogTile({ post }) {
-  const image = post.image || post.gambar || post.img
-  const title = post.title || post.judul || post.nama
-  return (
-    <article className="blog-tile">
-      <div className="blog-tile-photo">
-        {image ? <img src={image} alt="" /> : <span className="blog-tile-ph"></span>}
-      </div>
-      <div className="blog-tile-body">
-        <h3 className="blog-tile-title">{title}</h3>
-        <a href={post.url || '#blog'} className="btn btn-primary blog-tile-btn">
-          <Roll text="View Details" /> <ArrowRightIcon />
-        </a>
-      </div>
-    </article>
   )
 }

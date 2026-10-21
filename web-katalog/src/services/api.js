@@ -1,5 +1,6 @@
 
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+// Kuki Bakehouse - React/Vite API client
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
 
 export const ASSET_URL = API_BASE_URL.replace(/\/api$/, '')
 
@@ -38,20 +39,28 @@ export function clearSession() {
 }
 
 export async function request(path, { method = 'GET', body, formData, token, auth = true } = {}) {
+  const normalizedPath = `/${String(path).replace(/^\/+/, '')}`
+  const httpMethod = method.toUpperCase()
+
+  // FormData tidak boleh menggunakan Content-Type: application/json.
+  // Dukung juga komponen lama yang mungkin memanggil api.post(path, formData).
+  const uploadData = formData || (typeof FormData !== 'undefined' && body instanceof FormData ? body : null)
+  const hasJsonBody = !uploadData && body !== undefined
   const headers = { Accept: 'application/json' }
   const activeToken = token !== undefined ? token : auth ? getToken() : null
 
   if (activeToken) headers.Authorization = `Bearer ${activeToken}`
-  if (body) headers['Content-Type'] = 'application/json'
+  if (hasJsonBody) headers['Content-Type'] = 'application/json'
+
+  const fetchOptions = {
+    method: httpMethod,
+    headers,
+    body: uploadData || (hasJsonBody ? JSON.stringify(body) : undefined),
+  }
 
   let response
-
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method,
-      headers,
-      body: formData || (body ? JSON.stringify(body) : undefined),
-    })
+    response = await fetch(`${API_BASE_URL}${normalizedPath}`, fetchOptions)
   } catch {
     throw new ApiError('Tidak dapat terhubung ke server. Silakan coba lagi.', 0, null)
   }
@@ -66,7 +75,7 @@ export async function request(path, { method = 'GET', body, formData, token, aut
   if (!response.ok) {
     if (response.status === 401 && activeToken) clearSession()
     throw new ApiError(
-      data?.message || 'Terjadi kesalahan. Silakan coba lagi.',
+      data?.message || `Permintaan API gagal (HTTP ${response.status}).`,
       response.status,
       data,
     )
@@ -85,7 +94,13 @@ export const api = {
 
 export function assetUrl(path) {
   if (!path) return null
-  if (/^(https?:|data:|blob:)/.test(path)) return path
-  if (path.startsWith('/')) return path
-  return `${ASSET_URL}/storage/${path}`
+  const url = String(path).trim()
+  if (/^(https?:|data:|blob:|\/\/)/i.test(url)) return url
+
+  // Jika backend berjalan di origin berbeda dari Vite, /storage harus
+  // mengarah ke backend Laravel, bukan origin frontend.
+  if (/^\/storage(?:\/|$)/.test(url)) return `${ASSET_URL}${url}`
+  if (url.startsWith('/')) return url
+
+  return `${ASSET_URL}/storage/${url.replace(/^storage\//, '')}`
 }

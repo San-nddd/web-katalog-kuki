@@ -878,30 +878,6 @@ export const testimonials = [
   },
 ]
 
-export const blogPosts = [
-  {
-    id: 1,
-    title: '5 Expert Tips for Baking the Perfect Sourdough at Home',
-    date: '12 Mei 2025',
-    tag: 'TIPS',
-    kategori: 'Roti',
-  },
-  {
-    id: 2,
-    title: 'Summer Flavors Are Here: Try Our Berry Tart Collection',
-    date: '28 Mei 2025',
-    tag: 'STORIES',
-    kategori: 'Tart',
-  },
-  {
-    id: 3,
-    title: 'The Story Behind Our Signature Burnt Cheesecake',
-    date: '10 Juni 2025',
-    tag: 'STORIES',
-    kategori: 'Cheesecake',
-  },
-]
-
 export const bakers = [
   { id: 1, name: 'Raka Wijaya', role: 'Head Pastry Chef' },
   { id: 2, name: 'Nadia Kusuma', role: 'Pastry & Sourdough' },
