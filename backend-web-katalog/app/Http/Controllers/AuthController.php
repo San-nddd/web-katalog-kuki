@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
-     * Login admin dan buat token Sanctum.
+     * Login staff yang berwenang dan buat token Sanctum.
      */
     public function login(Request $request): JsonResponse
     {
@@ -22,7 +22,11 @@ class AuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+        if (
+            ! $user
+            || ! in_array($user->roleForAuthorization(), ['admin', 'owner'], true)
+            || ! Hash::check($validated['password'], $user->password)
+        ) {
             throw ValidationException::withMessages([
                 'email' => ['Email atau password salah.'],
             ]);
@@ -35,7 +39,10 @@ class AuthController extends Controller
             'message' => 'Login berhasil.',
             'data' => [
                 'token' => $token,
-                'user' => $user->only(['id', 'name', 'email']),
+                'user' => [
+                    ...$user->only(['id', 'name', 'email']),
+                    'role' => $user->roleForAuthorization(),
+                ],
             ],
         ]);
     }
@@ -48,7 +55,10 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data admin berhasil diambil.',
-            'data' => $request->user()->only(['id', 'name', 'email']),
+            'data' => [
+                ...$request->user()->only(['id', 'name', 'email']),
+                'role' => $request->user()->roleForAuthorization(),
+            ],
         ]);
     }
 

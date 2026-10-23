@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AdminAuthTest extends TestCase
@@ -25,6 +27,28 @@ class AdminAuthTest extends TestCase
 
         $this->assertNotEmpty($response->json('data.token'));
         $this->assertSame($user->id, $response->json('data.user.id'));
+    }
+
+    public function test_admin_legacy_tetap_dapat_login_sebelum_migrasi_role_diterapkan(): void
+    {
+        $user = User::factory()->create();
+
+        Schema::table('users', function (Blueprint $table): void {
+            $table->dropIndex(['role']);
+        });
+        Schema::table('users', function (Blueprint $table): void {
+            $table->dropColumn('role');
+        });
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.user.role', 'admin');
+
+        $this->assertTrue($user->fresh()->isAdmin());
+        $this->assertTrue($user->fresh()->can('manage-admin'));
     }
 
     public function test_login_dengan_password_salah_ditolak(): void

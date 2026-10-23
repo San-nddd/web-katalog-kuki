@@ -25,11 +25,21 @@ class produkController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        // Validation errors (422) are safe to return to the frontend.
+        // Bersihkan whitespace agar validasi kode unik konsisten.
+        $this->normalizeBarcode($request);
+        // Error validasi 422 tetap dikirim langsung ke frontend.
         $validated = $request->validate($this->rules());
 
         try {
-            $produk = produk::create($this->prepare($validated));
+            $attributes = $this->prepare($validated);
+
+            // Tanpa kode manual: sistem membuat barcode internal pendek.
+            // Kode unik benar-benar dijamin oleh UNIQUE index database (migration terpisah).
+            if (empty($attributes['barcode'])) {
+                $attributes['barcode'] = $this->generateBarcode();
+            }
+
+            $produk = produk::create($attributes);
 
             return response()->json([
                 'success' => true,
@@ -81,10 +91,19 @@ class produkController extends Controller
             ], 404);
         }
 
+        $this->normalizeBarcode($request);
         $validated = $request->validate($this->rules($produk->id));
 
         try {
-            $produk->update($this->prepare($validated));
+            $attributes = $this->prepare($validated);
+
+            // Saat field dikosongkan sewaktu edit, jangan menghapus barcode
+            // lama. Produk lama yang belum punya barcode mendapat kode otomatis.
+            if (empty($attributes['barcode'])) {
+                $attributes['barcode'] = $produk->barcode ?: $this->generateBarcode();
+            }
+
+            $produk->update($attributes);
 
             return response()->json([
                 'success' => true,
@@ -183,7 +202,13 @@ class produkController extends Controller
             'harga_produk' => 'required|numeric|min:0',
             'gambar_produk' => 'nullable|string|max:1000',
             'kategori_id' => 'nullable|integer|exists:kategoris,id',
-            'barcode' => 'nullable|string|max:100',
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[\x20-\x7E]+$/',
+                Rule::unique('katalog_produk', 'barcode')->ignore($exceptId),
+            ],
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9\-]*$/', Rule::unique('katalog_produk', 'slug')->ignore($exceptId)],
             'stok' => 'nullable|integer|min:0',
             'stok_minimum' => 'nullable|integer|min:0',
@@ -204,5 +229,34 @@ class produkController extends Controller
         $validated['stok_minimum'] = (int) ($validated['stok_minimum'] ?? 0);
 
         return $validated;
+    }
+
+    /**
+     * Whitespace awal/akhir tidak menjadi bagian dari identitas barcode.
+     * Empty string dikonversi menjadi null supaya bisa digenerate otomatis.
+     */
+    private function normalizeBarcode(Request $request): void
+    {
+        if (! $request->exists('barcode')) {
+            return;
+        }
+
+        $barcode = $request->input('barcode');
+        if (! is_string($barcode)) {
+            return; // Biarkan Laravel validator menangani tipe yang tidak valid.
+        }
+
+        $barcode = trim($barcode);
+        $request->merge(['barcode' => $barcode === '' ? null : $barcode]);
+    }
+
+ 
+    private function generateBarcode(): string
+    {
+        do {
+            $barcode = 'KKB-PRD-'.Str::upper(Str::random(10));
+        } while (produk::query()->where('barcode', $barcode)->exists());
+
+        return $barcode;
     }
 }

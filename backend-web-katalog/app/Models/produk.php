@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class produk extends Model
 {
@@ -30,5 +31,10 @@ class produk extends Model
     public function kategori()
     {
         return $this->belongsTo(kategori::class, 'kategori_id');
+    }
+
+    public function varian(): HasMany
+    {
+        return $this->hasMany(ProdukVarian::class, 'produk_id');
     }
 }
