@@ -1,0 +1,30 @@
+.kuki-label-overlay {
+  position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.65);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.kuki-label-dialog {
+  box-sizing: border-box; width: min(100%, 430px); max-height: 88vh; overflow: auto;
+  background: #fffdf5; color: #201408; border: 1px solid #201408;
+  border-radius: 16px; padding: 18px; box-shadow: 4px 5px 0 #140b04;
+}
+.kuki-label-dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 18px; }
+.kuki-label-close { border: none; background: none; font-size: 24px; cursor: pointer; color: inherit; }
+.kuki-label-form { display: grid; gap: 12px; margin-top: 14px; }
+.kuki-label-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+.kuki-label-form select, .kuki-label-form input { box-sizing: border-box; min-width: 0; width: 100%; border: 1px solid #857c70; border-radius: 7px; padding: 8px; background: #fff; color: #111; font: inherit; }
+.kuki-label-product { font-weight: 700; overflow-wrap: anywhere; }
+.kuki-label-product small { display: block; font-weight: 400; margin-top: 4px; }
+.kuki-label-result { font-size: 12px; background: #f5f0e7; padding: 10px; border-radius: 8px; }
+.kuki-label-result p { margin: 0 0 6px; }
+.kuki-label-result small { display: block; margin-top: 5px; line-height: 1.5; }
+.kuki-label-error { color: #b8201e; font-weight: 700; }
+.kuki-label-dialog-actions { display: flex; gap: 9px; justify-content: flex-end; margin-top: 16px; }
+
+/* Tambahan khusus pilihan jumlah cetak berdasarkan stok. */
+.kuki-label-stock {background:#fff3d2; border:1px solid #ddc88e; padding:9px; border-radius:8px; font-size:13px;}
+.kuki-label-stock small {display:block; font-weight:400; margin-top:4px; line-height:1.4;}
+.kuki-label-choices {border:1px solid #d8c8ab; border-radius:8px; padding:9px 10px; margin:0; display:grid; gap:8px;}
+.kuki-label-choices legend {padding:0 4px; font-size:13px; font-weight:700;}
+.kuki-label-choices label {display:flex; align-items:center; gap:8px; font-size:13px;}
+.kuki-label-choices input[type=radio] {width:auto; min-width:0; margin:0; accent-color:#e8a100;}
+.kuki-label-help {font-size:12px; margin:0;}

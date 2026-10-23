@@ -8,11 +8,15 @@ import DetailProdukPage from './pages/DetailProdukPage'
 import LoginPage from './pages/admin/LoginPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import ProdukAdminPage from './pages/admin/ProdukAdminPage'
+import ProduksiHarianPage from './pages/admin/ProduksiHarianPage'
 import ProdukFormPage from './pages/admin/ProdukFormPage'
 import KategoriAdminPage from './pages/admin/KategoriAdminPage'
 import ChatAdminPage from './pages/admin/ChatAdminPage'
+import TestimonialAdminPage from './pages/admin/TestimonialAdminPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import AdminRoute from './pages/admin/AdminRoute'
+import ManagementRoute from './pages/admin/ManagementRoute'
+import ManagementDashboardPage from './pages/admin/ManagementDashboardPage'
 import './pages/sections.css'
 import './App.css'
 import SmoothScroll from './components/SmoothScroll'
@@ -31,6 +35,14 @@ function App() {
         <Route path="/produk/:id" element={<DetailProdukPage />} />
         <Route path="/admin/login" element={<LoginPage />} />
         <Route
+          path="/management/dashboard"
+          element={
+            <ManagementRoute>
+              <ManagementDashboardPage />
+            </ManagementRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <AdminRoute>
@@ -43,6 +55,14 @@ function App() {
           element={
             <AdminRoute>
               <ProdukAdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/produksi-harian"
+          element={
+            <AdminRoute>
+              <ProduksiHarianPage />
             </AdminRoute>
           }
         />
@@ -67,6 +87,14 @@ function App() {
           element={
             <AdminRoute>
               <KategoriAdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/testimonial"
+          element={
+            <AdminRoute>
+              <TestimonialAdminPage />
             </AdminRoute>
           }
         />

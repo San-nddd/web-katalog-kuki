@@ -1,10 +1,12 @@
+import useAdminTranslation from '../../hooks/useAdminTranslation'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import { getProdukById, simpanProduk, uploadGambarProduk } from '../../services/produkService'
 import { getKategori } from '../../services/kategoriService'
 import { assetUrl } from '../../services/api'
-import ImageUpload from '../../components/ImageUpload'
+import ImageUploadEditor from '../../components/ImageUploadEditor/ImageUploadEditor'
+import BarcodePreview from '../../components/BarcodePreview'
 const KOSONG = {
   nama: '',
   deskripsi: '',
@@ -26,6 +28,8 @@ function ProdukFormPage() {
 }
 
 function ProdukFormInner({ id, isEdit }) {
+  const { t } = useAdminTranslation()
+
   const navigate = useNavigate()
 
   const [form, setForm] = useState(KOSONG)
@@ -35,6 +39,7 @@ function ProdukFormInner({ id, isEdit }) {
   const [error, setError] = useState('')
   const [loadedId, setLoadedId] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [savedLabel, setSavedLabel] = useState(null)
 
   // Saat mode edit berganti, form dianggap belum dimuat sampai data terbaru masuk.
   const loading = isEdit && loadedId !== String(id)
@@ -65,13 +70,18 @@ function ProdukFormInner({ id, isEdit }) {
           metadataAi: item.metadataAi || '',
         })
         setGambarLama(item.gambar)
+        setSavedLabel({
+          name: String(item.nama ?? '').trim(),
+          barcode: String(item.barcode ?? '').trim(),
+          stok: String(item.stok ?? 0),
+        })
         setLoadedId(String(id))
         setError('')
       })
       .catch((err) => {
         if (!active) return
         setLoadedId(String(id))
-        setError(err.message || 'Gagal memuat produk.')
+        setError(err.message ||t("Gagal memuat produk."))
       })
 
     return () => {
@@ -87,12 +97,12 @@ function ProdukFormInner({ id, isEdit }) {
     setError('')
 
     if (!form.nama.trim() || !form.deskripsi.trim() || !form.harga) {
-      setError('Nama, deskripsi, dan harga wajib diisi.')
+      setError(t("Nama, deskripsi, dan harga wajib diisi."))
       return
     }
 
     if (Number(form.harga) < 0) {
-      setError('Harga tidak boleh negatif.')
+      setError(t("Harga tidak boleh negatif."))
       return
     }
 
@@ -126,17 +136,17 @@ function ProdukFormInner({ id, isEdit }) {
 
       navigate('/admin/produk')
     } catch (err) {
-      setError(err.message || 'Gagal menyimpan produk.')
+      setError(err.message ||t("Gagal menyimpan produk."))
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <AdminLayout title={isEdit ? 'Ubah Produk' : 'Tambah Produk'}>
+    <AdminLayout title={isEdit ?t("Ubah Produk") :t("Tambah Produk")}>
       <div className="admin-form-toolbar">
         <Link to="/admin/produk" className="admin-btn admin-btn-ghost">
-          ← Kembali
+          {t("← Kembali")}
         </Link>
       </div>
 
@@ -148,27 +158,27 @@ function ProdukFormInner({ id, isEdit }) {
 
       <section className="admin-card">
         {loading ? (
-          <p className="admin-empty">Memuat produk...</p>
+          <p className="admin-empty">{t("Memuat produk...")}</p>
         ) : (
           <form className="admin-form" onSubmit={handleSubmit}>
             <label className="admin-field">
-              <span>Nama Produk *</span>
-              <input type="text" value={form.nama} onChange={setField('nama')} placeholder="Croissant Butter" />
+              <span>{t("Nama Produk *")}</span>
+              <input type="text" value={form.nama} onChange={setField('nama')} placeholder={t("Croissant Butter")} />
             </label>
 
             <label className="admin-field">
-              <span>Deskripsi *</span>
+              <span>{t("Deskripsi *")}</span>
               <textarea
                 rows="4"
                 value={form.deskripsi}
                 onChange={setField('deskripsi')}
-                placeholder="Croissant renyah dengan aroma butter..."
+                placeholder={t("Croissant renyah dengan aroma butter...")}
               />
             </label>
 
             <div className="admin-form-grid">
               <label className="admin-field">
-                <span>Harga (Rp) *</span>
+                <span>{t("Harga (Rp) *")}</span>
                 <input
                   type="number"
                   min="0"
@@ -179,9 +189,9 @@ function ProdukFormInner({ id, isEdit }) {
               </label>
 
               <label className="admin-field">
-                <span>Kategori</span>
+                <span>{t("Kategori")}</span>
                 <select value={form.kategoriId} onChange={setField('kategoriId')}>
-                  <option value="">Tanpa kategori</option>
+                  <option value="">{t("Tanpa kategori")}</option>
                   {kategori.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
@@ -191,12 +201,12 @@ function ProdukFormInner({ id, isEdit }) {
               </label>
 
               <label className="admin-field">
-                <span>Stok</span>
+                <span>{t("Stok")}</span>
                 <input type="number" min="0" value={form.stok} onChange={setField('stok')} />
               </label>
 
               <label className="admin-field">
-                <span>Stok Minimum</span>
+                <span>{t("Stok Minimum")}</span>
                 <input
                   type="number"
                   min="0"
@@ -206,45 +216,55 @@ function ProdukFormInner({ id, isEdit }) {
               </label>
 
               <label className="admin-field">
-                <span>Barcode / SKU</span>
-                <input type="text" value={form.barcode} onChange={setField('barcode')} placeholder="KKB-001" />
+                <span>{t("Barcode / SKU")}</span>
+                <input type="text" value={form.barcode} onChange={setField('barcode')} placeholder={t("KKB-001")} />
               </label>
 
               <label className="admin-field">
-                <span>Slug (opsional)</span>
-                <input type="text" value={form.slug} onChange={setField('slug')} placeholder="croissant-butter" />
+                <span>{t("Slug (opsional)")}</span>
+                <input type="text" value={form.slug} onChange={setField('slug')} placeholder={t("croissant-butter")} />
               </label>
             </div>
 
+            <BarcodePreview
+              produkId={id}
+              stok={Number(form.stok || 0)}
+              value={form.barcode}
+              productName={form.nama}
+              canPrint={Boolean(
+                isEdit && !saving && !error && savedLabel &&
+                savedLabel.barcode === form.barcode.trim() &&
+                savedLabel.name === form.nama.trim() &&
+                savedLabel.stok === String(form.stok || 0)
+              )}
+            />
+
             <label className="admin-field">
-              <span>Informasi AI (bahan, alergen, textur)</span>
+              <span>{t("Informasi AI (bahan, alergen, textur)")}</span>
               <textarea
                 rows="3"
                 value={form.metadataAi}
                 onChange={setField('metadataAi')}
-                placeholder="Bahan utama: tepung, butter, gula..."
+                placeholder={t("Bahan utama: tepung, butter, gula...")}
               />
             </label>
 
-            <label className="admin-field">
-              <span>{isEdit ? 'Ganti Gambar' : 'Gambar Produk'}</span>
-              <ImageUpload
-                value={gambarLama ? assetUrl(gambarLama) : null}
+            <div className="admin-field">
+              <ImageUploadEditor
+                label={isEdit ?t("Ganti / Edit Gambar Produk") :t("Gambar Produk")}
+                initialUrl={gambarLama ? assetUrl(gambarLama) : ''}
+                defaultRatio="1:1"
+                maxFileMB={10}
                 onChange={(file) => setGambarFile(file)}
-                onRemove={() => setGambarFile(null)}
-                label={isEdit ? 'Ganti Gambar' : 'Gambar Produk'}
-                accept="image/*"
-                maxSizeMB={5}
-                previewSize={140}
               />
-            </label>
+            </div>
 
             <div className="admin-form-actions">
               <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
-                {saving ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah Produk'}
+                {saving ?t("Menyimpan...") : isEdit ?t("Simpan Perubahan") :t("Tambah Produk")}
               </button>
               <Link to="/admin/produk" className="admin-btn admin-btn-ghost">
-                Batal
+                {t("Batal")}
               </Link>
             </div>
           </form>

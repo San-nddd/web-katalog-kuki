@@ -1,0 +1,22 @@
+/* Tambahan khusus Management Production. Tidak mengubah CSS homepage atau Admin CMS. */
+.management-heading-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .7rem; }
+.management-production-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .9rem; margin: .5rem 0 1.7rem; }
+.management-production-summary > div { display: flex; flex-direction: column; gap: .25rem; padding: 1rem; border: 1px solid rgba(100,60,30,.15); border-radius: 12px; background: rgba(255,246,217,.12); }
+.management-production-summary strong { font-size: clamp(1.4rem,2.7vw,2.15rem); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.management-production-summary span { font-size: .83rem; opacity: .8; }
+.management-production-chart { margin-bottom: 1.5rem; }
+.management-production-chart h3, .management-production-table-title { font-size: 1.1rem; margin: 0 0 .45rem; }
+.management-production-bars { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: .8rem; padding: .5rem .4rem; border-bottom: 1px solid rgba(100,60,30,.2); }
+.management-production-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; gap: .22rem; font-variant-numeric: tabular-nums; }
+.management-production-track { height: 140px; width: min(100%,55px); display: flex; align-items: flex-end; border-radius: 5px 5px 0 0; background: rgba(100,60,30,.065); overflow: hidden; }
+.management-production-bar { width: 100%; min-height: 0; border-radius: 5px 5px 0 0; background: var(--orange, #d8843f); }
+.management-production-number, .management-production-dayname, .management-production-day small { font-size: .78rem; }
+.management-production-alerts { margin: 0; padding: 0 0 0 1.2rem; }
+.management-production-alerts li { margin: .55rem 0; line-height: 1.55; }
+@media (max-width: 760px) {
+ .management-production-summary { grid-template-columns: repeat(2, minmax(0,1fr)); }
+ .management-production-bars { gap: .3rem; }
+ .management-production-track { height: 115px; }
+ .management-production-number, .management-production-dayname, .management-production-day small { font-size: .65rem; }
+}
+@media (max-width: 380px) { .management-production-summary { grid-template-columns: 1fr 1fr; } }

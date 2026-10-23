@@ -854,30 +854,6 @@ export const products = [
 
 export const featuredProducts = products.slice(0, 4)
 
-export const testimonials = [
-  {
-    id: 1,
-    quote:
-      'Kuki Bakehouse selalu jadi andalan kami untuk setiap acara. Burnt Cheesecake-nya juara, dan custom cake-nya selalu tepat sesuai keinginan.',
-    name: 'Michael Turner',
-    role: 'Senior Manager @ Lumora Solutions',
-  },
-  {
-    id: 2,
-    quote:
-      'Garden Cheesecake-nya lembut banget, gak terlalu manis. Sudah langganan dua tahun dan kualitasnya tidak pernah mengecewakan.',
-    name: 'Sarah Putri',
-    role: 'Food Blogger @ Rasa Harian',
-  },
-  {
-    id: 3,
-    quote:
-      'Pesan Tiramisu dan Lapis Legit untuk keluarga, hasilnya cantik dan rasanya luar biasa. Semua tamu bertanya di mana pesannya.',
-    name: 'Daniel Hartono',
-    role: 'Event Director @ Svara Creative',
-  },
-]
-
 export const bakers = [
   { id: 1, name: 'Raka Wijaya', role: 'Head Pastry Chef' },
   { id: 2, name: 'Nadia Kusuma', role: 'Pastry & Sourdough' },

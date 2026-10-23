@@ -4,8 +4,10 @@ import AdminLayout from './AdminLayout'
 import { getProduk } from '../../services/produkService'
 import { getKategori } from '../../services/kategoriService'
 import { formatRupiah } from '../../utils/mockData'
+import useAdminTranslation from '../../hooks/useAdminTranslation'
 
 function DashboardPage() {
+  const { t } = useAdminTranslation()
   const [produk, setProduk] = useState([])
   const [kategori, setKategori] = useState([])
   const [error, setError] = useState('')
@@ -36,7 +38,7 @@ function DashboardPage() {
   ]
 
   return (
-    <AdminLayout title="Dashboard">
+    <AdminLayout title={t("Dashboard")}>
       {error && (
         <div className="admin-alert" role="alert">
           {error}
@@ -54,28 +56,28 @@ function DashboardPage() {
 
       <section className="admin-card">
         <div className="admin-card-head">
-          <h2 className="display-font">Produk Terbaru</h2>
+          <h2 className="display-font">{t("Produk Terbaru")}</h2>
           <div className="admin-card-actions">
             <Link to="/admin/kategori" className="admin-btn admin-btn-ghost">
-              Kelola Kategori
+              {t("Kelola Kategori")}
             </Link>
             <Link to="/admin/produk" className="admin-btn admin-btn-primary">
-              Kelola Produk
+              {t("Kelola Produk")}
             </Link>
           </div>
         </div>
 
         {terbaru.length === 0 ? (
-          <p className="admin-empty">Belum ada produk. Tambahkan produk pertama Anda.</p>
+          <p className="admin-empty">{t("Belum ada produk. Tambahkan produk pertama Anda.")}</p>
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Produk</th>
-                  <th>Kategori</th>
-                  <th>Harga</th>
-                  <th>Stok</th>
+                  <th>{t("Produk")}</th>
+                  <th>{t("Kategori")}</th>
+                  <th>{t("Harga")}</th>
+                  <th>{t("Stok")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -96,12 +98,12 @@ function DashboardPage() {
       {stokMenipis.length > 0 && (
         <section className="admin-card">
           <div className="admin-card-head">
-            <h2 className="display-font">Perhatian Stok</h2>
+            <h2 className="display-font">{t("Perhatian Stok")}</h2>
           </div>
           <ul className="admin-list">
             {stokMenipis.map((item) => (
               <li key={item.id}>
-                <strong>{item.nama}</strong> — sisa {item.stok} (minimum {item.stokMinimum})
+                <strong>{item.nama}</strong> {t("— sisa")} {item.stok} {t("(minimum")} {item.stokMinimum})
               </li>
             ))}
           </ul>

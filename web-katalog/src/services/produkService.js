@@ -1,8 +1,4 @@
-// Service data produk: katalog publik + pengelolaan Admin.
-
 import { api, assetUrl } from './api'
-
-// Petakan response Laravel (nama_produk, ...) ke bentuk yang dipakai UI publik.
 export function mapProduk(item) {
   if (!item) return null
 
@@ -46,7 +42,12 @@ export async function simpanProduk(payload) {
     stok: payload.stok ?? 0,
     stok_minimum: payload.stokMinimum ?? 0,
     metadata_ai: payload.metadataAi || null,
-    gambar_produk: payload.gambar || null,
+  }
+
+  // Jangan menimpa gambar lama dengan null saat mengedit data produk.
+  // Gambar yang dipilih di form diunggah melalui uploadGambarProduk().
+  if (payload.gambar !== undefined) {
+    body.gambar_produk = payload.gambar
   }
 
   if (payload.id) {
@@ -54,7 +55,10 @@ export async function simpanProduk(payload) {
     return response.data
   }
 
-  return api.post('/produk', body)
+  // Samakan bentuk return create & update: keduanya berupa objek produk.
+  // Penting agar ProdukFormPage bisa membaca saved.id untuk upload gambar.
+  const response = await api.post('/produk', body)
+  return response.data
 }
 
 export async function hapusProduk(id) {

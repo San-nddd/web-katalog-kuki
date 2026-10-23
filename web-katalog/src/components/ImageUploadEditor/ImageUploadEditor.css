@@ -1,0 +1,31 @@
+/* Semua selector dibuat khusus agar tidak menimpa CSS UI Kuki Bakehouse. */
+.kuki-image-editor { font: inherit; }
+.kuki-image-editor__label { display: block; font-weight: 600; margin-bottom: 8px; }
+.kuki-image-editor__preview { display: flex; align-items: center; justify-content: flex-start; margin: 10px 0; }
+.kuki-image-editor__preview img { display: block; width: auto; max-width: min(100%, 360px); height: auto; max-height: 240px; object-fit: contain; border-radius: 8px; }
+.kuki-image-editor__file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.kuki-image-editor__actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.kuki-image-editor__button { font: inherit; color: #fff; background: #303030; border: 1px solid #555; border-radius: 8px; padding: 9px 13px; cursor: pointer; }
+.kuki-image-editor__button:disabled { opacity: .55; cursor: not-allowed; }
+.kuki-image-editor__button--primary { background: #4caf50; color: #112313; border-color: #4caf50; font-weight: 700; }
+.kuki-image-editor__hint { color: #a6a6a6; font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.kuki-image-editor__error { color: #ff9999; font-size: 13px; }
+.kuki-image-editor__overlay { position: fixed; z-index: 10000; inset: 0; background: rgba(0,0,0,.85); display: grid; place-items: center; padding: 12px; box-sizing: border-box; }
+.kuki-image-editor__dialog { font: inherit; width: 100%; max-width: 720px; max-height: 94vh; overflow: auto; background: #1f1f1f; color: #fff; border: 1px solid #454545; border-radius: 14px; padding: 16px; box-sizing: border-box; }
+.kuki-image-editor__header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.kuki-image-editor__header h2 { font-size: 19px; font-weight: 700; margin: 0; }
+.kuki-image-editor__crop-area { height: min(44vh, 340px); min-height: 240px; width: 100%; position: relative; overflow: hidden; background: #111; border-radius: 10px; margin: 12px 0; }
+.kuki-image-editor__controls { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px 20px; }
+.kuki-image-editor__field { display: flex; flex-direction: column; gap: 5px; min-width: 0; font-size: 13px; }
+.kuki-image-editor__field input, .kuki-image-editor__field select { width: 100%; min-width: 0; box-sizing: border-box; font: inherit; }
+.kuki-image-editor__field input[type=number], .kuki-image-editor__field select { color: #fff; background: #2c2c2c; border: 1px solid #555; border-radius: 7px; padding: 8px; }
+.kuki-image-editor__field input[type=range] { accent-color: #4caf50; }
+.kuki-image-editor__dimension-row { display: flex; gap: 10px; }
+.kuki-image-editor__dimension-row > * { flex: 1; }
+.kuki-image-editor__footer { display: flex; flex-direction: column; gap: 12px; justify-content: space-between; margin-top: 18px; }
+@media (max-width: 540px) { .kuki-image-editor__controls { grid-template-columns: 1fr; } .kuki-image-editor__dialog { padding: 12px; } }
+
+/* Area transparan mudah dikenali melalui checkerboard. */
+.kuki-image-editor__preview img { background-color: #eee; background-image: linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%); background-size: 16px 16px; background-position: 0 0,0 8px,8px -8px,-8px 0; }
+.kuki-image-editor__bg-tools { margin: 12px 0; }
+.kuki-image-editor__crop-area { background-color: #333; background-image: linear-gradient(45deg,#444 25%,transparent 25%),linear-gradient(-45deg,#444 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#444 75%),linear-gradient(-45deg,transparent 75%,#444 75%); background-size: 18px 18px; }

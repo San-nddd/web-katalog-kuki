@@ -1,0 +1,99 @@
+.management-layout {
+  --management-accent: var(--orange);
+}
+
+.management-sidebar {
+  gap: 1.5rem;
+}
+
+.management-nav a {
+  font-size: 0.88rem;
+}
+
+.management-role {
+  color: var(--orange);
+  font-weight: 700;
+}
+
+.management-admin-link {
+  color: var(--muted-dark);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.management-admin-link:hover {
+  color: var(--cream);
+}
+
+.management-content {
+  gap: 1.5rem;
+}
+
+.management-section {
+  scroll-margin-top: 1rem;
+}
+
+.management-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.management-section-heading h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.management-section-heading > span,
+.management-card-caption {
+  color: var(--muted-cream);
+  font-size: 0.85rem;
+}
+
+.management-data-note {
+  color: var(--muted-cream);
+  font-size: 0.9rem;
+  margin: 1rem 0 0;
+}
+
+.management-unavailable {
+  padding: 1rem;
+  border: 1px dashed var(--brown-dark);
+  border-radius: var(--radius-sm);
+  color: var(--muted-cream);
+  line-height: 1.6;
+}
+
+.management-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 760px) {
+  .management-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+
+  .management-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .management-main .admin-topbar,
+  .management-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .management-error {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

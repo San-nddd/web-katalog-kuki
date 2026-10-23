@@ -16,6 +16,7 @@ import {
 } from '../../components/icons'
 import { api } from '../../services/api'
 import './admin.css'
+import useAdminTranslation from '../../hooks/useAdminTranslation'
 
 const STATUS_LABEL = {
   AI_ACTIVE: 'AI Aktif',
@@ -38,6 +39,7 @@ const LIST_POLL_INTERVAL = 3000
 const BOTTOM_THRESHOLD = 80
 
 function AdminChatPage() {
+  const { t } = useAdminTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
   const isDetail = Boolean(id)
@@ -375,14 +377,14 @@ function AdminChatPage() {
 
   if (isDetail && !selectedObrolan && !loading) {
     return (
-      <AdminLayout title="Chat Admin">
+      <AdminLayout title={t("Chat Admin")}>
         <div className="admin-card admin-chat-not-found">
-          <p>Obrolan tidak ditemukan</p>
+          <p>{t("Obrolan tidak ditemukan")}</p>
           <button
             className="admin-btn admin-btn-primary"
             onClick={handleKembali}
           >
-            Kembali ke Daftar
+            {t("Kembali ke Daftar")}
           </button>
         </div>
       </AdminLayout>
@@ -410,24 +412,24 @@ function AdminChatPage() {
       {!isDetail ? (
         <section className="admin-card">
           <div className="admin-card-head">
-            <h2 className="display-font">Kelola Chat</h2>
+            <h2 className="display-font">{t("Kelola Chat")}</h2>
 
             <div className="admin-stats-row">
               {stats && (
                 <>
                   <span className="admin-stat">
                     <strong>{stats.total_pending || 0}</strong>
-                    Menunggu
+                    {t("Menunggu")}
                   </span>
 
                   <span className="admin-stat">
                     <strong>{stats.total_active || 0}</strong>
-                    Aktif
+                    {t("Aktif")}
                   </span>
 
                   <span className="admin-stat">
                     <strong>{stats.total_closed || 0}</strong>
-                    Selesai
+                    {t("Selesai")}
                   </span>
                 </>
               )}
@@ -435,26 +437,26 @@ function AdminChatPage() {
               {unansweredCount > 0 && (
                 <span className="admin-stat admin-stat-warning">
                   <strong>{unansweredCount}</strong>
-                  Perlu Tindakan
+                  {t("Perlu Tindakan")}
                 </span>
               )}
             </div>
           </div>
 
           {loading ? (
-            <p className="admin-empty">Memuat obrolan...</p>
+            <p className="admin-empty">{t("Memuat obrolan...")}</p>
           ) : obrolanList.length === 0 ? (
-            <p className="admin-empty">Belum ada obrolan yang membutuhkan Admin.</p>
+            <p className="admin-empty">{t("Belum ada obrolan yang membutuhkan Admin.")}</p>
           ) : (
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Pengunjung</th>
-                    <th>Status</th>
-                    <th>Pesan Terakhir</th>
-                    <th>Waktu</th>
-                    <th>Aksi</th>
+                    <th>{t("Pengunjung")}</th>
+                    <th>{t("Status")}</th>
+                    <th>{t("Pesan Terakhir")}</th>
+                    <th>{t("Waktu")}</th>
+                    <th>{t("Aksi")}</th>
                   </tr>
                 </thead>
 
@@ -467,7 +469,7 @@ function AdminChatPage() {
                     >
                       <td>
                         <strong>
-                          {obrolan.pengunjung?.nama || 'Pengunjung'}
+                          {obrolan.pengunjung?.nama || t("Pengunjung")}
                         </strong>
 
                         {obrolan.pengunjung?.email && (
@@ -495,7 +497,7 @@ function AdminChatPage() {
 
                       <td>
                         <span className="admin-message-preview">
-                          {obrolan.pesan_terakhir?.isi || 'Belum ada pesan'}
+                          {obrolan.pesan_terakhir?.isi || t("Belum ada pesan")}
                         </span>
                       </td>
 
@@ -513,7 +515,7 @@ function AdminChatPage() {
                             handlePilihObrolan(obrolan)
                           }}
                         >
-                          Buka
+                          {t("Buka")}
                         </button>
                       </td>
                     </tr>
@@ -533,12 +535,12 @@ function AdminChatPage() {
                 onClick={handleKembali}
               >
                 <ArrowLeftIcon width="16" height="16" />
-                Kembali
+                {t("Kembali")}
               </button>
 
               <div className="admin-chat-header-info">
                 <strong>
-                  {selectedObrolan?.pengunjung?.nama || 'Pengunjung'}
+                  {selectedObrolan?.pengunjung?.nama || t("Pengunjung")}
                 </strong>
 
                 <small className="admin-sub">
@@ -547,14 +549,14 @@ function AdminChatPage() {
                   {selectedObrolan?.session_id && (
                     <span>
                       {' '}
-                      • Session: {selectedObrolan.session_id.slice(0, 8)}...
+                      {t("• Session:")} {selectedObrolan.session_id.slice(0, 8)}...
                     </span>
                   )}
                 </small>
 
                 {selectedObrolan?.product && (
                   <span className="admin-badge admin-badge-info admin-chat-product-badge">
-                    Produk: {selectedObrolan.product.nama}
+                    {t("Produk:")} {selectedObrolan.product.nama}
                   </span>
                 )}
               </div>
@@ -574,14 +576,14 @@ function AdminChatPage() {
                     <AlertCircleIcon width="12" height="12" />
                     {secondsRemaining !== null
                       ? `Konfirmasi ${secondsRemaining}s`
-                      : 'Menunggu konfirmasi'}
+                      : t("Menunggu konfirmasi")}
                   </span>
                 )}
 
                 {status === 'WAITING_ADMIN' && (
                   <span className="admin-badge admin-badge-warning">
                     <AlertCircleIcon width="12" height="12" />
-                    Pelanggan menunggu
+                    {t("Pelanggan menunggu")}
                   </span>
                 )}
               </div>
@@ -595,14 +597,14 @@ function AdminChatPage() {
                   <div>
                     <strong>
                       {status === 'HANDOVER_PENDING'
-                        ? 'Pelanggan meminta bantuan Admin.'
-                        : 'Pelanggan masih menunggu bantuan.'}
+                        ? t("Pelanggan meminta bantuan Admin.")
+                        : t("Pelanggan masih menunggu bantuan.")}
                     </strong>
 
                     {status === 'HANDOVER_PENDING' &&
                       secondsRemaining !== null && (
                         <small>
-                          Sisa waktu konfirmasi cepat: {secondsRemaining} detik
+                          {t("Sisa waktu konfirmasi cepat:")} {secondsRemaining} {t("detik")}
                         </small>
                       )}
                   </div>
@@ -613,7 +615,7 @@ function AdminChatPage() {
                     onClick={handleAmbilChat}
                     disabled={taking}
                   >
-                    {taking ? 'Mengambil...' : 'Ambil Chat'}
+                    {taking ? t("Mengambil...") : t("Ambil Chat")}
                   </button>
                 </>
               )}
@@ -621,8 +623,8 @@ function AdminChatPage() {
               {status === 'ADMIN_ACTIVE' && (
                 <>
                   <div>
-                    <strong>Anda sedang menangani percakapan ini.</strong>
-                    <small>AI dikunci sampai percakapan selesai.</small>
+                    <strong>{t("Anda sedang menangani percakapan ini.")}</strong>
+                    <small>{t("AI dikunci sampai percakapan selesai.")}</small>
                   </div>
 
                   <button
@@ -631,7 +633,7 @@ function AdminChatPage() {
                     onClick={handleSelesai}
                     disabled={closing}
                   >
-                    {closing ? 'Menyelesaikan...' : 'Selesai'}
+                    {closing ? t("Menyelesaikan...") : t("Selesai")}
                   </button>
                 </>
               )}
@@ -645,10 +647,10 @@ function AdminChatPage() {
               onScroll={handleMessagesScroll}
             >
               {loading ? (
-                <div className="admin-chat-loading">Memuat pesan...</div>
+                <div className="admin-chat-loading">{t("Memuat pesan...")}</div>
               ) : messages.length === 0 ? (
                 <div className="admin-chat-empty">
-                  Belum ada pesan dalam obrolan ini.
+                  {t("Belum ada pesan dalam obrolan ini.")}
                 </div>
               ) : (
                 messages.map((pesan) => (
@@ -701,7 +703,7 @@ function AdminChatPage() {
                     }
                     rows={3}
                     disabled={sending || !selectedObrolan || !canReply}
-                    aria-label="Balasan admin"
+                    aria-label={t("Balasan admin")}
                   />
 
                   <button
@@ -720,12 +722,12 @@ function AdminChatPage() {
                           className="admin-btn-spinner"
                           aria-hidden="true"
                         />
-                        Mengirim...
+                        {t("Mengirim...")}
                       </>
                     ) : (
                       <>
                         <SendIcon width="16" height="16" />
-                        Kirim
+                        {t("Kirim")}
                       </>
                     )}
                   </button>
@@ -742,7 +744,7 @@ function AdminChatPage() {
 
             {isClosed && (
               <div className="admin-chat-closed">
-                Percakapan sudah selesai dan tersimpan di riwayat.
+                {t("Percakapan sudah selesai dan tersimpan di riwayat.")}
               </div>
             )}
           </div>

@@ -1,0 +1,150 @@
+KUKI ADMIN I18N - LAPORAN CAKUPAN
+Halaman berubah: 16
+String UI statis dibungkus t(): 210
+Belum punya terjemahan EN dalam adminTranslations.js: 137
+
+MASIH PERLU DITERJEMAHKAN (tidak ada padanan di kamus):
+src/pages/admin/AdminLayout.jsx:326 | K
+src/pages/admin/AdminLayout.jsx:329 | Kuki Admin
+src/pages/admin/AdminLayout.jsx:539 | ×
+src/pages/admin/AdminSettingsPage.jsx:226 | KUKI ADMIN
+src/pages/admin/AdminSettingsPage.jsx:245 | Atur browser push, toast, dan suara Dashboard Admin.
+src/pages/admin/AdminSettingsPage.jsx:252 | Web Push
+src/pages/admin/AdminSettingsPage.jsx:255 | Aktif pada browser ini.
+src/pages/admin/AdminSettingsPage.jsx:277 | Mengaktifkan...
+src/pages/admin/AdminSettingsPage.jsx:298 | Toast di Dashboard
+src/pages/admin/AdminSettingsPage.jsx:305 | Suara notifikasi dalam Dashboard
+src/pages/admin/AdminSettingsPage.jsx:311 | Suara saat customer minta Admin
+src/pages/admin/AdminSettingsPage.jsx:312 | Pilih suara khusus untuk HANDOVER_REQUESTED.
+src/pages/admin/AdminSettingsPage.jsx:322 | Soft
+src/pages/admin/AdminSettingsPage.jsx:323 | Chime
+src/pages/admin/AdminSettingsPage.jsx:324 | Alert
+src/pages/admin/AdminSettingsPage.jsx:325 | Audio Custom
+src/pages/admin/AdminSettingsPage.jsx:326 | Tanpa suara
+src/pages/admin/AdminSettingsPage.jsx:332 | Audio custom handover
+src/pages/admin/AdminSettingsPage.jsx:335 | Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB.
+src/pages/admin/AdminSettingsPage.jsx:341 | Import Audio
+src/pages/admin/AdminSettingsPage.jsx:382 | Tes Suara Handover
+src/pages/admin/AdminSettingsPage.jsx:388 | Suara saat customer mengirim pesan
+src/pages/admin/AdminSettingsPage.jsx:389 | Pilih suara khusus untuk CUSTOMER_NEW_MESSAGE.
+src/pages/admin/AdminSettingsPage.jsx:402 | Soft
+src/pages/admin/AdminSettingsPage.jsx:403 | Chime
+src/pages/admin/AdminSettingsPage.jsx:404 | Alert
+src/pages/admin/AdminSettingsPage.jsx:405 | Audio Custom
+src/pages/admin/AdminSettingsPage.jsx:406 | Tanpa suara
+src/pages/admin/AdminSettingsPage.jsx:412 | Audio custom pesan customer
+src/pages/admin/AdminSettingsPage.jsx:415 | Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB.
+src/pages/admin/AdminSettingsPage.jsx:421 | Import Audio
+src/pages/admin/AdminSettingsPage.jsx:462 | Tes Suara Pesan
+src/pages/admin/AdminSettingsPage.jsx:493 | Bunyi saat customer minta Admin
+src/pages/admin/AdminSettingsPage.jsx:503 | Bunyi saat customer kirim pesan baru
+src/pages/admin/AdminSettingsPage.jsx:515 | Sesuaikan tampilan Dashboard tanpa mengubah Public Web.
+src/pages/admin/AdminSettingsPage.jsx:523 | System mengikuti tema perangkat.
+src/pages/admin/AdminSettingsPage.jsx:540 | Kepadatan tampilan
+src/pages/admin/AdminSettingsPage.jsx:541 | Compact cocok untuk layar laptop/tablet.
+src/pages/admin/AdminSettingsPage.jsx:551 | Compact
+src/pages/admin/AdminSettingsPage.jsx:557 | Ukuran teks
+src/pages/admin/AdminSettingsPage.jsx:558 | Memengaruhi area Admin saja.
+src/pages/admin/AdminSettingsPage.jsx:577 | Kurangi animasi
+src/pages/admin/AdminSettingsPage.jsx:588 | Bahasa saat ini diterapkan pada shell Admin dan halaman Pengaturan.
+src/pages/admin/AdminSettingsPage.jsx:595 | Bahasa antarmuka
+src/pages/admin/AdminSettingsPage.jsx:596 | Konten halaman lama akan diterjemahkan bertahap.
+src/pages/admin/AdminSettingsPage.jsx:616 | Refresh Data
+src/pages/admin/AdminSettingsPage.jsx:617 | Atur seberapa sering indikator chat Admin diperbarui.
+src/pages/admin/AdminSettingsPage.jsx:624 | Interval notifikasi chat
+src/pages/admin/AdminSettingsPage.jsx:625 | Semakin cepat, semakin responsif tetapi request API lebih sering.
+src/pages/admin/AdminSettingsPage.jsx:634 | 5 detik
+src/pages/admin/AdminSettingsPage.jsx:635 | 10 detik
+src/pages/admin/AdminSettingsPage.jsx:636 | 30 detik
+src/pages/admin/AdminSettingsPage.jsx:646 | Reset Preferensi
+src/pages/admin/AdminSettingsPage.jsx:647 | Kembalikan pengaturan perangkat ini ke bawaan Kuki Admin.
+src/pages/admin/AdminSettingsPage.jsx:657 | Reset ke Default
+src/pages/admin/AdminSettingsPage.jsx:661 | Preferensi disimpan di browser/perangkat ini. Data produk,
+            kategori, chat, dan akun tidak ikut dihapus.
+src/pages/admin/ChatAdminPage.jsx:413 | Kelola Chat
+src/pages/admin/ChatAdminPage.jsx:438 | Perlu Tindakan
+src/pages/admin/ChatAdminPage.jsx:445 | Memuat obrolan...
+src/pages/admin/ChatAdminPage.jsx:447 | Belum ada obrolan yang membutuhkan Admin.
+src/pages/admin/ChatAdminPage.jsx:455 | Pesan Terakhir
+src/pages/admin/ChatAdminPage.jsx:456 | Waktu
+src/pages/admin/ChatAdminPage.jsx:516 | Buka
+src/pages/admin/ChatAdminPage.jsx:536 | Kembali
+src/pages/admin/ChatAdminPage.jsx:550 | • Session:
+src/pages/admin/ChatAdminPage.jsx:557 | Produk:
+src/pages/admin/ChatAdminPage.jsx:577 | Menunggu konfirmasi
+src/pages/admin/ChatAdminPage.jsx:584 | Pelanggan menunggu
+src/pages/admin/ChatAdminPage.jsx:598 | Pelanggan meminta bantuan Admin.
+src/pages/admin/ChatAdminPage.jsx:599 | Pelanggan masih menunggu bantuan.
+src/pages/admin/ChatAdminPage.jsx:605 | Sisa waktu konfirmasi cepat:
+src/pages/admin/ChatAdminPage.jsx:616 | Mengambil...
+src/pages/admin/ChatAdminPage.jsx:624 | Anda sedang menangani percakapan ini.
+src/pages/admin/ChatAdminPage.jsx:625 | AI dikunci sampai percakapan selesai.
+src/pages/admin/ChatAdminPage.jsx:634 | Menyelesaikan...
+src/pages/admin/ChatAdminPage.jsx:648 | Memuat pesan...
+src/pages/admin/ChatAdminPage.jsx:651 | Belum ada pesan dalam obrolan ini.
+src/pages/admin/ChatAdminPage.jsx:704 | Balasan admin
+src/pages/admin/ChatAdminPage.jsx:745 | Percakapan sudah selesai dan tersimpan di riwayat.
+src/pages/admin/DashboardPage.jsx:57 | Produk Terbaru
+src/pages/admin/DashboardPage.jsx:99 | Perhatian Stok
+src/pages/admin/DashboardPage.jsx:104 | — sisa
+src/pages/admin/DashboardPage.jsx:104 | (minimum
+src/pages/admin/KategoriAdminPage.jsx:139 | Croissant
+src/pages/admin/KategoriAdminPage.jsx:149 | croissant
+src/pages/admin/LoginPage.jsx:19 | Email dan password wajib diisi.
+src/pages/admin/LoginPage.jsx:46 | K
+src/pages/admin/LoginPage.jsx:49 | Masuk untuk mengelola atau memantau Kuki Bakehouse.
+src/pages/admin/LoginPage.jsx:58 | Sesi ini tidak memiliki akses Admin. Silakan masuk dengan akun Admin.
+src/pages/admin/LoginPage.jsx:68 | admin@kukibakehouse.com
+src/pages/admin/LoginPage.jsx:85 | Memproses...
+src/pages/admin/ManagementDashboardPage.jsx:111 | WIB
+src/pages/admin/ManagementLayout.jsx:43 | K
+src/pages/admin/ManagementLayout.jsx:45 | Kuki Management
+src/pages/admin/ProdukFormPage.jsx:166 | Croissant Butter
+src/pages/admin/ProdukFormPage.jsx:175 | Croissant renyah dengan aroma butter...
+src/pages/admin/ProdukFormPage.jsx:220 | KKB-001
+src/pages/admin/ProdukFormPage.jsx:225 | croissant-butter
+src/pages/admin/ProdukFormPage.jsx:248 | Bahan utama: tepung, butter, gula...
+src/pages/admin/ProdukVarianPage.jsx:99 | Nama varian dan harga yang valid wajib diisi.
+src/pages/admin/ProdukVarianPage.jsx:103 | Stok dan stok minimum harus bilangan bulat tidak negatif.
+src/pages/admin/ProdukVarianPage.jsx:155 | Kelola Varian Produk
+src/pages/admin/ProdukVarianPage.jsx:157 | ← Daftar Produk
+src/pages/admin/ProdukVarianPage.jsx:159 | Ubah Produk Utama
+src/pages/admin/ProdukVarianPage.jsx:168 | Varian:
+src/pages/admin/ProdukVarianPage.jsx:170 | Muat Ulang
+src/pages/admin/ProdukVarianPage.jsx:174 | Setiap rasa atau ukuran memiliki SKU, barcode, harga, dan stok sendiri.
+          Produk utama tetap satu kartu di katalog.
+src/pages/admin/ProdukVarianPage.jsx:179 | Barcode produk utama:
+src/pages/admin/ProdukVarianPage.jsx:179 | . Jangan gunakan kode yang sama pada varian.
+src/pages/admin/ProdukVarianPage.jsx:186 | Ubah Varian
+src/pages/admin/ProdukVarianPage.jsx:186 | + Tambah Varian
+src/pages/admin/ProdukVarianPage.jsx:189 | Batal Edit
+src/pages/admin/ProdukVarianPage.jsx:196 | Nama Varian *
+src/pages/admin/ProdukVarianPage.jsx:198 | Contoh: Original / 16 cm
+src/pages/admin/ProdukVarianPage.jsx:201 | Harga Varian (Rp) *
+src/pages/admin/ProdukVarianPage.jsx:203 | Isi harga sebenarnya
+src/pages/admin/ProdukVarianPage.jsx:207 | SKU
+src/pages/admin/ProdukVarianPage.jsx:209 | Kosongkan untuk generate otomatis
+src/pages/admin/ProdukVarianPage.jsx:212 | Barcode Code 128
+src/pages/admin/ProdukVarianPage.jsx:214 | Kosongkan untuk memakai SKU
+src/pages/admin/ProdukVarianPage.jsx:231 | Varian aktif (ditampilkan di katalog)
+src/pages/admin/ProdukVarianPage.jsx:234 | Kode hanya menerima huruf A–Z, angka, dan tanda hubung.
+            Saat mengedit, kode kosong tidak akan menghapus kode yang sudah tersimpan.
+src/pages/admin/ProdukVarianPage.jsx:248 | Daftar Varian (
+src/pages/admin/ProdukVarianPage.jsx:251 | Memuat varian...
+src/pages/admin/ProdukVarianPage.jsx:253 | Belum ada varian. Tambahkan varian pertama melalui form di atas.
+src/pages/admin/ProdukVarianPage.jsx:259 | Varian
+src/pages/admin/ProdukVarianPage.jsx:260 | SKU / Barcode
+src/pages/admin/ProdukVarianPage.jsx:274 | Barcode:
+src/pages/admin/ProdukVarianPage.jsx:282 | Min.
+src/pages/admin/ProdukVarianPage.jsx:294 | Menghapus...
+src/components/BarcodePreview.jsx:20 | Produk Kuki Bakehouse
+src/components/BarcodePrintButton.jsx:120 | ×
+src/components/BarcodePrintButton.jsx:174 | mm,
+                    label
+src/components/BarcodePrintButton.jsx:175 | ×
+src/components/BarcodePrintButton.jsx:175 | mm.
+src/components/ImageUploadEditor/ImageUploadEditor.jsx:281 | ×
+src/components/ImageUploadEditor/ImageUploadEditor.jsx:303 | Memproses...
+
+CATATAN: SetError, teks error dari Laravel, template dinamis, dan data API tidak diubah otomatis.
+Ubah terjemahan dalam kamus lalu jalankan pengujian Admin di kedua bahasa.

@@ -1,0 +1,33 @@
+.kuki-inventory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  margin: 0.7rem 0 1rem;
+}
+.kuki-inventory-filter {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+.kuki-inventory-filter select {
+  min-width: 165px;
+  min-height: 38px;
+  border: 1px solid currentColor;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+}
+.kuki-inventory-total {
+  padding-bottom: 0.5rem;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+.kuki-inventory-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}

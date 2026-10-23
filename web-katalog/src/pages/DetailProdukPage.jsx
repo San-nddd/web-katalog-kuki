@@ -7,7 +7,7 @@ import { ArrowLeftIcon } from '../components/icons'
 import { getProdukById } from '../services/produkService'
 import { formatRupiah, products as mockProducts } from '../utils/mockData'
 import './DetailProdukPage.css'
-
+import PilihanVarianProduk from '../components/PilihanVarianProduk'
 function mapMock(product) {
   return {
     id: product.id,
@@ -31,6 +31,7 @@ function DetailProdukPage() {
   const key = String(id)
   const status = loaded.key === key ? loaded.status : 'loading'
   const product = loaded.key === key ? loaded.product : null
+  const [varianDipilih, setVarianDipilih] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -95,6 +96,8 @@ function DetailProdukPage() {
               <div className="detail-info">
                 <h1 className="detail-title display-font">{product.nama}</h1>
                 <p className="detail-price">{formatRupiah(product.harga)}</p>
+                <PilihanVarianProduk produkId={id} onChange={setVarianDipilih} tampilkanRingkasan={false}
+/>
 
                 {product.tersedia !== null && (
                   <span className={`detail-stock ${product.tersedia ? 'available' : 'sold'}`}>

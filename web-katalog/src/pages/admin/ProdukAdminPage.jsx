@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import useAdminTranslation from '../../hooks/useAdminTranslation'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import { getProduk, hapusProduk, uploadGambarProduk } from '../../services/produkService'
@@ -6,14 +7,38 @@ import { formatRupiah } from '../../utils/mockData'
 import { assetUrl } from '../../services/api'
 import ImageUploadButton from '../../components/ImageUploadButton'
 import ImagePreviewModal from '../../components/ImagePreviewModal'
+import BarcodePrintButton from '../../components/BarcodePrintButton'
+import './ProdukAdminKategori.css'
 
 function ProdukAdminPage() {
+  const { t } = useAdminTranslation()
+
   const [produk, setProduk] = useState([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [previewSrc, setPreviewSrc] = useState(null)
   const [previewAlt, setPreviewAlt] = useState('')
+  const [filterKategori, setFilterKategori] = useState('semua')
+  const [filterStok, setFilterStok] = useState('semua')
+
+  const pilihanKategori = useMemo(() => {
+    const items = new Map()
+    for (const item of produk) {
+      if (item.kategoriId != null) {
+        items.set(String(item.kategoriId), item.kategori || `Kategori #${item.kategoriId}`)
+      }
+    }
+    return [...items.entries()].sort((a, b) => a[1].localeCompare(b[1], 'id'))
+  }, [produk])
+
+  const produkTerfilter = useMemo(() => produk.filter((item) => {
+    if (filterKategori !== 'semua' && String(item.kategoriId ?? 'tanpa') !== filterKategori) return false
+    if (filterStok === 'habis') return item.stok <= 0
+    if (filterStok === 'menipis') return item.stok > 0 && item.stok <= item.stokMinimum
+    if (filterStok === 'tersedia') return item.stok > 0
+    return true
+  }), [produk, filterKategori, filterStok])
 
   const muat = useCallback(() => {
     getProduk()
@@ -30,12 +55,12 @@ function ProdukAdminPage() {
   }, [muat])
 
   const handleHapus = async (item) => {
-    const ok = window.confirm(`Hapus produk "${item.nama}"? Tindakan ini tidak bisa dibatalkan.`)
+    const ok = window.confirm(t('Hapus produk "{nama}"? Tindakan ini tidak bisa dibatalkan.', { nama: item.nama }))
     if (!ok) return
 
     try {
       await hapusProduk(item.id)
-      setMessage(`Produk "${item.nama}" berhasil dihapus.`)
+      setMessage(t('Produk "{nama}" berhasil dihapus.', { nama: item.nama }))
       setError('')
       muat()
     } catch (err) {
@@ -44,7 +69,7 @@ function ProdukAdminPage() {
   }
 
   return (
-    <AdminLayout title="Kelola Produk">
+    <AdminLayout title={t("Kelola Produk")}>
       {message && (
         <div className="admin-alert admin-alert-success" role="status">
           {message}
@@ -58,31 +83,54 @@ function ProdukAdminPage() {
 
       <section className="admin-card">
         <div className="admin-card-head">
-          <h2 className="display-font">Daftar Produk</h2>
+          <h2 className="display-font">{t("Daftar Produk")}</h2>
           <Link to="/admin/produk/baru" className="admin-btn admin-btn-primary">
-            + Tambah Produk
+            {t("+ Tambah Produk")}
           </Link>
         </div>
 
+        <div className="kuki-inventory-filters">
+          <label className="kuki-inventory-filter">
+            <span>{t("Kategori")}</span>
+            <select value={filterKategori} onChange={(event) => setFilterKategori(event.target.value)}>
+              <option value="semua">{t("Semua kategori")}</option>
+              {pilihanKategori.map(([id, nama]) => <option key={id} value={id}>{nama}</option>)}
+              {produk.some((item) => item.kategoriId == null) && <option value="tanpa">{t("Tanpa kategori")}</option>}
+            </select>
+          </label>
+          <label className="kuki-inventory-filter">
+            <span>{t("Kondisi stok")}</span>
+            <select value={filterStok} onChange={(event) => setFilterStok(event.target.value)}>
+              <option value="semua">{t("Semua stok")}</option>
+              <option value="tersedia">{t("Tersedia")}</option>
+              <option value="menipis">{t("Menipis")}</option>
+              <option value="habis">{t("Habis")}</option>
+            </select>
+          </label>
+          <span className="kuki-inventory-total" role="status">{produkTerfilter.length} {t("dari")} {produk.length} {t("produk")}</span>
+        </div>
+
         {loading ? (
-          <p className="admin-empty">Memuat produk...</p>
+          <p className="admin-empty">{t("Memuat produk...")}</p>
         ) : produk.length === 0 ? (
-          <p className="admin-empty">Belum ada produk. Tambahkan produk pertama Anda.</p>
+          <p className="admin-empty">{t("Belum ada produk. Tambahkan produk pertama Anda.")}</p>
+        ) : produkTerfilter.length === 0 ? (
+          <p className="admin-empty">{t("Tidak ada produk untuk filter yang dipilih.")}</p>
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Gambar</th>
-                  <th>Produk</th>
-                  <th>Kategori</th>
-                  <th>Harga</th>
-                  <th>Stok</th>
-                  <th>Aksi</th>
+                  <th>{t("Gambar")}</th>
+                  <th>{t("Produk")}</th>
+                  <th>{t("Kategori")}</th>
+                  <th>{t("Harga")}</th>
+                  <th>{t("Stok")}</th>
+                  <th>{t("Aksi")}</th>
                 </tr>
               </thead>
               <tbody>
-                {produk.map((item) => (
+                {produkTerfilter.map((item) => (
                   <tr key={item.id}>
                     <td>
                       {item.gambar ? (
@@ -98,14 +146,14 @@ function ProdukAdminPage() {
                           <img className="admin-thumb" src={item.gambar} alt={item.nama} />
                         </button>
                       ) : (
-                        <span className="admin-thumb admin-thumb-empty" aria-label="Tanpa gambar">
+                        <span className="admin-thumb admin-thumb-empty" aria-label={t("Tanpa gambar")}>
                           —
                         </span>
                       )}
                     </td>
                     <td>
                       <strong>{item.nama}</strong>
-                      {item.barcode && <small className="admin-sub">SKU: {item.barcode}</small>}
+                      {item.barcode && <small className="admin-sub">{t("SKU:")} {item.barcode}</small>}
                     </td>
                     <td>{item.kategori || '-'}</td>
                     <td>{formatRupiah(item.harga)}</td>
@@ -115,22 +163,23 @@ function ProdukAdminPage() {
                       </span>
                     </td>
                     <td>
-                      <div className="admin-row-actions">
+                      <div className="admin-row-actions kuki-inventory-row-actions">
                         <Link to={`/admin/produk/${item.id}/edit`} className="admin-btn admin-btn-ghost">
-                          Ubah
+                          {t("Ubah")}
                         </Link>
                         <ImageUploadButton
                           currentImage={item.gambar ? assetUrl(item.gambar) : null}
                           onUpload={(file) => uploadGambarProduk(item.id, file).then(() => muat())}
                           disabled={loading}
-                          title={`Klik untuk ${item.gambar ? 'ganti' : 'upload'} gambar ${item.nama}`}
+                          title={t('Klik untuk {aksi} gambar {nama}', { aksi: t(item.gambar ? 'ganti' : 'upload'), nama: item.nama })}
                         />
+                        <BarcodePrintButton produkId={item.id} stok={item.stok} value={item.barcode} productName={item.nama} />
                         <button
                           type="button"
                           className="admin-btn admin-btn-danger"
                           onClick={() => handleHapus(item)}
                         >
-                          Hapus
+                          {t("Hapus")}
                         </button>
                       </div>
                     </td>

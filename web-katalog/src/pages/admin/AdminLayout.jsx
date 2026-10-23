@@ -1,3 +1,4 @@
+import { translateAdminText } from '../../services/adminTranslations'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { currentUser, logout } from '../../services/authService'
@@ -17,6 +18,7 @@ import {
   cekPushNotificationsAktif,
 } from '../../services/pushNotificationService'
 import './admin.css'
+import useAdminTranslation from '../../hooks/useAdminTranslation'
 
 
 function BellIcon({ width = 22, height = 22 }) {
@@ -49,6 +51,7 @@ function AdminLayout({ title, children }) {
   const navigate = useNavigate()
   const user = currentUser()
   const [preferences, setPreferences] = useState(() => getAdminPreferences())
+  const t = (key, params) => translateAdminText(preferences.language, key, params)
   const copy = getAdminCopy(preferences.language)
   const effectiveTheme = getEffectiveAdminTheme(preferences.theme)
 
@@ -86,7 +89,7 @@ function AdminLayout({ title, children }) {
         setToast({
           id: obrolanId,
           title: notification.title || 'Kuki Bakehouse Admin',
-          message: notification.body || 'Ada notifikasi baru untuk Admin.',
+          message: notification.body ||t("Ada notifikasi baru untuk Admin."),
         })
 
         if (toastTimerRef.current) {
@@ -173,10 +176,9 @@ function AdminLayout({ title, children }) {
           if (preferences.toastEnabled) {
             setToast({
               id: newest.id,
-              title: 'Customer meminta bantuan Admin',
+              title:t("Customer meminta bantuan Admin"),
               message:
-                newest.pertanyaan_terakhir?.isi ||
-                'Ada percakapan baru yang membutuhkan Admin.',
+                newest.pertanyaan_terakhir?.isi ||t("Ada percakapan baru yang membutuhkan Admin."),
             })
 
             if (toastTimerRef.current) {
@@ -322,20 +324,24 @@ function AdminLayout({ title, children }) {
       <aside className="admin-sidebar">
         <div className="admin-brand">
           <span className="admin-logo" aria-hidden="true">
-            K
+            {t("K")}
           </span>
           <div>
-            <strong>Kuki Admin</strong>
-            <small>Katalog Content</small>
+            <strong>{t("Kuki Admin")}</strong>
+            <small>{t("Katalog Content")}</small>
           </div>
         </div>
 
         <nav className="admin-nav">
           <NavLink to="/admin" end>
-            Dashboard
+            {t("Dashboard")}
           </NavLink>
+          {user?.role === 'admin' && (
+            <NavLink to="/management/dashboard">{t("Management Dashboard")}</NavLink>
+          )}
           <NavLink to="/admin/produk">{copy.products}</NavLink>
           <NavLink to="/admin/kategori">{copy.categories}</NavLink>
+          {user?.role === 'admin' && <NavLink to="/admin/testimonial">{t("Testimonial")}</NavLink>}
           <NavLink to="/admin/chat">
             {copy.chat}
             {notificationCount > 0 && (
@@ -362,7 +368,7 @@ function AdminLayout({ title, children }) {
 
       <main className="admin-main">
         <header className="admin-topbar">
-          <h1 className="display-font">{title}</h1>
+          <h1 className="display-font">{t(title)}</h1>
 
           <div className="admin-notification">
             <button
@@ -372,7 +378,7 @@ function AdminLayout({ title, children }) {
                 setNotificationOpen((prev) => !prev)
                 loadNotifications()
               }}
-              aria-label="Notifikasi chat"
+              aria-label={t("Notifikasi chat")}
               aria-expanded={notificationOpen}
             >
               <BellIcon />
@@ -400,7 +406,7 @@ function AdminLayout({ title, children }) {
                     type="button"
                     className="admin-notification-refresh"
                     onClick={loadNotifications}
-                    aria-label="Muat ulang notifikasi"
+                    aria-label={t("Muat ulang notifikasi")}
                   >
                     ↻
                   </button>
@@ -529,9 +535,9 @@ function AdminLayout({ title, children }) {
               type="button"
               className="admin-chat-toast-close"
               onClick={() => setToast(null)}
-              aria-label="Tutup notifikasi"
+              aria-label={t("Tutup notifikasi")}
             >
-              ×
+              {t("×")}
             </button>
           </div>
         )}
