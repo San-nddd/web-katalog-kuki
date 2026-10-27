@@ -14,7 +14,6 @@ function ProductCarousel({
   autoPlay = false,
   autoPlayInterval = 4000,
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartX, setDragStartX] = useState(0)
   const [translateX, setTranslateX] = useState(0)
@@ -46,14 +45,12 @@ function ProductCarousel({
     }
 
     currentIndexRef.current = index
-    setCurrentIndex(index)
     setTranslateX(-index * itemWidthRef.current)
   }, [])
 
   const jumpTo = useCallback((index) => {
     setJumping(true)
     currentIndexRef.current = index
-    setCurrentIndex(index)
     setTranslateX(-index * itemWidthRef.current)
 
     requestAnimationFrame(() => {

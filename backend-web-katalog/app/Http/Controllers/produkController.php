@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\produk;
+use Illuminate\Support\Facades\DB;
+use App\Models\ProduksiHarian;
+use App\Models\MutasiStok;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -39,7 +42,23 @@ class produkController extends Controller
                 $attributes['barcode'] = $this->generateBarcode();
             }
 
-            $produk = produk::create($attributes);
+            $produk = DB::transaction(function () use ($request, $attributes) {
+                // KUKI STOCK LEDGER: PRODUCT - stok awal
+                $created = produk::create($attributes);
+                $stokAwal = (int) ($created->stok ?? 0);
+                if ($stokAwal > 0) {
+                    MutasiStok::create([
+                        'produk_id' => $created->id,
+                        'pengguna_id' => $request->user()?->getAuthIdentifier(),
+                        'jenis' => 'stok_awal',
+                        'perubahan' => $stokAwal,
+                        'stok_sebelum' => 0,
+                        'stok_sesudah' => $stokAwal,
+                        'keterangan' => 'Stok awal saat produk ditambahkan.',
+                    ]);
+                }
+                return $created;
+            });
 
             return response()->json([
                 'success' => true,
@@ -103,7 +122,25 @@ class produkController extends Controller
                 $attributes['barcode'] = $produk->barcode ?: $this->generateBarcode();
             }
 
-            $produk->update($attributes);
+            $produk = DB::transaction(function () use ($id, $request, $attributes) {
+                // KUKI STOCK LEDGER: PRODUCT - stok diubah dari Edit Produk
+                $locked = produk::query()->lockForUpdate()->findOrFail($id);
+                $sebelum = (int) ($locked->stok ?? 0);
+                $locked->update($attributes);
+                $sesudah = (int) ($locked->stok ?? 0);
+                if ($sebelum !== $sesudah) {
+                    MutasiStok::create([
+                        'produk_id' => $locked->id,
+                        'pengguna_id' => $request->user()?->getAuthIdentifier(),
+                        'jenis' => 'koreksi',
+                        'perubahan' => $sesudah - $sebelum,
+                        'stok_sebelum' => $sebelum,
+                        'stok_sesudah' => $sesudah,
+                        'keterangan' => 'Stok diubah melalui form Edit Produk.',
+                    ]);
+                }
+                return $locked;
+            });
 
             return response()->json([
                 'success' => true,
@@ -140,6 +177,14 @@ class produkController extends Controller
                 'message' => 'Produk tidak ditemukan.',
                 'data' => null,
             ], 404);
+        }
+
+        // KUKI STOCK LEDGER: PRODUCT (riwayat audit tidak boleh terhapus)
+        if (MutasiStok::where('produk_id', $produk->id)->exists() || ProduksiHarian::where('produk_id', $produk->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk memiliki riwayat stok/produksi dan tidak bisa dihapus. Arsipkan produk jika sudah tidak dijual.',
+            ], 409);
         }
 
         if ($produk->gambar_produk) {

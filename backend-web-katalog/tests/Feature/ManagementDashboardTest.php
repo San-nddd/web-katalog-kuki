@@ -82,7 +82,7 @@ class ManagementDashboardTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_manager_legacy_role_is_not_an_active_role(): void
+    public function test_manager_legacy_role_remains_mapped_to_admin(): void
     {
         $manager = User::factory()->create(['role' => 'manager']);
         $token = $manager
@@ -91,12 +91,14 @@ class ManagementDashboardTest extends TestCase
 
         $this->withToken($token)
             ->getJson('/api/management/dashboard')
-            ->assertForbidden();
+            ->assertOk()
+            ->assertJsonPath('data.inventory.total_products', 0);
 
         $this->postJson('/api/auth/login', [
             'email' => $manager->email,
             'password' => 'password',
-        ])->assertUnprocessable();
+        ])->assertOk()
+            ->assertJsonPath('data.user.role', 'admin');
     }
 
     public function test_management_role_can_log_in_without_changing_admin_login(): void

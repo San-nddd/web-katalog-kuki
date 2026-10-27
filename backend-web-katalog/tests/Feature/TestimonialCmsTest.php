@@ -32,7 +32,7 @@ class TestimonialCmsTest extends TestCase
         ], $overrides));
     }
 
-    public function test_public_submission_waits_for_admin_verification(): void
+    public function test_public_submission_is_published_immediately(): void
     {
         $this->postJson('/api/testimonial', [
             'name' => 'Rani',
@@ -40,16 +40,22 @@ class TestimonialCmsTest extends TestCase
             'quote' => 'Kue sangat lezat.',
         ])->assertCreated()
             ->assertJsonPath('data.source', 'customer')
-            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.status', 'published')
             ->assertJsonPath('data.verified_at', null);
 
-        $this->getJson('/api/testimonial')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/api/testimonial')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Rani');
     }
 
     public function test_published_testimonials_are_public_and_pending_testimonials_are_hidden(): void
     {
         $this->testimonial(['status' => 'published', 'name' => 'Published']);
-        $this->testimonial(['status' => 'pending', 'name' => 'Pending']);
+        Testimonial::withoutEvents(fn () => $this->testimonial([
+            'status' => 'pending',
+            'name' => 'Pending',
+        ]));
 
         $this->getJson('/api/testimonial')
             ->assertOk()
@@ -125,7 +131,7 @@ class TestimonialCmsTest extends TestCase
         ]);
     }
 
-    public function test_comments_are_separate_pending_and_moderated_per_testimonial(): void
+    public function test_comments_are_published_immediately_and_moderated_per_testimonial(): void
     {
         $token = $this->adminToken();
         $first = $this->testimonial(['status' => 'published']);
@@ -135,19 +141,22 @@ class TestimonialCmsTest extends TestCase
             'name' => 'Budi',
             'comment' => 'Setuju, sangat enak.',
         ])->assertCreated()
-            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.status', 'approved')
             ->json('data.id');
-
-        $this->getJson("/api/testimonial/{$first->id}/komentar")->assertOk()->assertJsonCount(0, 'data');
-
-        $this->withToken($token)
-            ->patchJson("/api/admin/testimonial/komentar/{$commentId}/moderasi", ['status' => 'approved'])
-            ->assertOk();
 
         $this->getJson("/api/testimonial/{$first->id}/komentar")
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Budi');
+
+        $this->withToken($token)
+            ->patchJson("/api/admin/testimonial/komentar/{$commentId}/moderasi", ['status' => 'rejected'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'rejected');
+
+        $this->getJson("/api/testimonial/{$first->id}/komentar")
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
         $this->getJson("/api/testimonial/{$second->id}/komentar")->assertOk()->assertJsonCount(0, 'data');
 
         $comment = TestimonialComment::findOrFail($commentId);

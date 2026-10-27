@@ -47,9 +47,9 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
      * }
      */
     public function chat(
-        string $sessionId,
+        ?string $sessionId,
         string $message,
-        int $productId = null
+        ?int $productId = null
     ): array {
         $sessionId = $sessionId ?: (string) Str::uuid();
 

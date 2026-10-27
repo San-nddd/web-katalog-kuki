@@ -1,4 +1,3 @@
-import { translateAdminText } from '../../services/adminTranslations'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { currentUser, logout } from '../../services/authService'
@@ -7,7 +6,6 @@ import {
   getEffectiveAdminTheme,
   subscribeAdminPreferences,
 } from '../../services/adminPreferencesService'
-import { getAdminCopy } from '../../services/adminI18n'
 import { playAdminNotificationSound } from '../../services/notificationSoundService'
 import {
   ambilPertanyaanTidakTerjawab,
@@ -18,8 +16,33 @@ import {
   cekPushNotificationsAktif,
 } from '../../services/pushNotificationService'
 import './admin.css'
-import useAdminTranslation from '../../hooks/useAdminTranslation'
 
+const copy = {
+  products: 'Produk',
+  categories: 'Kategori',
+  chat: 'Chat',
+  settings: 'Pengaturan',
+  viewSite: 'Lihat Situs',
+  logout: 'Keluar',
+  notifications: 'Notifikasi Chat',
+  waitingCount: (count) => `${count} chat menunggu Admin`,
+  noWaiting: 'Tidak ada chat yang menunggu',
+  browserActive: 'Notifikasi browser aktif',
+  browserActiveHint: 'Admin dapat menerima notifikasi saat membuka tab lain.',
+  browserUnsupported: 'Peramban ini belum mendukung notifikasi web.',
+  browserDenied: 'Izin notifikasi diblokir. Aktifkan kembali melalui pengaturan peramban.',
+  browserEnable: 'Aktifkan Notifikasi Browser',
+  browserEnabling: 'Mengaktifkan...',
+  browserChecking: 'Memeriksa notifikasi...',
+  loadingNotifications: 'Memuat notifikasi...',
+  allSafe: 'Semua aman. Belum ada pelanggan yang menunggu Admin.',
+  customerNeedsHelp: 'Pelanggan meminta bantuan',
+  genericHelp: 'Ada percakapan yang membutuhkan Admin.',
+  connectingAdmin: 'Sedang menghubungkan Admin',
+  waitingAdmin: 'Menunggu Admin',
+  openAllChats: 'Buka semua chat',
+  clickToOpen: 'Klik untuk membuka chat',
+}
 
 function BellIcon({ width = 22, height = 22 }) {
   return (
@@ -51,8 +74,6 @@ function AdminLayout({ title, children }) {
   const navigate = useNavigate()
   const user = currentUser()
   const [preferences, setPreferences] = useState(() => getAdminPreferences())
-  const t = (key, params) => translateAdminText(preferences.language, key, params)
-  const copy = getAdminCopy(preferences.language)
   const effectiveTheme = getEffectiveAdminTheme(preferences.theme)
 
   const [notificationOpen, setNotificationOpen] = useState(false)
@@ -89,7 +110,7 @@ function AdminLayout({ title, children }) {
         setToast({
           id: obrolanId,
           title: notification.title || 'Kuki Bakehouse Admin',
-          message: notification.body ||t("Ada notifikasi baru untuk Admin."),
+          message: notification.body ||"Ada notifikasi baru untuk Admin.",
         })
 
         if (toastTimerRef.current) {
@@ -176,9 +197,9 @@ function AdminLayout({ title, children }) {
           if (preferences.toastEnabled) {
             setToast({
               id: newest.id,
-              title:t("Customer meminta bantuan Admin"),
+              title:"Pelanggan meminta bantuan Admin",
               message:
-                newest.pertanyaan_terakhir?.isi ||t("Ada percakapan baru yang membutuhkan Admin."),
+                newest.pertanyaan_terakhir?.isi ||"Ada percakapan baru yang membutuhkan Admin.",
             })
 
             if (toastTimerRef.current) {
@@ -323,25 +344,26 @@ function AdminLayout({ title, children }) {
     >
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <span className="admin-logo" aria-hidden="true">
-            {t("K")}
-          </span>
+          <img src="src/assets/Kuki.png" alt="Kuki Bakehouse" className="admin-brand-logo"/>
           <div>
-            <strong>{t("Kuki Admin")}</strong>
-            <small>{t("Katalog Content")}</small>
+            <strong>{"Kuki Admin"}</strong>
+            <small>{"Konten Katalog"}</small>
           </div>
         </div>
 
         <nav className="admin-nav">
           <NavLink to="/admin" end>
-            {t("Dashboard")}
+            {"Dashboard"}
           </NavLink>
           {user?.role === 'admin' && (
-            <NavLink to="/management/dashboard">{t("Management Dashboard")}</NavLink>
+            <NavLink to="/management/dashboard">{"Dashboard Manajemen"}</NavLink>
           )}
           <NavLink to="/admin/produk">{copy.products}</NavLink>
           <NavLink to="/admin/kategori">{copy.categories}</NavLink>
-          {user?.role === 'admin' && <NavLink to="/admin/testimonial">{t("Testimonial")}</NavLink>}
+          <NavLink to="/admin/produksi-harian">Produksi Harian</NavLink>
+          <NavLink to="/admin/mutasi-stok">Riwayat Mutasi Stok</NavLink>
+          <NavLink to="/admin/opname-stok">Stock Opname</NavLink>
+          {user?.role === 'admin' && <NavLink to="/admin/testimonial">{"Testimonial"}</NavLink>}
           <NavLink to="/admin/chat">
             {copy.chat}
             {notificationCount > 0 && (
@@ -368,7 +390,7 @@ function AdminLayout({ title, children }) {
 
       <main className="admin-main">
         <header className="admin-topbar">
-          <h1 className="display-font">{t(title)}</h1>
+          <h1 className="display-font">{title}</h1>
 
           <div className="admin-notification">
             <button
@@ -378,7 +400,7 @@ function AdminLayout({ title, children }) {
                 setNotificationOpen((prev) => !prev)
                 loadNotifications()
               }}
-              aria-label={t("Notifikasi chat")}
+              aria-label={"Notifikasi chat"}
               aria-expanded={notificationOpen}
             >
               <BellIcon />
@@ -406,7 +428,7 @@ function AdminLayout({ title, children }) {
                     type="button"
                     className="admin-notification-refresh"
                     onClick={loadNotifications}
-                    aria-label={t("Muat ulang notifikasi")}
+                    aria-label={"Muat ulang notifikasi"}
                   >
                     ↻
                   </button>
@@ -535,9 +557,9 @@ function AdminLayout({ title, children }) {
               type="button"
               className="admin-chat-toast-close"
               onClick={() => setToast(null)}
-              aria-label={t("Tutup notifikasi")}
+              aria-label={"Tutup notifikasi"}
             >
-              {t("×")}
+              {"×"}
             </button>
           </div>
         )}

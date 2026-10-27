@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import {
-  DEFAULT_ADMIN_PREFERENCES,
   getAdminPreferences,
   resetAdminPreferences,
   saveAdminPreferences,
@@ -20,7 +19,6 @@ import {
 } from '../../services/customNotificationAudioService'
 import './admin.css'
 import './admin-settings.css'
-import useAdminTranslation from '../../hooks/useAdminTranslation'
 
 function Toggle({
   checked,
@@ -50,7 +48,6 @@ function Toggle({
 }
 
 function AdminSettingsPage() {
-  const { t } = useAdminTranslation()
   const [preferences, setPreferences] = useState(
     () => getAdminPreferences(),
   )
@@ -64,17 +61,10 @@ function AdminSettingsPage() {
   })
   const [audioImportError, setAudioImportError] = useState('')
 
-  const languageIsEnglish = preferences.language === 'en'
-
-  const text = useMemo(
-    () => ({
-      title: languageIsEnglish ? 'Settings' : 'Pengaturan',
-      subtitle: languageIsEnglish
-        ? 'Personalize this Admin dashboard on this device.'
-        : 'Atur pengalaman Dashboard Admin pada perangkat ini.',
-    }),
-    [languageIsEnglish],
-  )
+  const text = {
+    title: 'Pengaturan',
+    subtitle: 'Atur pengalaman Dashboard Admin pada perangkat ini.',
+  }
 
   useEffect(() => {
     let mounted = true
@@ -181,11 +171,7 @@ function AdminSettingsPage() {
   const update = (patch) => {
     const next = saveAdminPreferences(patch)
     setPreferences(next)
-    setSavedHint(
-      next.language === 'en'
-        ? 'Saved automatically'
-        : 'Tersimpan otomatis',
-    )
+    setSavedHint('Tersimpan otomatis')
 
     window.setTimeout(() => {
       setSavedHint('')
@@ -225,7 +211,7 @@ function AdminSettingsPage() {
     <AdminLayout title={text.title}>
       <div className="admin-settings-intro">
         <div>
-          <p className="admin-settings-kicker">{t("KUKI ADMIN")}</p>
+          <p className="admin-settings-kicker">{"KUKI ADMIN"}</p>
           <h2 className="display-font">{text.title}</h2>
           <p>{text.subtitle}</p>
         </div>
@@ -243,18 +229,18 @@ function AdminSettingsPage() {
             <div>
               <span className="admin-settings-icon" aria-hidden="true">🔔</span>
               <div>
-                <h3>{t("Notifikasi")}</h3>
-                <p>{t("Atur browser push, toast, dan suara Dashboard Admin.")}</p>
+                <h3>{"Notifikasi"}</h3>
+                <p>{"Atur notifikasi browser, notifikasi singkat, dan suara Dashboard Admin."}</p>
               </div>
             </div>
           </div>
 
           <div className="admin-browser-status">
             <div>
-              <strong>{t("Web Push")}</strong>
+              <strong>{"Notifikasi Web"}</strong>
               <small>
                 {pushStatus === 'active'
-                  ? t("Aktif pada browser ini.")
+                  ? "Aktif pada browser ini."
                   : pushStatus === 'denied'
                     ? 'Diblokir oleh browser.'
                     : pushStatus === 'unsupported'
@@ -276,8 +262,8 @@ function AdminSettingsPage() {
                   }
                 >
                   {pushStatus === 'loading'
-                    ? t("Mengaktifkan...")
-                    : t("Aktifkan")}
+                    ? "Mengaktifkan..."
+                    : "Aktifkan"}
                 </button>
               )}
           </div>
@@ -297,21 +283,21 @@ function AdminSettingsPage() {
           <Toggle
             checked={preferences.toastEnabled}
             onChange={(value) => update({ toastEnabled: value })}
-            label={t("Toast di Dashboard")}
+            label={"Toast di Dashboard"}
             description="Munculkan popup kecil saat ada chat baru."
           />
 
           <Toggle
             checked={preferences.soundEnabled}
             onChange={(value) => update({ soundEnabled: value })}
-            label={t("Suara notifikasi dalam Dashboard")}
+            label={"Suara notifikasi dalam Dashboard"}
             description="Bunyi diputar saat Dashboard terbuka dan browser mengizinkan audio."
           />
 
           <div className="admin-setting-row">
             <span className="admin-setting-copy">
-              <strong>{t("Suara saat customer minta Admin")}</strong>
-              <small>{t("Pilih suara khusus untuk HANDOVER_REQUESTED.")}</small>
+              <strong>{"Suara saat pelanggan meminta bantuan Admin"}</strong>
+              <small>{"Pilih suara saat pelanggan meminta Admin mengambil alih percakapan."}</small>
             </span>
 
             <select
@@ -321,26 +307,26 @@ function AdminSettingsPage() {
               })}
               disabled={!preferences.soundEnabled || !preferences.soundOnHandover}
             >
-              <option value="soft">{t("Soft")}</option>
-              <option value="chime">{t("Chime")}</option>
-              <option value="alert">{t("Alert")}</option>
-              <option value="custom">{t("Audio Custom")}</option>
-              <option value="silent">{t("Tanpa suara")}</option>
+              <option value="soft">{"Lembut"}</option>
+              <option value="chime">{"Lonceng"}</option>
+              <option value="alert">{"Peringatan"}</option>
+              <option value="custom">{"Audio Khusus"}</option>
+              <option value="silent">{"Tanpa suara"}</option>
             </select>
           </div>
 
           <div className="admin-custom-audio-box">
             <div className="admin-custom-audio-info">
-              <strong>{t("Audio custom handover")}</strong>
+              <strong>{"Audio khusus saat alih percakapan"}</strong>
               <small>
                 {customAudioMeta.handover?.name ||
-                  t("Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB.")}
+                  "Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB."}
               </small>
             </div>
 
             <div className="admin-custom-audio-actions">
               <label className="admin-btn admin-btn-file">
-                {t("Import Audio")}
+                {"Impor Audio"}
                 <input
                   type="file"
                   accept="audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/aac,.mp3,.wav,.ogg,.m4a,.aac"
@@ -359,7 +345,7 @@ function AdminSettingsPage() {
                   className="admin-btn admin-btn-ghost"
                   onClick={() => handleRemoveAudio('handover')}
                 >
-                  {t("Hapus")}
+                  {"Hapus"}
                 </button>
               )}
             </div>
@@ -381,14 +367,14 @@ function AdminSettingsPage() {
                 preferences.handoverSoundPreset === 'silent'
               }
             >
-              {t("Tes Suara Handover")}
+              {"Uji Suara Alih Percakapan"}
             </button>
           </div>
 
           <div className="admin-setting-row">
             <span className="admin-setting-copy">
-              <strong>{t("Suara saat customer mengirim pesan")}</strong>
-              <small>{t("Pilih suara khusus untuk CUSTOMER_NEW_MESSAGE.")}</small>
+              <strong>{"Suara saat pelanggan mengirim pesan"}</strong>
+              <small>{"Pilih suara untuk pesan baru dari pelanggan."}</small>
             </span>
 
             <select
@@ -401,26 +387,26 @@ function AdminSettingsPage() {
                 !preferences.soundOnCustomerMessage
               }
             >
-              <option value="soft">{t("Soft")}</option>
-              <option value="chime">{t("Chime")}</option>
-              <option value="alert">{t("Alert")}</option>
-              <option value="custom">{t("Audio Custom")}</option>
-              <option value="silent">{t("Tanpa suara")}</option>
+              <option value="soft">{"Lembut"}</option>
+              <option value="chime">{"Lonceng"}</option>
+              <option value="alert">{"Peringatan"}</option>
+              <option value="custom">{"Audio Khusus"}</option>
+              <option value="silent">{"Tanpa suara"}</option>
             </select>
           </div>
 
           <div className="admin-custom-audio-box">
             <div className="admin-custom-audio-info">
-              <strong>{t("Audio custom pesan customer")}</strong>
+              <strong>{"Audio khusus pesan pelanggan"}</strong>
               <small>
                 {customAudioMeta.customerMessage?.name ||
-                  t("Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB.")}
+                  "Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB."}
               </small>
             </div>
 
             <div className="admin-custom-audio-actions">
               <label className="admin-btn admin-btn-file">
-                {t("Import Audio")}
+                {"Impor Audio"}
                 <input
                   type="file"
                   accept="audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/aac,.mp3,.wav,.ogg,.m4a,.aac"
@@ -439,7 +425,7 @@ function AdminSettingsPage() {
                   className="admin-btn admin-btn-ghost"
                   onClick={() => handleRemoveAudio('customerMessage')}
                 >
-                  {t("Hapus")}
+                  {"Hapus"}
                 </button>
               )}
             </div>
@@ -461,13 +447,13 @@ function AdminSettingsPage() {
                 preferences.customerMessageSoundPreset === 'silent'
               }
             >
-              {t("Tes Suara Pesan")}
+              {"Uji Suara Pesan"}
             </button>
           </div>
 
           <div className="admin-setting-row admin-setting-volume">
             <span className="admin-setting-copy">
-              <strong>{t("Volume")}</strong>
+              <strong>{"Volume"}</strong>
               <small>
                 {Math.round(preferences.soundVolume * 100)}%
               </small>
@@ -492,7 +478,7 @@ function AdminSettingsPage() {
             onChange={(value) => update({
               soundOnHandover: value,
             })}
-            label={t("Bunyi saat customer minta Admin")}
+            label={"Bunyi saat pelanggan meminta bantuan Admin"}
             description="Untuk HANDOVER_REQUESTED."
             disabled={!preferences.soundEnabled}
           />
@@ -502,7 +488,7 @@ function AdminSettingsPage() {
             onChange={(value) => update({
               soundOnCustomerMessage: value,
             })}
-            label={t("Bunyi saat customer kirim pesan baru")}
+            label={"Bunyi saat pelanggan mengirim pesan baru"}
             description="Untuk CUSTOMER_NEW_MESSAGE setelah chat dialihkan."
             disabled={!preferences.soundEnabled}
           />
@@ -513,16 +499,16 @@ function AdminSettingsPage() {
             <div>
               <span className="admin-settings-icon" aria-hidden="true">◐</span>
               <div>
-                <h3>{t("Tampilan")}</h3>
-                <p>{t("Sesuaikan tampilan Dashboard tanpa mengubah Public Web.")}</p>
+                <h3>{"Tampilan"}</h3>
+                <p>{"Sesuaikan tampilan Dashboard tanpa mengubah situs publik."}</p>
               </div>
             </div>
           </div>
 
           <div className="admin-setting-row">
             <span className="admin-setting-copy">
-              <strong>{t("Tema")}</strong>
-              <small>{t("System mengikuti tema perangkat.")}</small>
+              <strong>{"Tema"}</strong>
+              <small>{"Tema sistem mengikuti tema perangkat."}</small>
             </span>
 
             <select
@@ -531,16 +517,16 @@ function AdminSettingsPage() {
                 theme: event.target.value,
               })}
             >
-              <option value="system">{t("System")}</option>
-              <option value="light">{t("Light")}</option>
-              <option value="dark">{t("Dark")}</option>
+              <option value="system">{"Sistem"}</option>
+              <option value="light">{"Terang"}</option>
+              <option value="dark">{"Gelap"}</option>
             </select>
           </div>
 
           <div className="admin-setting-row">
             <span className="admin-setting-copy">
-              <strong>{t("Kepadatan tampilan")}</strong>
-              <small>{t("Compact cocok untuk layar laptop/tablet.")}</small>
+              <strong>{"Kepadatan tampilan"}</strong>
+              <small>{"Tampilan ringkas cocok untuk layar laptop atau tablet."}</small>
             </span>
 
             <select
@@ -549,15 +535,15 @@ function AdminSettingsPage() {
                 density: event.target.value,
               })}
             >
-              <option value="comfortable">{t("Nyaman")}</option>
-              <option value="compact">{t("Compact")}</option>
+              <option value="comfortable">{"Nyaman"}</option>
+              <option value="compact">{"Ringkas"}</option>
             </select>
           </div>
 
           <div className="admin-setting-row">
             <span className="admin-setting-copy">
-              <strong>{t("Ukuran teks")}</strong>
-              <small>{t("Memengaruhi area Admin saja.")}</small>
+              <strong>{"Ukuran teks"}</strong>
+              <small>{"Memengaruhi area Admin saja."}</small>
             </span>
 
             <select
@@ -566,8 +552,8 @@ function AdminSettingsPage() {
                 fontScale: event.target.value,
               })}
             >
-              <option value="normal">{t("Normal")}</option>
-              <option value="large">{t("Besar")}</option>
+              <option value="normal">{"Normal"}</option>
+              <option value="large">{"Besar"}</option>
             </select>
           </div>
 
@@ -576,7 +562,7 @@ function AdminSettingsPage() {
             onChange={(value) => update({
               reduceMotion: value,
             })}
-            label={t("Kurangi animasi")}
+            label={"Kurangi animasi"}
             description="Mengurangi transisi dan animasi pada Dashboard Admin."
           />
         </section>
@@ -584,47 +570,18 @@ function AdminSettingsPage() {
         <section className="admin-settings-card">
           <div className="admin-settings-card-head">
             <div>
-              <span className="admin-settings-icon" aria-hidden="true">文</span>
-              <div>
-                <h3>{t("Bahasa")}</h3>
-                <p>{t("Bahasa saat ini diterapkan pada shell Admin dan halaman Pengaturan.")}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="admin-setting-row">
-            <span className="admin-setting-copy">
-              <strong>{t("Bahasa antarmuka")}</strong>
-              <small>{t("Konten halaman lama akan diterjemahkan bertahap.")}</small>
-            </span>
-
-            <select
-              value={preferences.language}
-              onChange={(event) => update({
-                language: event.target.value,
-              })}
-            >
-              <option value="id">{t("Bahasa Indonesia")}</option>
-              <option value="en">{t("English")}</option>
-            </select>
-          </div>
-        </section>
-
-        <section className="admin-settings-card">
-          <div className="admin-settings-card-head">
-            <div>
               <span className="admin-settings-icon" aria-hidden="true">↻</span>
               <div>
-                <h3>{t("Refresh Data")}</h3>
-                <p>{t("Atur seberapa sering indikator chat Admin diperbarui.")}</p>
+                <h3>{"Pembaruan Data"}</h3>
+                <p>{"Atur seberapa sering indikator chat Admin diperbarui."}</p>
               </div>
             </div>
           </div>
 
           <div className="admin-setting-row">
             <span className="admin-setting-copy">
-              <strong>{t("Interval notifikasi chat")}</strong>
-              <small>{t("Semakin cepat, semakin responsif tetapi request API lebih sering.")}</small>
+              <strong>{"Interval notifikasi chat"}</strong>
+              <small>{"Semakin cepat, semakin responsif tetapi request API lebih sering."}</small>
             </span>
 
             <select
@@ -633,9 +590,9 @@ function AdminSettingsPage() {
                 notificationRefreshMs: Number(event.target.value),
               })}
             >
-              <option value={5000}>{t("5 detik")}</option>
-              <option value={10000}>{t("10 detik")}</option>
-              <option value={30000}>{t("30 detik")}</option>
+              <option value={5000}>{"5 detik"}</option>
+              <option value={10000}>{"10 detik"}</option>
+              <option value={30000}>{"30 detik"}</option>
             </select>
           </div>
         </section>
@@ -645,8 +602,8 @@ function AdminSettingsPage() {
             <div>
               <span className="admin-settings-icon" aria-hidden="true">↺</span>
               <div>
-                <h3>{t("Reset Preferensi")}</h3>
-                <p>{t("Kembalikan pengaturan perangkat ini ke bawaan Kuki Admin.")}</p>
+                <h3>{"Reset Preferensi"}</h3>
+                <p>{"Kembalikan pengaturan perangkat ini ke bawaan Kuki Admin."}</p>
               </div>
             </div>
           </div>
@@ -656,11 +613,11 @@ function AdminSettingsPage() {
             className="admin-btn"
             onClick={handleReset}
           >
-            {t("Reset ke Default")}
+            {"Atur Ulang ke Bawaan"}
           </button>
 
           <small className="admin-settings-device-note">
-            {t("Preferensi disimpan di browser/perangkat ini. Data produk,\n            kategori, chat, dan akun tidak ikut dihapus.")}
+            {"Preferensi disimpan di browser/perangkat ini. Data produk,\n            kategori, chat, dan akun tidak ikut dihapus."}
           </small>
         </section>
       </div>

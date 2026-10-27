@@ -29,7 +29,7 @@ class AdminAuthTest extends TestCase
         $this->assertSame($user->id, $response->json('data.user.id'));
     }
 
-    public function test_admin_legacy_tetap_dapat_login_sebelum_migrasi_role_diterapkan(): void
+    public function test_admin_legacy_tanpa_kolom_role_tidak_dapat_login(): void
     {
         $user = User::factory()->create();
 
@@ -44,11 +44,10 @@ class AdminAuthTest extends TestCase
             'email' => $user->email,
             'password' => 'password',
         ])
-            ->assertOk()
-            ->assertJsonPath('data.user.role', 'admin');
+            ->assertUnprocessable();
 
-        $this->assertTrue($user->fresh()->isAdmin());
-        $this->assertTrue($user->fresh()->can('manage-admin'));
+        $this->assertFalse($user->fresh()->isAdmin());
+        $this->assertFalse($user->fresh()->can('manage-admin'));
     }
 
     public function test_login_dengan_password_salah_ditolak(): void

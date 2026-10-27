@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProduksiHarian;
+use App\Models\MutasiStok;
 use App\Models\produk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,7 +74,7 @@ class ProduksiHarianController extends Controller
         $produkId = (int) $data['produk_id'];
         $jumlah = (int) $data['jumlah'];
 
-        $batch = DB::transaction(function () use ($tanggal, $produkId, $jumlah) {
+        $batch = DB::transaction(function () use ($tanggal, $produkId, $jumlah, $request) {
             // Kunci produk lebih dahulu agar penambahan untuk SKU yang sama terserialisasi.
             $item = produk::query()->lockForUpdate()->findOrFail($produkId);
             $stokSaatIni = (int) ($item->stok ?? 0);
@@ -106,6 +107,19 @@ class ProduksiHarianController extends Controller
 
             $batch->increment('jumlah_produksi', $jumlah);
             $item->increment('stok', $jumlah);
+
+            // KUKI STOCK LEDGER: PRODUCTION (mutasi masuk di transaksi yang sama)
+            MutasiStok::create([
+                'produk_id' => $produkId,
+                'pengguna_id' => $request->user()?->getAuthIdentifier(),
+                'jenis' => 'produksi',
+                'perubahan' => $jumlah,
+                'stok_sebelum' => $stokSaatIni,
+                'stok_sesudah' => $stokSaatIni + $jumlah,
+                'keterangan' => 'Penambahan stok dari produksi harian.',
+                'referensi_tipe' => 'produksi_harian',
+                'referensi_id' => $batch->id,
+            ]);
 
             return $batch->fresh();
         });

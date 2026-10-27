@@ -2,7 +2,6 @@ const STORAGE_KEY = 'kuki_admin_preferences_v1'
 const EVENT_NAME = 'kuki:admin-preferences-changed'
 
 export const DEFAULT_ADMIN_PREFERENCES = {
-  language: 'id',
   theme: 'system',
   density: 'comfortable',
   fontScale: 'normal',
@@ -26,9 +25,7 @@ function sanitizePreferences(value = {}) {
     ...value,
   }
 
-  if (!['id', 'en'].includes(next.language)) {
-    next.language = DEFAULT_ADMIN_PREFERENCES.language
-  }
+  delete next.language
 
   if (!['system', 'light', 'dark'].includes(next.theme)) {
     next.theme = DEFAULT_ADMIN_PREFERENCES.theme

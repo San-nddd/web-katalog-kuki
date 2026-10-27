@@ -10,8 +10,6 @@ import {
 } from '../../services/produkVarianService'
 import { formatRupiah } from '../../utils/mockData'
 import './ProdukVarianPage.css'
-import useAdminTranslation from '../../hooks/useAdminTranslation'
-
 const FORM_KOSONG = {
   id: null,
   namaVarian: '',
@@ -33,7 +31,6 @@ function pesanError(error) {
 }
 
 function ProdukVarianPage() {
-  const { t } = useAdminTranslation()
   const { id: produkId } = useParams()
   const [produk, setProduk] = useState(null)
   const [varian, setVarian] = useState([])
@@ -98,11 +95,11 @@ function ProdukVarianPage() {
     const stok = Number(form.stok)
     const stokMinimum = Number(form.stokMinimum)
     if (!form.namaVarian.trim() || form.harga === '' || !Number.isFinite(harga) || harga < 0 || harga > 99999999.99) {
-      setError(t("Nama varian dan harga yang valid wajib diisi."))
+      setError("Nama varian dan harga yang valid wajib diisi.")
       return
     }
     if (![stok, stokMinimum].every((nilai) => Number.isSafeInteger(nilai) && nilai >= 0 && nilai <= 4294967295)) {
-      setError(t("Stok dan stok minimum harus bilangan bulat tidak negatif."))
+      setError("Stok dan stok minimum harus bilangan bulat tidak negatif.")
       return
     }
 
@@ -154,11 +151,11 @@ function ProdukVarianPage() {
   }
 
   return (
-    <AdminLayout title={t("Kelola Varian Produk")}>
+    <AdminLayout title={"Kelola Varian Produk"}>
       <div className="admin-form-toolbar kuki-varian-toolbar">
-        <Link to="/admin/produk" className="admin-btn admin-btn-ghost">{t("← Daftar Produk")}</Link>
+        <Link to="/admin/produk" className="admin-btn admin-btn-ghost">{"← Daftar Produk"}</Link>
         <Link to={`/admin/produk/${produkId}/edit`} className="admin-btn admin-btn-ghost">
-          {t("Ubah Produk Utama")}
+          {"Ubah Produk Utama"}
         </Link>
       </div>
 
@@ -167,60 +164,60 @@ function ProdukVarianPage() {
 
       <section className="admin-card">
         <div className="admin-card-head">
-          <h2 className="display-font">{t("Varian:")} {produk?.nama || t("Memuat produk...")}</h2>
+          <h2 className="display-font">{"Varian:"} {produk?.nama || "Memuat produk..."}</h2>
           <button type="button" className="admin-btn admin-btn-ghost" onClick={muat} disabled={loading || saving}>
-            {t("Muat Ulang")}
+            {"Muat Ulang"}
           </button>
         </div>
         <p className="admin-sub">
-          {t("Setiap rasa atau ukuran memiliki SKU, barcode, harga, dan stok sendiri.\n          Produk utama tetap satu kartu di katalog.")}
+          {"Setiap rasa atau ukuran memiliki SKU, barcode, harga, dan stok sendiri.\n          Produk utama tetap satu kartu di katalog."}
         </p>
         {produk?.barcode && (
           <p className="admin-sub">
-            {t("Barcode produk utama:")} <strong>{produk.barcode}</strong>{t(". Jangan gunakan kode yang sama pada varian.")}
+            {"Barcode produk utama:"} <strong>{produk.barcode}</strong>{". Jangan gunakan kode yang sama pada varian."}
           </p>
         )}
       </section>
 
       <section className="admin-card">
         <div className="admin-card-head">
-          <h2 className="display-font">{form.id ? t("Ubah Varian") : t("+ Tambah Varian")}</h2>
+          <h2 className="display-font">{form.id ? "Ubah Varian" : "+ Tambah Varian"}</h2>
           {form.id && (
             <button type="button" className="admin-btn admin-btn-ghost" onClick={resetForm} disabled={saving}>
-              {t("Batal Edit")}
+              {"Batal Edit"}
             </button>
           )}
         </div>
         <form className="admin-form" onSubmit={simpan}>
           <div className="admin-form-grid">
             <label className="admin-field">
-              <span>{t("Nama Varian *")}</span>
+              <span>{"Nama Varian *"}</span>
               <input value={form.namaVarian} onChange={setField('namaVarian')} maxLength={150}
-                placeholder={t("Contoh: Original / 16 cm")} required disabled={loading || saving} />
+                placeholder={"Contoh: Original / 16 cm"} required disabled={loading || saving} />
             </label>
             <label className="admin-field">
-              <span>{t("Harga Varian (Rp) *")}</span>
+              <span>{"Harga Varian (Rp) *"}</span>
               <input type="number" value={form.harga} onChange={setField('harga')}
-                min="0" max="99999999.99" step="0.01" placeholder={t("Isi harga sebenarnya")}
+                min="0" max="99999999.99" step="0.01" placeholder={"Isi harga sebenarnya"}
                 required disabled={loading || saving} />
             </label>
             <label className="admin-field">
-              <span>{t("SKU")}</span>
+              <span>{"SKU"}</span>
               <input value={form.sku} onChange={setField('sku')} maxLength={100}
-                placeholder={t("Kosongkan untuk generate otomatis")} disabled={loading || saving} />
+                placeholder={"Kosongkan untuk generate otomatis"} disabled={loading || saving} />
             </label>
             <label className="admin-field">
-              <span>{t("Barcode Code 128")}</span>
+              <span>{"Barcode Code 128"}</span>
               <input value={form.barcode} onChange={setField('barcode')} maxLength={100}
-                placeholder={t("Kosongkan untuk memakai SKU")} disabled={loading || saving} />
+                placeholder={"Kosongkan untuk memakai SKU"} disabled={loading || saving} />
             </label>
             <label className="admin-field">
-              <span>{t("Stok")}</span>
+              <span>{"Stok"}</span>
               <input type="number" min="0" step="1" value={form.stok}
                 onChange={setField('stok')} disabled={loading || saving} />
             </label>
             <label className="admin-field">
-              <span>{t("Stok Minimum")}</span>
+              <span>{"Stok Minimum"}</span>
               <input type="number" min="0" step="1" value={form.stokMinimum}
                 onChange={setField('stokMinimum')} disabled={loading || saving} />
             </label>
@@ -229,39 +226,39 @@ function ProdukVarianPage() {
             <input type="checkbox" checked={form.aktif}
               onChange={(event) => setForm((prev) => ({ ...prev, aktif: event.target.checked }))}
               disabled={loading || saving} />
-            <span>{t("Varian aktif (ditampilkan di katalog)")}</span>
+            <span>{"Varian aktif (ditampilkan di katalog)"}</span>
           </label>
           <p className="admin-sub">
-            {t("Kode hanya menerima huruf A–Z, angka, dan tanda hubung.\n            Saat mengedit, kode kosong tidak akan menghapus kode yang sudah tersimpan.")}
+            {"Kode hanya menerima huruf A–Z, angka, dan tanda hubung.\n            Saat mengedit, kode kosong tidak akan menghapus kode yang sudah tersimpan."}
           </p>
           <div className="admin-form-actions">
             <button className="admin-btn admin-btn-primary" type="submit" disabled={loading || saving || deletingId !== null}>
-              {saving ? t("Menyimpan...") : form.id ? 'Simpan Perubahan' : 'Tambah Varian'}
+              {saving ? "Menyimpan..." : form.id ? 'Simpan Perubahan' : 'Tambah Varian'}
             </button>
-            {form.id && <button type="button" className="admin-btn admin-btn-ghost" onClick={resetForm} disabled={saving}>{t("Batal")}</button>}
+            {form.id && <button type="button" className="admin-btn admin-btn-ghost" onClick={resetForm} disabled={saving}>{"Batal"}</button>}
           </div>
         </form>
       </section>
 
       <section className="admin-card">
         <div className="admin-card-head">
-          <h2 className="display-font">{t("Daftar Varian (")}{varian.length})</h2>
+          <h2 className="display-font">{"Daftar Varian ("}{varian.length})</h2>
         </div>
         {loading ? (
-          <p className="admin-empty">{t("Memuat varian...")}</p>
+          <p className="admin-empty">{"Memuat varian..."}</p>
         ) : varian.length === 0 ? (
-          <p className="admin-empty">{t("Belum ada varian. Tambahkan varian pertama melalui form di atas.")}</p>
+          <p className="admin-empty">{"Belum ada varian. Tambahkan varian pertama melalui form di atas."}</p>
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>{t("Varian")}</th>
-                  <th>{t("SKU / Barcode")}</th>
-                  <th>{t("Harga")}</th>
-                  <th>{t("Stok")}</th>
-                  <th>{t("Status")}</th>
-                  <th>{t("Aksi")}</th>
+                  <th>{"Varian"}</th>
+                  <th>{"SKU / Barcode"}</th>
+                  <th>{"Harga"}</th>
+                  <th>{"Stok"}</th>
+                  <th>{"Status"}</th>
+                  <th>{"Aksi"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -271,7 +268,7 @@ function ProdukVarianPage() {
                     <td>
                       <span className="kuki-varian-code">{item.sku}</span>
                       {item.barcode !== item.sku && (
-                        <small className="admin-sub">{t("Barcode:")} {item.barcode}</small>
+                        <small className="admin-sub">{"Barcode:"} {item.barcode}</small>
                       )}
                     </td>
                     <td>{formatRupiah(item.harga)}</td>
@@ -279,19 +276,19 @@ function ProdukVarianPage() {
                       <span className={`admin-badge ${item.stok <= item.stokMinimum ? 'warn' : ''}`}>
                         {item.stok}
                       </span>
-                      <small className="admin-sub">{t("Min.")} {item.stokMinimum}</small>
+                      <small className="admin-sub">{"Min."} {item.stokMinimum}</small>
                     </td>
                     <td><span className={`admin-badge ${!item.aktif ? 'warn' : ''}`}>
-                      {item.aktif ? t("Aktif") : t("Nonaktif")}
+                      {item.aktif ? "Aktif" : "Nonaktif"}
                     </span></td>
                     <td>
                       <div className="admin-row-actions kuki-varian-row-actions">
                         <button type="button" className="admin-btn admin-btn-ghost"
-                          onClick={() => mulaiEdit(item)} disabled={saving || deletingId !== null}>{t("Ubah")}</button>
+                          onClick={() => mulaiEdit(item)} disabled={saving || deletingId !== null}>{"Ubah"}</button>
                         <BarcodePrintButton value={item.barcode} productName={`${produk?.nama || 'Produk'} - ${item.namaVarian}`} />
                         <button type="button" className="admin-btn admin-btn-danger"
                           onClick={() => hapus(item)} disabled={saving || deletingId !== null}>
-                          {deletingId === item.id ? t("Menghapus...") : t("Hapus")}
+                          {deletingId === item.id ? "Menghapus..." : "Hapus"}
                         </button>
                       </div>
                     </td>

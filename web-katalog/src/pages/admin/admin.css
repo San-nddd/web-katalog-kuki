@@ -40,12 +40,11 @@
   font-size: 0.75rem;
 }
 
-.admin-logo {
+.admin-brand-logo {
   width: 60px;
-  height: 42px;
+  height: 60px;
   border-radius: 12px;
-  background: var(--orange);
-  color: var(--brown-dark);
+  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -187,7 +186,7 @@
   gap: 0.35rem;
   padding: 0.55rem 1rem;
   border-radius: var(--radius-sm);
-  border: 2px solid var(--brown-dark);
+  border: 2px solid var(--muted-cream);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 700;
@@ -195,7 +194,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   background: var(--cream-card);
-  color: var(--brown-dark);
+  color: var(--brown);
 }
 
 .admin-btn:hover:not(:disabled) {

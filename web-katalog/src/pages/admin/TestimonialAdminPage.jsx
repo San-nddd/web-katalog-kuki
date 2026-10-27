@@ -1,4 +1,3 @@
-import useAdminTranslation from '../../hooks/useAdminTranslation'
 import { useCallback, useEffect, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import ImageUpload from '../../components/ImageUpload'
@@ -24,8 +23,6 @@ const EMPTY_FORM = {
 }
 
 function TestimonialAdminPage() {
-  const { t } = useAdminTranslation()
-
   const [testimonials, setTestimonials] = useState([])
   const [comments, setComments] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
@@ -135,7 +132,7 @@ function TestimonialAdminPage() {
         await moderateTestimonial(testimonialId, form.status)
       }
 
-      setMessage(form.id ?t("Testimonial berhasil diperbarui.") :t("Testimonial berhasil ditambahkan."))
+      setMessage(form.id ?"Testimonial berhasil diperbarui." :"Testimonial berhasil ditambahkan.")
       resetForm()
       await loadTestimonials()
     } catch (saveError) {
@@ -152,8 +149,8 @@ function TestimonialAdminPage() {
       await moderateTestimonial(testimonial.id, status)
       setMessage(
         testimonial.source === 'customer' && status === 'published'
-          ?t("Testimonial pelanggan diverifikasi dan dipublikasikan.")
-          :t("Status testimonial berhasil diperbarui."),
+          ?"Testimonial pelanggan diverifikasi dan dipublikasikan."
+          :"Status testimonial berhasil diperbarui.",
       )
       await loadTestimonials()
     } catch (moderationError) {
@@ -162,13 +159,13 @@ function TestimonialAdminPage() {
   }
 
   const handleDeleteTestimonial = async (testimonial) => {
-    if (!window.confirm(t('Hapus testimonial dari "{nama}" beserta komentarnya?', { nama: testimonial.name }))) return
+    if (!window.confirm(("Hapus testimonial dari \"" + testimonial.name + "\" beserta komentarnya?"))) return
 
     setError('')
     setMessage('')
     try {
       await deleteTestimonial(testimonial.id)
-      setMessage(t("Testimonial berhasil dihapus."))
+      setMessage("Testimonial berhasil dihapus.")
       if (form.id === testimonial.id) resetForm()
       await loadTestimonials()
     } catch (deleteError) {
@@ -181,7 +178,7 @@ function TestimonialAdminPage() {
     setMessage('')
     try {
       await moderateTestimonialComment(comment.id, status)
-      setMessage(t("Status komentar berhasil diperbarui."))
+      setMessage("Status komentar berhasil diperbarui.")
       await loadComments()
     } catch (moderationError) {
       setError(moderationError.message)
@@ -189,13 +186,13 @@ function TestimonialAdminPage() {
   }
 
   const handleDeleteComment = async (comment) => {
-    if (!window.confirm(t("Hapus komentar ini?"))) return
+    if (!window.confirm("Hapus komentar ini?")) return
 
     setError('')
     setMessage('')
     try {
       await deleteTestimonialComment(comment.id)
-      setMessage(t("Komentar berhasil dihapus."))
+      setMessage("Komentar berhasil dihapus.")
       await loadComments()
     } catch (deleteError) {
       setError(deleteError.message)
@@ -203,11 +200,11 @@ function TestimonialAdminPage() {
   }
 
   return (
-    <AdminLayout title={t("Kelola Testimonial")}>
+    <AdminLayout title={"Kelola Testimonial"}>
       {message && <div className="admin-alert admin-alert-success" role="status">{message}</div>}
       {error && <div className="admin-alert" role="alert">{error}</div>}
 
-      <div className="admin-card-actions" role="tablist" aria-label={t("Kelola testimonial")}>
+      <div className="admin-card-actions" role="tablist" aria-label={"Kelola testimonial"}>
         <button
           type="button"
           role="tab"
@@ -218,7 +215,7 @@ function TestimonialAdminPage() {
             setActiveTab('testimonials')
           }}
         >
-          {t("Testimonial")}
+          {"Testimonial"}
         </button>
         <button
           type="button"
@@ -230,7 +227,7 @@ function TestimonialAdminPage() {
             setActiveTab('comments')
           }}
         >
-          {t("Moderasi Komentar")}
+          {"Moderasi Komentar"}
         </button>
       </div>
 
@@ -238,11 +235,11 @@ function TestimonialAdminPage() {
         <div className="admin-two-col">
           <section className="admin-card">
             <div className="admin-card-head">
-              <h2 className="display-font">{form.id ?t("Ubah Testimonial") :t("Tambah Manual")}</h2>
+              <h2 className="display-font">{form.id ?"Ubah Testimonial" :"Tambah Manual"}</h2>
             </div>
             <form className="admin-form" onSubmit={handleSave}>
               <label className="admin-field">
-                <span>{t("Nama pelanggan *")}</span>
+                <span>{"Nama pelanggan *"}</span>
                 <input
                   value={form.name}
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -251,7 +248,7 @@ function TestimonialAdminPage() {
                 />
               </label>
               <label className="admin-field">
-                <span>{t("Peran (opsional)")}</span>
+                <span>{"Peran (opsional)"}</span>
                 <input
                   value={form.role}
                   onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
@@ -259,7 +256,7 @@ function TestimonialAdminPage() {
                 />
               </label>
               <label className="admin-field">
-                <span>{t("Testimonial *")}</span>
+                <span>{"Testimonial *"}</span>
                 <textarea
                   value={form.quote}
                   onChange={(event) => setForm((current) => ({ ...current, quote: event.target.value }))}
@@ -269,22 +266,22 @@ function TestimonialAdminPage() {
                 />
               </label>
               <label className="admin-field">
-                <span>{t("Status publikasi")}</span>
+                <span>{"Status publikasi"}</span>
                 <select
                   value={form.status}
                   onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
                 >
-                  <option value="pending">{t("Menunggu")}</option>
-                  <option value="published">{t("Publikasikan")}</option>
-                  {form.id && <option value="rejected">{t("Ditolak")}</option>}
+                  <option value="pending">{"Menunggu"}</option>
+                  <option value="published">{"Publikasikan"}</option>
+                  {form.id && <option value="rejected">{"Ditolak"}</option>}
                 </select>
               </label>
               <label className="admin-field">
-                <span>{t("Foto (opsional)")}</span>
+                <span>{"Foto (opsional)"}</span>
                 {!removePhoto && selectedTestimonial?.photo_path && !photoFile && (
                   <div className="admin-form-preview">
                     <img src={assetUrl(selectedTestimonial.photo_path)} alt={`Foto ${form.name || 'testimonial'}`} />
-                    <span>{t("Foto saat ini")}</span>
+                    <span>{"Foto saat ini"}</span>
                   </div>
                 )}
                 <ImageUpload
@@ -304,22 +301,22 @@ function TestimonialAdminPage() {
                     className="admin-btn admin-btn-danger"
                     onClick={() => setRemovePhoto(true)}
                   >
-                    {t("Hapus foto saat ini")}
+                    {"Hapus foto saat ini"}
                   </button>
                 )}
               </label>
               <p className="admin-sub">
                 {selectedTestimonial?.source === 'customer'
-                  ?t("Kiriman pelanggan; publikasi akan memverifikasi sumber kiriman.")
-                  :t("Entri ini dicatat sebagai testimonial yang dimasukkan Admin, bukan kiriman pelanggan terverifikasi.")}
+                  ?"Kiriman pelanggan; publikasi akan memverifikasi sumber kiriman."
+                  :"Entri ini dicatat sebagai testimonial yang dimasukkan Admin, bukan kiriman pelanggan terverifikasi."}
               </p>
               <div className="admin-form-actions">
                 <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
-                  {saving ?t("Menyimpan...") : form.id ?t("Simpan Perubahan") :t("Tambah Testimonial")}
+                  {saving ?"Menyimpan..." : form.id ?"Simpan Perubahan" :"Tambah Testimonial"}
                 </button>
                 {form.id && (
                   <button type="button" className="admin-btn admin-btn-ghost" onClick={resetForm}>
-                    {t("Batal")}
+                    {"Batal"}
                   </button>
                 )}
               </div>
@@ -328,25 +325,25 @@ function TestimonialAdminPage() {
 
           <section className="admin-card">
             <div className="admin-card-head">
-              <h2 className="display-font">{t("Semua Testimonial")}</h2>
+              <h2 className="display-font">{"Semua Testimonial"}</h2>
               <button type="button" className="admin-btn admin-btn-ghost" onClick={loadTestimonials}>
-                {t("Muat ulang")}
+                {"Muat ulang"}
               </button>
             </div>
             {loading ? (
-              <p className="admin-empty">{t("Memuat testimonial...")}</p>
+              <p className="admin-empty">{"Memuat testimonial..."}</p>
             ) : testimonials.length === 0 ? (
-              <p className="admin-empty">{t("Belum ada testimonial.")}</p>
+              <p className="admin-empty">{"Belum ada testimonial."}</p>
             ) : (
               <div className="admin-table-wrap">
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>{t("Nama")}</th>
-                      <th>{t("Sumber")}</th>
-                      <th>{t("Status")}</th>
-                      <th>{t("Komentar")}</th>
-                      <th>{t("Aksi")}</th>
+                      <th>{"Nama"}</th>
+                      <th>{"Sumber"}</th>
+                      <th>{"Status"}</th>
+                      <th>{"Komentar"}</th>
+                      <th>{"Aksi"}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -358,16 +355,16 @@ function TestimonialAdminPage() {
                         </td>
                         <td>
                           <span className="admin-badge">
-                            {testimonial.source === 'customer' ? t("Pelanggan") :t("Manual Admin")}
+                            {testimonial.source === 'customer' ? "Pelanggan" :"Manual Admin"}
                           </span>
-                          {testimonial.isVerified && <small className="admin-sub">{t("Terverifikasi")}</small>}
+                          {testimonial.isVerified && <small className="admin-sub">{"Terverifikasi"}</small>}
                         </td>
                         <td><span className={`admin-badge ${testimonial.status !== 'published' ? 'warn' : ''}`}>{testimonial.status}</span></td>
                         <td>{testimonial.comments_count ?? testimonial.commentCount}</td>
                         <td>
                           <div className="admin-row-actions">
                             <button type="button" className="admin-btn admin-btn-ghost" onClick={() => startEdit(testimonial)}>
-                              {t("Ubah")}
+                              {"Ubah"}
                             </button>
                             {testimonial.status !== 'published' && (
                               <button
@@ -375,7 +372,7 @@ function TestimonialAdminPage() {
                                 className="admin-btn admin-btn-primary"
                                 onClick={() => handleModerateTestimonial(testimonial, 'published')}
                               >
-                                {testimonial.source === 'customer' ?t("Verifikasi & publikasikan") :t("Publikasikan")}
+                                {testimonial.source === 'customer' ?"Verifikasi & publikasikan" :"Publikasikan"}
                               </button>
                             )}
                             {testimonial.status !== 'rejected' && (
@@ -384,7 +381,7 @@ function TestimonialAdminPage() {
                                 className="admin-btn admin-btn-danger"
                                 onClick={() => handleModerateTestimonial(testimonial, 'rejected')}
                               >
-                                {t("Tolak")}
+                                {"Tolak"}
                               </button>
                             )}
                             <button
@@ -392,7 +389,7 @@ function TestimonialAdminPage() {
                               className="admin-btn admin-btn-danger"
                               onClick={() => handleDeleteTestimonial(testimonial)}
                             >
-                              {t("Hapus")}
+                              {"Hapus"}
                             </button>
                           </div>
                         </td>
@@ -407,9 +404,9 @@ function TestimonialAdminPage() {
       ) : (
         <section className="admin-card">
           <div className="admin-card-head">
-            <h2 className="display-font">{t("Komentar Testimonial")}</h2>
+            <h2 className="display-font">{"Komentar Testimonial"}</h2>
             <label className="admin-field">
-              <span>{t("Filter status")}</span>
+              <span>{"Filter status"}</span>
               <select
                 value={commentStatus}
                 onChange={(event) => {
@@ -417,33 +414,33 @@ function TestimonialAdminPage() {
                   setCommentStatus(event.target.value)
                 }}
               >
-                <option value="pending">{t("Menunggu")}</option>
-                <option value="approved">{t("Disetujui")}</option>
-                <option value="rejected">{t("Ditolak")}</option>
-                <option value="">{t("Semua")}</option>
+                <option value="pending">{"Menunggu"}</option>
+                <option value="approved">{"Disetujui"}</option>
+                <option value="rejected">{"Ditolak"}</option>
+                <option value="">{"Semua"}</option>
               </select>
             </label>
           </div>
           {loading ? (
-            <p className="admin-empty">{t("Memuat komentar...")}</p>
+            <p className="admin-empty">{"Memuat komentar..."}</p>
           ) : comments.length === 0 ? (
-            <p className="admin-empty">{t("Tidak ada komentar untuk filter ini.")}</p>
+            <p className="admin-empty">{"Tidak ada komentar untuk filter ini."}</p>
           ) : (
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>{t("Testimonial")}</th>
-                    <th>{t("Pengirim")}</th>
-                    <th>{t("Komentar")}</th>
-                    <th>{t("Status")}</th>
-                    <th>{t("Aksi")}</th>
+                    <th>{"Testimonial"}</th>
+                    <th>{"Pengirim"}</th>
+                    <th>{"Komentar"}</th>
+                    <th>{"Status"}</th>
+                    <th>{"Aksi"}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {comments.map((comment) => (
                     <tr key={comment.id}>
-                      <td>{comment.testimonial?.name ||t("Testimonial dihapus")}</td>
+                      <td>{comment.testimonial?.name ||"Testimonial dihapus"}</td>
                       <td>{comment.name}</td>
                       <td>{comment.comment}</td>
                       <td><span className={`admin-badge ${comment.status !== 'approved' ? 'warn' : ''}`}>{comment.status}</span></td>
@@ -455,7 +452,7 @@ function TestimonialAdminPage() {
                               className="admin-btn admin-btn-primary"
                               onClick={() => handleModerateComment(comment, 'approved')}
                             >
-                              {t("Setujui")}
+                              {"Setujui"}
                             </button>
                           )}
                           {comment.status !== 'rejected' && (
@@ -464,7 +461,7 @@ function TestimonialAdminPage() {
                               className="admin-btn admin-btn-danger"
                               onClick={() => handleModerateComment(comment, 'rejected')}
                             >
-                              {t("Tolak")}
+                              {"Tolak"}
                             </button>
                           )}
                           <button
@@ -472,7 +469,7 @@ function TestimonialAdminPage() {
                             className="admin-btn admin-btn-danger"
                             onClick={() => handleDeleteComment(comment)}
                           >
-                            {t("Hapus")}
+                            {"Hapus"}
                           </button>
                         </div>
                       </td>

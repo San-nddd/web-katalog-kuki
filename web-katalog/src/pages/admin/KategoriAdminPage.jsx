@@ -1,4 +1,3 @@
-import useAdminTranslation from '../../hooks/useAdminTranslation'
 import { useCallback, useEffect, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import {
@@ -14,8 +13,6 @@ import ImagePreviewModal from '../../components/ImagePreviewModal'
 const KOSONG = { id: null, nama: '', slug: '' }
 
 function KategoriAdminPage() {
-  const { t } = useAdminTranslation()
-
   const [kategori, setKategori] = useState([])
   const [form, setForm] = useState(KOSONG)
   const [loading, setLoading] = useState(true)
@@ -47,7 +44,7 @@ function KategoriAdminPage() {
     setMessage('')
 
     if (!form.nama.trim()) {
-      setError(t("Nama kategori wajib diisi."))
+      setError("Nama kategori wajib diisi.")
       return
     }
 
@@ -60,7 +57,7 @@ function KategoriAdminPage() {
       const kategoriId = saved?.id || form.id
 
       if (!kategoriId) {
-        throw new Error(t("Kategori sudah dikirim, tetapi respons API tidak mengembalikan ID kategori."))
+        throw new Error("Kategori sudah dikirim, tetapi respons API tidak mengembalikan ID kategori.")
       }
 
       // Jika upload gambar gagal, klik Simpan lagi harus mengubah kategori yang
@@ -71,13 +68,13 @@ function KategoriAdminPage() {
         await uploadGambarKategori(kategoriId, gambarFile)
       }
 
-      setMessage(form.id ?t("Kategori berhasil diperbarui.") :t("Kategori berhasil ditambahkan."))
+      setMessage(form.id ?"Kategori berhasil diperbarui." :"Kategori berhasil ditambahkan.")
       setForm(KOSONG)
       setGambarFile(null)
       setGambarLama(null)
       muat()
     } catch (err) {
-      setError(err.message ||t("Gagal menyimpan kategori."))
+      setError(err.message ||"Gagal menyimpan kategori.")
     } finally {
       setSaving(false)
     }
@@ -92,12 +89,12 @@ function KategoriAdminPage() {
   }
 
   const handleHapus = async (item) => {
-    const ok = window.confirm(t('Hapus kategori "{nama}"?', { nama: item.nama }))
+    const ok = window.confirm(("Hapus kategori \"" + item.nama + "\"?"))
     if (!ok) return
 
     try {
       await hapusKategori(item.id)
-      setMessage(t('Kategori "{nama}" dihapus.', { nama: item.nama }))
+      setMessage(("Kategori \"" + item.nama + "\" dihapus."))
       setError('')
       if (form.id === item.id) {
         setForm(KOSONG)
@@ -106,12 +103,12 @@ function KategoriAdminPage() {
       }
       muat()
     } catch (err) {
-      setError(err.message ||t("Gagal menghapus kategori."))
+      setError(err.message ||"Gagal menghapus kategori.")
     }
   }
 
   return (
-    <AdminLayout title={t("Kelola Kategori")}>
+    <AdminLayout title={"Kelola Kategori"}>
       {message && (
         <div className="admin-alert admin-alert-success" role="status">
           {message}
@@ -126,34 +123,34 @@ function KategoriAdminPage() {
       <div className="admin-two-col">
         <section className="admin-card">
           <div className="admin-card-head">
-            <h2 className="display-font">{form.id ?t("Ubah Kategori") :t("Tambah Kategori")}</h2>
+            <h2 className="display-font">{form.id ?"Ubah Kategori" :"Tambah Kategori"}</h2>
           </div>
 
           <form className="admin-form" onSubmit={handleSubmit}>
             <label className="admin-field">
-              <span>{t("Nama Kategori *")}</span>
+              <span>{"Nama Kategori *"}</span>
               <input
                 type="text"
                 value={form.nama}
                 onChange={(event) => setForm((prev) => ({ ...prev, nama: event.target.value }))}
-                placeholder={t("Croissant")}
+                placeholder={"Croissant"}
               />
             </label>
 
             <label className="admin-field">
-              <span>{t("Slug (opsional)")}</span>
+              <span>{"Slug (opsional)"}</span>
               <input
                 type="text"
                 value={form.slug}
                 onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-                placeholder={t("croissant")}
+                placeholder={"croissant"}
               />
             </label>
 
             <div className="admin-field">
               <ImageUploadEditor
                 key={form.id ? `kategori-${form.id}` : 'kategori-baru'}
-                label={form.id ?t("Ganti Gambar") :t("Gambar Kategori")}
+                label={form.id ?"Ganti Gambar" :"Gambar Kategori"}
                 initialUrl={gambarLama ? assetUrl(gambarLama) : ''}
                 defaultRatio="1:1"
                 maxFileMB={10}
@@ -163,7 +160,7 @@ function KategoriAdminPage() {
 
             <div className="admin-form-actions">
               <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
-                {saving ?t("Menyimpan...") : form.id ?t("Simpan Perubahan") :t("Tambah Kategori")}
+                {saving ?"Menyimpan..." : form.id ?"Simpan Perubahan" :"Tambah Kategori"}
               </button>
               {form.id && (
                 <button
@@ -175,7 +172,7 @@ function KategoriAdminPage() {
                     setGambarLama(null)
                   }}
                 >
-                  {t("Batal")}
+                  {"Batal"}
                 </button>
               )}
             </div>
@@ -184,13 +181,13 @@ function KategoriAdminPage() {
 
         <section className="admin-card">
           <div className="admin-card-head">
-            <h2 className="display-font">{t("Daftar Kategori")}</h2>
+            <h2 className="display-font">{"Daftar Kategori"}</h2>
           </div>
 
           {loading ? (
-            <p className="admin-empty">{t("Memuat kategori...")}</p>
+            <p className="admin-empty">{"Memuat kategori..."}</p>
           ) : kategori.length === 0 ? (
-            <p className="admin-empty">{t("Belum ada kategori.")}</p>
+            <p className="admin-empty">{"Belum ada kategori."}</p>
           ) : (
             <ul className="admin-kategori-list">
               {kategori.map((item) => (
@@ -215,7 +212,7 @@ function KategoriAdminPage() {
                     ) : (
                       <span
                         className="admin-category-thumbnail admin-category-thumbnail-empty"
-                        aria-label={t("Tanpa gambar")}
+                        aria-label={"Tanpa gambar"}
                       >
                         —
                       </span>
@@ -223,7 +220,7 @@ function KategoriAdminPage() {
                     <div>
                       <strong>{item.nama}</strong>
                       <small className="admin-sub">
-                        {item.slug} · {item.jumlahProduk} {t("produk")}
+                        {item.slug} · {item.jumlahProduk} {"produk"}
                       </small>
                     </div>
                   </div>
@@ -233,14 +230,14 @@ function KategoriAdminPage() {
                       className="admin-btn admin-btn-ghost"
                       onClick={() => handleEdit(item)}
                     >
-                      {t("Ubah")}
+                      {"Ubah"}
                     </button>
                     <button
                       type="button"
                       className="admin-btn admin-btn-danger"
                       onClick={() => handleHapus(item)}
                     >
-                      {t("Hapus")}
+                      {"Hapus"}
                     </button>
                   </div>
                 </li>

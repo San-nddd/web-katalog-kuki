@@ -31,7 +31,6 @@ function DetailProdukPage() {
   const key = String(id)
   const status = loaded.key === key ? loaded.status : 'loading'
   const product = loaded.key === key ? loaded.product : null
-  const [varianDipilih, setVarianDipilih] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -96,7 +95,7 @@ function DetailProdukPage() {
               <div className="detail-info">
                 <h1 className="detail-title display-font">{product.nama}</h1>
                 <p className="detail-price">{formatRupiah(product.harga)}</p>
-                <PilihanVarianProduk produkId={id} onChange={setVarianDipilih} tampilkanRingkasan={false}
+                <PilihanVarianProduk produkId={id} tampilkanRingkasan={false}
 />
 
                 {product.tersedia !== null && (

@@ -65,7 +65,7 @@ function ChatWindow({
   onStartNewConversation,
 }) {
   const [text, setText] = useState('')
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
   const bodyRef = useRef(null)
   const isNearBottomRef = useRef(true)
 

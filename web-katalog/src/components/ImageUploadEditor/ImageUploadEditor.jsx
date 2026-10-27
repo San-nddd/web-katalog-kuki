@@ -1,4 +1,3 @@
-import useAdminTranslation from '../../hooks/useAdminTranslation'
 import { useEffect, useId, useRef, useState } from 'react'
 import Cropper from 'react-easy-crop'
 import { createPortal } from 'react-dom'
@@ -42,8 +41,6 @@ export default function ImageUploadEditor({
   maxFileMB = 10,
   onChange,
 }) {
-  const { t } = useAdminTranslation()
-
   const inputId = useId()
   const inputRef = useRef(null)
   const [sourceFile, setSourceFile] = useState(null)
@@ -126,11 +123,11 @@ export default function ImageUploadEditor({
     event.target.value = ''
     if (!file) return
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setError(t("Gunakan gambar JPG, PNG, atau WebP."))
+      setError("Gunakan gambar JPG, PNG, atau WebP.")
       return
     }
     if (file.size > maxFileMB * 1024 * 1024) {
-      setError(t('Ukuran gambar maksimal {jumlah} MB.', { jumlah: maxFileMB }))
+      setError(("Ukuran gambar maksimal " + maxFileMB + " MB."))
       return
     }
     startEdit(file)
@@ -150,7 +147,7 @@ export default function ImageUploadEditor({
         if (!response.ok) throw new Error('HTTP ' + response.status)
         const blob = await response.blob()
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) {
-          throw new Error(t("Tipe file gambar tidak didukung."))
+          throw new Error("Tipe file gambar tidak didukung.")
         }
         if (blob.size > maxFileMB * 1024 * 1024) {
           throw new Error(`File melebihi ${maxFileMB} MB.`)
@@ -158,7 +155,7 @@ export default function ImageUploadEditor({
         startEdit(new File([blob], 'foto-tersimpan.jpg', { type: blob.type }))
       }
     } catch (err) {
-      setError(t("Gagal membuka foto tersimpan. Pastikan URL storage dapat diakses dan CORS diizinkan. ") + err.message)
+      setError("Gagal membuka foto tersimpan. Pastikan URL storage dapat diakses dan CORS diizinkan. " + err.message)
     } finally {
       setBusy(false)
     }
@@ -197,7 +194,7 @@ export default function ImageUploadEditor({
       onChange?.(result.file, result.metadata)
       closeEditor()
     } catch (err) {
-      setError(err.message ||t("Tidak dapat mengedit gambar."))
+      setError(err.message ||"Tidak dapat mengedit gambar.")
     } finally {
       setBusy(false)
     }
@@ -207,10 +204,10 @@ export default function ImageUploadEditor({
 
   return (
     <section className="kuki-image-editor">
-      <label htmlFor={inputId} className="kuki-image-editor__label">{t(label)}</label>
+      <label htmlFor={inputId} className="kuki-image-editor__label">{label}</label>
       {preview && (
         <div className="kuki-image-editor__preview">
-          <img src={preview} alt={`Pratinjau ${t(label)}`} />
+          <img src={preview} alt={`Pratinjau ${label}`} />
         </div>
       )}
       <div className="kuki-image-editor__actions">
@@ -223,25 +220,25 @@ export default function ImageUploadEditor({
           onChange={handlePick}
         />
         <button type="button" className="kuki-image-editor__button" onClick={() => inputRef.current?.click()}>
-          {preview ?t("Ganti Foto") :t("Pilih Foto")}
+          {preview ?"Ganti Foto" :"Pilih Foto"}
         </button>
         {preview && (
           <button type="button" className="kuki-image-editor__button" disabled={busy} onClick={handleEditSaved}>
-            {busy ? t('Memuat...') : t('Edit Foto')}
+            {busy ? "Memuat..." : "Edit Foto"}
           </button>
         )}
       </div>
-      <p className="kuki-image-editor__hint">{t("JPG/PNG/WebP · sumber maks.")} {maxFileMB} {t("MB. Hasil edit WebP maks. 2 MB (sesuai API Laravel).")}</p>
+      <p className="kuki-image-editor__hint">{"JPG/PNG/WebP · sumber maks."} {maxFileMB} {"MB. Hasil edit WebP maks. 2 MB (sesuai API Laravel)."}</p>
       {error && !isOpen && <p className="kuki-image-editor__error" role="alert">{error}</p>}
 
       {isOpen && sourceUrl && createPortal(
         <div className="kuki-image-editor__overlay" role="presentation">
-          <div className="kuki-image-editor__dialog" role="dialog" aria-modal="true" aria-label={t("Editor Foto")}>
+          <div className="kuki-image-editor__dialog" role="dialog" aria-modal="true" aria-label={"Editor Foto"}>
             <div className="kuki-image-editor__header">
-              <h2>{t("Editor Foto")}</h2>
-              <button type="button" className="kuki-image-editor__button" onClick={closeEditor} disabled={busy} aria-label={t("Tutup editor")}>✕</button>
+              <h2>{"Editor Foto"}</h2>
+              <button type="button" className="kuki-image-editor__button" onClick={closeEditor} disabled={busy} aria-label={"Tutup editor"}>✕</button>
             </div>
-            <p className="kuki-image-editor__hint">{t("Geser foto untuk crop, lalu atur zoom, rotasi, kecerahan, dan kontras.")}</p>
+            <p className="kuki-image-editor__hint">{"Geser foto untuk crop, lalu atur zoom, rotasi, kecerahan, dan kontras."}</p>
             <div className="kuki-image-editor__crop-area">
               <Cropper
                 image={sourceUrl}
@@ -259,53 +256,53 @@ export default function ImageUploadEditor({
 
             <div className="kuki-image-editor__controls">
               <label className="kuki-image-editor__field">
-                <span>{t("Rasio foto")}</span>
+                <span>{"Rasio foto"}</span>
                 <select value={ratio} onChange={(e) => chooseRatio(e.target.value)}>
-                  {RATIOS.map((choice) => <option key={choice.value} value={choice.value}>{t(choice.label)}</option>)}
+                  {RATIOS.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
                 </select>
               </label>
 
               {ratio === 'custom' && (
                 <div className="kuki-image-editor__dimension-row">
                   <label className="kuki-image-editor__field">
-                    <span>{t("Lebar rasio")}</span>
+                    <span>{"Lebar rasio"}</span>
                     <input type="number" min="1" max="10000" value={customWidth} onChange={(e) => { setCustomWidth(e.target.value); setPixels(null) }} />
                   </label>
                   <label className="kuki-image-editor__field">
-                    <span>{t("Tinggi rasio")}</span>
+                    <span>{"Tinggi rasio"}</span>
                     <input type="number" min="1" max="10000" value={customHeight} onChange={(e) => { setCustomHeight(e.target.value); setPixels(null) }} />
                   </label>
                 </div>
               )}
               <label className="kuki-image-editor__field">
-                <span>{t("Zoom:")} {zoom.toFixed(1)}{t("×")}</span>
+                <span>{"Zoom:"} {zoom.toFixed(1)}{"×"}</span>
                 <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
               </label>
               <label className="kuki-image-editor__field">
-                <span>{t("Kecerahan:")} {brightness}%</span>
+                <span>{"Kecerahan:"} {brightness}%</span>
                 <input type="range" min="50" max="150" step="1" value={brightness} onChange={(e) => setBrightness(Number(e.target.value))} />
               </label>
               <label className="kuki-image-editor__field">
-                <span>{t("Kontras:")} {contrast}%</span>
+                <span>{"Kontras:"} {contrast}%</span>
                 <input type="range" min="50" max="150" step="1" value={contrast} onChange={(e) => setContrast(Number(e.target.value))} />
               </label>
             </div>
 
             <div className="kuki-image-editor__footer">
               <div className="kuki-image-editor__actions">
-                <button type="button" className="kuki-image-editor__button" onClick={() => { setRotation((r) => r - 90); setPixels(null) }}>{t("↶ Kiri")}</button>
-                <button type="button" className="kuki-image-editor__button" onClick={() => { setRotation((r) => r + 90); setPixels(null) }}>{t("↷ Kanan")}</button>
-                <button type="button" className="kuki-image-editor__button" onClick={resetControls}>{t("Reset")}</button>
+                <button type="button" className="kuki-image-editor__button" onClick={() => { setRotation((r) => r - 90); setPixels(null) }}>{"↶ Kiri"}</button>
+                <button type="button" className="kuki-image-editor__button" onClick={() => { setRotation((r) => r + 90); setPixels(null) }}>{"↷ Kanan"}</button>
+                <button type="button" className="kuki-image-editor__button" onClick={resetControls}>{"Reset"}</button>
               </div>
               <div className="kuki-image-editor__actions">
-                <button type="button" className="kuki-image-editor__button" disabled={busy} onClick={closeEditor}>{t("Batal")}</button>
+                <button type="button" className="kuki-image-editor__button" disabled={busy} onClick={closeEditor}>{"Batal"}</button>
                 <button type="button" className="kuki-image-editor__button kuki-image-editor__button--primary" disabled={busy || !pixels} onClick={applyEdit}>
-                  {busy ? t("Memproses...") :t("Gunakan Foto")}
+                  {busy ? "Memproses..." :"Gunakan Foto"}
                 </button>
               </div>
             </div>
             {error && <p className="kuki-image-editor__error" role="alert">{error}</p>}
-            <p className="kuki-image-editor__hint">{t("Hasil edit disimpan sebagai WebP. Foto baru diunggah setelah tombol Simpan di form Admin ditekan.")}</p>
+            <p className="kuki-image-editor__hint">{"Hasil edit disimpan sebagai WebP. Foto baru diunggah setelah tombol Simpan di form Admin ditekan."}</p>
           </div>
         </div>,
         document.body,

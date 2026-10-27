@@ -1,4 +1,3 @@
-import useAdminTranslation from '../../hooks/useAdminTranslation'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
@@ -28,8 +27,6 @@ function ProdukFormPage() {
 }
 
 function ProdukFormInner({ id, isEdit }) {
-  const { t } = useAdminTranslation()
-
   const navigate = useNavigate()
 
   const [form, setForm] = useState(KOSONG)
@@ -81,7 +78,7 @@ function ProdukFormInner({ id, isEdit }) {
       .catch((err) => {
         if (!active) return
         setLoadedId(String(id))
-        setError(err.message ||t("Gagal memuat produk."))
+        setError(err.message ||"Gagal memuat produk.")
       })
 
     return () => {
@@ -97,12 +94,12 @@ function ProdukFormInner({ id, isEdit }) {
     setError('')
 
     if (!form.nama.trim() || !form.deskripsi.trim() || !form.harga) {
-      setError(t("Nama, deskripsi, dan harga wajib diisi."))
+      setError("Nama, deskripsi, dan harga wajib diisi.")
       return
     }
 
     if (Number(form.harga) < 0) {
-      setError(t("Harga tidak boleh negatif."))
+      setError("Harga tidak boleh negatif.")
       return
     }
 
@@ -136,17 +133,17 @@ function ProdukFormInner({ id, isEdit }) {
 
       navigate('/admin/produk')
     } catch (err) {
-      setError(err.message ||t("Gagal menyimpan produk."))
+      setError(err.message ||"Gagal menyimpan produk.")
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <AdminLayout title={isEdit ?t("Ubah Produk") :t("Tambah Produk")}>
+    <AdminLayout title={isEdit ?"Ubah Produk" :"Tambah Produk"}>
       <div className="admin-form-toolbar">
         <Link to="/admin/produk" className="admin-btn admin-btn-ghost">
-          {t("← Kembali")}
+          {"← Kembali"}
         </Link>
       </div>
 
@@ -158,27 +155,27 @@ function ProdukFormInner({ id, isEdit }) {
 
       <section className="admin-card">
         {loading ? (
-          <p className="admin-empty">{t("Memuat produk...")}</p>
+          <p className="admin-empty">{"Memuat produk..."}</p>
         ) : (
           <form className="admin-form" onSubmit={handleSubmit}>
             <label className="admin-field">
-              <span>{t("Nama Produk *")}</span>
-              <input type="text" value={form.nama} onChange={setField('nama')} placeholder={t("Croissant Butter")} />
+              <span>{"Nama Produk *"}</span>
+              <input type="text" value={form.nama} onChange={setField('nama')} placeholder={"Croissant Butter"} />
             </label>
 
             <label className="admin-field">
-              <span>{t("Deskripsi *")}</span>
+              <span>{"Deskripsi *"}</span>
               <textarea
                 rows="4"
                 value={form.deskripsi}
                 onChange={setField('deskripsi')}
-                placeholder={t("Croissant renyah dengan aroma butter...")}
+                placeholder={"Croissant renyah dengan aroma butter..."}
               />
             </label>
 
             <div className="admin-form-grid">
               <label className="admin-field">
-                <span>{t("Harga (Rp) *")}</span>
+                <span>{"Harga (Rp) *"}</span>
                 <input
                   type="number"
                   min="0"
@@ -189,9 +186,9 @@ function ProdukFormInner({ id, isEdit }) {
               </label>
 
               <label className="admin-field">
-                <span>{t("Kategori")}</span>
+                <span>{"Kategori"}</span>
                 <select value={form.kategoriId} onChange={setField('kategoriId')}>
-                  <option value="">{t("Tanpa kategori")}</option>
+                  <option value="">{"Tanpa kategori"}</option>
                   {kategori.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
@@ -201,12 +198,12 @@ function ProdukFormInner({ id, isEdit }) {
               </label>
 
               <label className="admin-field">
-                <span>{t("Stok")}</span>
+                <span>{"Stok"}</span>
                 <input type="number" min="0" value={form.stok} onChange={setField('stok')} />
               </label>
 
               <label className="admin-field">
-                <span>{t("Stok Minimum")}</span>
+                <span>{"Stok Minimum"}</span>
                 <input
                   type="number"
                   min="0"
@@ -216,13 +213,13 @@ function ProdukFormInner({ id, isEdit }) {
               </label>
 
               <label className="admin-field">
-                <span>{t("Barcode / SKU")}</span>
-                <input type="text" value={form.barcode} onChange={setField('barcode')} placeholder={t("KKB-001")} />
+                <span>{"Barcode / SKU"}</span>
+                <input type="text" value={form.barcode} onChange={setField('barcode')} placeholder={"KKB-001"} />
               </label>
 
               <label className="admin-field">
-                <span>{t("Slug (opsional)")}</span>
-                <input type="text" value={form.slug} onChange={setField('slug')} placeholder={t("croissant-butter")} />
+                <span>{"Slug (opsional)"}</span>
+                <input type="text" value={form.slug} onChange={setField('slug')} placeholder={"croissant-butter"} />
               </label>
             </div>
 
@@ -240,18 +237,18 @@ function ProdukFormInner({ id, isEdit }) {
             />
 
             <label className="admin-field">
-              <span>{t("Informasi AI (bahan, alergen, textur)")}</span>
+              <span>{"Informasi AI (bahan, alergen, textur)"}</span>
               <textarea
                 rows="3"
                 value={form.metadataAi}
                 onChange={setField('metadataAi')}
-                placeholder={t("Bahan utama: tepung, butter, gula...")}
+                placeholder={"Bahan utama: tepung, butter, gula..."}
               />
             </label>
 
             <div className="admin-field">
               <ImageUploadEditor
-                label={isEdit ?t("Ganti / Edit Gambar Produk") :t("Gambar Produk")}
+                label={isEdit ?"Ganti / Edit Gambar Produk" :"Gambar Produk"}
                 initialUrl={gambarLama ? assetUrl(gambarLama) : ''}
                 defaultRatio="1:1"
                 maxFileMB={10}
@@ -261,10 +258,10 @@ function ProdukFormInner({ id, isEdit }) {
 
             <div className="admin-form-actions">
               <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
-                {saving ?t("Menyimpan...") : isEdit ?t("Simpan Perubahan") :t("Tambah Produk")}
+                {saving ?"Menyimpan..." : isEdit ?"Simpan Perubahan" :"Tambah Produk"}
               </button>
               <Link to="/admin/produk" className="admin-btn admin-btn-ghost">
-                {t("Batal")}
+                {"Batal"}
               </Link>
             </div>
           </form>

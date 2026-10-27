@@ -1,23 +1,20 @@
-import useAdminTranslation from '../hooks/useAdminTranslation'
 import BarcodePrintButton from './BarcodePrintButton'
 import { encodeCode128B } from '../utils/code128'
 import './barcodePrint.css'
 
 function BarcodePreview({ value, productName, produkId, stok, canPrint = false }) {
-  const { t } = useAdminTranslation()
-
   const encoded = encodeCode128B(value)
 
   return (
-    <div className="kuki-barcode-preview" aria-label={t("Pratinjau barcode produk")}>
-      <strong className="kuki-barcode-preview-title">{t("Pratinjau Barcode — Code 128")}</strong>
+    <div className="kuki-barcode-preview" aria-label={"Pratinjau barcode produk"}>
+      <strong className="kuki-barcode-preview-title">{"Pratinjau Barcode — Code 128"}</strong>
 
       {encoded.error ? (
         <p className="kuki-barcode-help" role="status">{encoded.error}</p>
       ) : (
         <>
           <div className="kuki-barcode-printable">
-            <div className="kuki-barcode-product-name">{productName?.trim() || t("Produk Kuki Bakehouse")}</div>
+            <div className="kuki-barcode-product-name">{productName?.trim() || "Produk Kuki Bakehouse"}</div>
             <svg
               role="img"
               aria-label={`Barcode Code 128 untuk ${encoded.text}`}
@@ -44,8 +41,8 @@ function BarcodePreview({ value, productName, produkId, stok, canPrint = false }
           <div className="kuki-barcode-preview-actions">
             <span className="kuki-barcode-help">
               {canPrint
-                ?t("Kode telah tersimpan. Siap dicetak sebagai label.")
-                :t("Simpan produk atau perubahan barcode terlebih dahulu sebelum mencetak.")}
+                ?"Kode telah tersimpan. Siap dicetak sebagai label."
+                :"Simpan produk atau perubahan barcode terlebih dahulu sebelum mencetak."}
             </span>
             <BarcodePrintButton
               value={value}

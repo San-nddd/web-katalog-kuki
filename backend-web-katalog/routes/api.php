@@ -1,8 +1,8 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\MutasiStokController;
 use App\Http\Controllers\AdminChatController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuthController;
@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\TestimonialCommentController;
 use App\Http\Controllers\Api\ProdukVarianController;
 use App\Http\Controllers\Api\ProduksiHarianController;
+use App\Http\Controllers\Api\LaporanInventarisController;
+use App\Http\Controllers\Api\Pos\PosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,6 +126,8 @@ Route::prefix('management')
     ->middleware(['auth:sanctum', 'can:view-management-dashboard'])
     ->group(function () {
         Route::get('/dashboard', [ManagementDashboardController::class, 'show']);
+        Route::get('/laporan-inventaris', [LaporanInventarisController::class, 'index']);
+        Route::get('/laporan-inventaris/export', [LaporanInventarisController::class, 'exportCsv']);
     });
 
 
@@ -154,3 +158,31 @@ Route::prefix('admin/testimonial')
         Route::delete('/{testimonial}/foto', [TestimonialController::class, 'deletePhoto']);
 
     });
+
+// Riwayat Mutasi Stok — GET Admin/Owner, koreksi hanya Admin.
+Route::get('/admin/mutasi-stok', [MutasiStokController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::post('/admin/mutasi-stok/koreksi', [MutasiStokController::class, 'koreksi'])->middleware(['auth:sanctum', 'can:manage-admin']);
+
+// STOCK OPNAME — Admin/Owner boleh membaca, hanya Admin boleh mengubah.
+Route::get('/admin/opname-stok', [\App\Http\Controllers\Api\StockOpnameController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::get('/admin/opname-stok/ringkasan-pengeluaran', [\App\Http\Controllers\Api\StockOpnameController::class, 'ringkasanPengeluaran'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::get('/admin/opname-stok/{opnameStok}', [\App\Http\Controllers\Api\StockOpnameController::class, 'show'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::post('/admin/opname-stok', [\App\Http\Controllers\Api\StockOpnameController::class, 'store'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::put('/admin/opname-stok/{opnameStok}', [\App\Http\Controllers\Api\StockOpnameController::class, 'update'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::post('/admin/opname-stok/{opnameStok}/selesai', [\App\Http\Controllers\Api\StockOpnameController::class, 'selesai'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::post('/admin/opname-stok/{opnameStok}/batalkan', [\App\Http\Controllers\Api\StockOpnameController::class, 'batalkan'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::post('/admin/opname-stok/pengeluaran', [\App\Http\Controllers\Api\StockOpnameController::class, 'pengeluaran'])->middleware(['auth:sanctum', 'can:manage-admin']);
+
+
+//POS 
+Route::prefix('pos')
+    ->middleware(['auth:sanctum', 'can:manage-pos'])
+    ->group(function () {
+        Route::get('/transaksi', [PosController::class, 'index']);
+        Route::post('/transaksi', [PosController::class, 'store']);
+        Route::get('/transaksi/{transaksi}', [PosController::class, 'show']);
+        Route::put('/transaksi/{transaksi}', [PosController::class, 'update']);
+        Route::delete('/transaksi/{transaksi}', [PosController::class, 'destroy']);
+    });
+    // Flutter POS Kuki Bakehouse
+require __DIR__ . '/pos.php';

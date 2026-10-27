@@ -17,6 +17,9 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import AdminRoute from './pages/admin/AdminRoute'
 import ManagementRoute from './pages/admin/ManagementRoute'
 import ManagementDashboardPage from './pages/admin/ManagementDashboardPage'
+import LaporanInventarisPage from './pages/admin/LaporanInventarisPage'
+import RiwayatStokPage from './pages/admin/RiwayatStokPage'
+import StockOpnamePage from './pages/admin/StockOpnamePage'
 import './pages/sections.css'
 import './App.css'
 import SmoothScroll from './components/SmoothScroll'
@@ -39,6 +42,14 @@ function App() {
           element={
             <ManagementRoute>
               <ManagementDashboardPage />
+            </ManagementRoute>
+          }
+        />
+        <Route
+          path="/management/laporan-inventaris"
+          element={
+            <ManagementRoute>
+              <LaporanInventarisPage />
             </ManagementRoute>
           }
         />
@@ -123,7 +134,18 @@ function App() {
             </AdminRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/admin/mutasi-stok" element={<AdminRoute><RiwayatStokPage /></AdminRoute>} />
+        <Route path="/management/mutasi-stok" element={<ManagementRoute><RiwayatStokPage readOnly /></ManagementRoute>} />
+        <Route path="/admin/opname-stok" element={<AdminRoute><StockOpnamePage /></AdminRoute>} />
+        <Route path="/management/opname-stok" element={<ManagementRoute><StockOpnamePage readOnly /></ManagementRoute>} />
+        <Route
+  path="*"
+  element={
+    <div style={{ padding: 30 }}>
+      Route React tidak ditemukan: {window.location.pathname}
+    </div>
+  }
+/>
       </Routes>
     </div>
   )

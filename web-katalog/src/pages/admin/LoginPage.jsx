@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { login } from '../../services/authService'
 import './admin.css'
-import useAdminTranslation from '../../hooks/useAdminTranslation'
-
 function LoginPage() {
-  const { t } = useAdminTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -18,7 +15,7 @@ function LoginPage() {
     setError('')
 
     if (!email.trim() || !password) {
-      setError(t("Email dan password wajib diisi."))
+      setError("Email dan password wajib diisi.")
       return
     }
 
@@ -45,10 +42,10 @@ function LoginPage() {
     <div className="admin-login">
       <form className="admin-login-card" onSubmit={handleSubmit}>
         <span className="admin-logo admin-login-logo" aria-hidden="true">
-          {t("K")}
+          {"K"}
         </span>
         <h1 className="display-font">Admin &amp; Management</h1>
-        <p>{t("Masuk untuk mengelola atau memantau Kuki Bakehouse.")}</p>
+        <p>{"Masuk untuk mengelola atau memantau Kuki Bakehouse."}</p>
 
         {error && (
           <div className="admin-alert" role="alert">
@@ -57,23 +54,23 @@ function LoginPage() {
         )}
         {location.state?.accessDenied && (
           <div className="admin-alert" role="alert">
-            {t("Sesi ini tidak memiliki akses Admin. Silakan masuk dengan akun Admin.")}
+            {"Sesi ini tidak memiliki akses Admin. Silakan masuk dengan akun Admin."}
           </div>
         )}
 
         <label className="admin-field">
-          <span>{t("Email")}</span>
+          <span>{"Email"}</span>
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder={t("admin@kukibakehouse.com")}
+            placeholder={"admin@kukibakehouse.com"}
             autoComplete="username"
           />
         </label>
 
         <label className="admin-field">
-          <span>{t("Password")}</span>
+          <span>{"Password"}</span>
           <input
             type="password"
             value={password}
@@ -84,11 +81,11 @@ function LoginPage() {
         </label>
 
         <button type="submit" className="admin-btn admin-btn-primary" disabled={loading}>
-          {loading ? t("Memproses...") : t("Masuk")}
+          {loading ? "Memproses..." : "Masuk"}
         </button>
 
         <Link className="admin-login-back" to="/">
-          {t("Kembali ke situs")}
+          {"Kembali ke situs"}
         </Link>
       </form>
     </div>
