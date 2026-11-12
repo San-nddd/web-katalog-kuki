@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Send } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import {
   ambilDaftarObrolan,
@@ -10,7 +11,6 @@ import {
   ambilPertanyaanTidakTerjawab,
 } from '../../services/chatAdminService'
 import {
-  SendIcon,
   AlertCircleIcon,
   ArrowLeftIcon,
 } from '../../components/icons'
@@ -723,7 +723,7 @@ function AdminChatPage() {
                       </>
                     ) : (
                       <>
-                        <SendIcon width="16" height="16" />
+                        <Send size={17} strokeWidth={2} aria-hidden="true" />
                         {"Kirim"}
                       </>
                     )}
