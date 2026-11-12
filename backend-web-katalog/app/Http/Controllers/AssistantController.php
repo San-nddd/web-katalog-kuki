@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Obrolan;
 use App\Models\PesanObrolan;
+use App\Notifications\HandoverRequestedNotification;
 use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
-use App\Notifications\HandoverRequestedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\facades\Notifications;
 
 class AssistantController extends Controller
 {
@@ -167,83 +166,83 @@ class AssistantController extends Controller
      * system-message handover sehingga tidak perlu destructive migration.
      */
     public function handover(Request $request): JsonResponse
-{
-    $validated = $request->validate([
-        'session_id' => 'nullable|string|max:64',
-        'reason' => 'nullable|string|max:500',
-    ]);
+    {
+        $validated = $request->validate([
+            'session_id' => 'nullable|string|max:64',
+            'reason' => 'nullable|string|max:500',
+        ]);
 
-    $sessionId = $validated['session_id'] ?? null;
+        $sessionId = $validated['session_id'] ?? null;
 
-    $reason = $validated['reason']
-        ?? 'Pengguna meminta bantuan admin manusia';
+        $reason = $validated['reason']
+            ?? 'Pengguna meminta bantuan admin manusia';
 
-    // Session wajib ada
-    if (! $sessionId) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Session ID diperlukan.',
-            'data' => null,
-        ], 400);
-    }
+        // Session wajib ada
+        if (! $sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID diperlukan.',
+                'data' => null,
+            ], 400);
+        }
 
-    // ✅ Cari obrolan DULU
-    $obrolan = Obrolan::where(
-        'session_id',
-        $sessionId
-    )->first();
+        // ✅ Cari obrolan DULU
+        $obrolan = Obrolan::where(
+            'session_id',
+            $sessionId
+        )->first();
 
-    if (! $obrolan) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Obrolan tidak ditemukan.',
-            'data' => null,
-        ], 404);
-    }
+        if (! $obrolan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Obrolan tidak ditemukan.',
+                'data' => null,
+            ], 404);
+        }
 
-    // Simpan pesan sistem handover
-    $obrolan->pesan()->create([
-        'tipe_pengirim' => 'system',
-        'pesan' => 'Permintaan handover ke admin: '.$reason,
-    ]);
+        // Simpan pesan sistem handover
+        $obrolan->pesan()->create([
+            'tipe_pengirim' => 'system',
+            'pesan' => 'Permintaan handover ke admin: '.$reason,
+        ]);
 
-    // Update status
-    $obrolan->update([
-        'status_handover' => 'membutuhkan_admin',
-        'status' => 'menunggu',
-    ]);
+        // Update status
+        $obrolan->update([
+            'status_handover' => 'membutuhkan_admin',
+            'status' => 'menunggu',
+        ]);
 
-    // ✅ Baru kirim Web Push
-    try {
-        $admins = User::whereHas(
-            'pushSubscriptions'
-        )->get();
+        // ✅ Baru kirim Web Push
+        try {
+            $admins = User::whereHas(
+                'pushSubscriptions'
+            )->get();
 
-        if ($admins->isNotEmpty()) {
-            Notification::send(
-                $admins,
-                new HandoverRequestedNotification(
-                    $obrolan->id,
-                    'Ada customer yang meminta bantuan Admin.'
-                )
+            if ($admins->isNotEmpty()) {
+                Notification::send(
+                    $admins,
+                    new HandoverRequestedNotification(
+                        $obrolan->id,
+                        'Ada customer yang meminta bantuan Admin.'
+                    )
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::error(
+                'Gagal mengirim Web Push handover: '
+                .$e->getMessage()
             );
         }
-    } catch (\Throwable $e) {
-        Log::error(
-            'Gagal mengirim Web Push handover: '
-            .$e->getMessage()
-        );
-    }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Permintaan handover ke admin berhasil dikirim.',
-        'data' => [
-            'session_id' => $sessionId,
-            'status_handover' => 'membutuhkan_admin',
-        ],
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan handover ke admin berhasil dikirim.',
+            'data' => [
+                'session_id' => $sessionId,
+                'status_handover' => 'membutuhkan_admin',
+            ],
+        ]);
+    }
 
     private function latestOpenConversation(string $sessionId): ?Obrolan
     {

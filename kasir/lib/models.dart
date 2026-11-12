@@ -5,6 +5,20 @@ String rupiah(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', dec
 Map<String, dynamic> asMap(dynamic raw) => raw is Map ? Map<String, dynamic>.from(raw) : {};
 int asInt(dynamic n) => n is num ? n.toInt() : int.tryParse('$n') ?? 0;
 
+int _productInt(Map<String, dynamic> json, String key, {bool positive = false}) {
+  final value = json[key];
+  final int? parsed = switch (value) {
+    int number => number,
+    num number when number.isFinite && number == number.roundToDouble() => number.toInt(),
+    String text => int.tryParse(text.trim()),
+    _ => null,
+  };
+  if (parsed == null || parsed < 0 || (positive && parsed == 0)) {
+    throw FormatException('Data produk tidak valid: $key harus bilangan bulat yang valid.');
+  }
+  return parsed;
+}
+
 class PosProduct {
   final int id, price, stock;
   final String name, category, barcode;
@@ -13,9 +27,22 @@ class PosProduct {
     required this.category, required this.barcode, this.image});
   factory PosProduct.fromJson(dynamic value) {
     final json = asMap(value);
-    return PosProduct(id: asInt(json['id']), price: asInt(json['harga']), stock: asInt(json['stok']),
-      name: '${json['nama'] ?? '-'}', category: '${json['kategori'] ?? 'Lainnya'}',
-      barcode: '${json['barcode'] ?? ''}', image: json['gambar']?.toString());
+    final name = json['nama'];
+    if (name is! String || name.trim().isEmpty) {
+      throw const FormatException('Data produk tidak valid: nama produk tidak tersedia.');
+    }
+
+    return PosProduct(
+      id: _productInt(json, 'id', positive: true),
+      price: _productInt(json, 'harga'),
+      stock: _productInt(json, 'stok'),
+      name: name,
+      category: json['kategori'] is String && (json['kategori'] as String).trim().isNotEmpty
+          ? json['kategori'] as String
+          : 'Lainnya',
+      barcode: json['barcode']?.toString() ?? '',
+      image: json['gambar']?.toString(),
+    );
   }
 }
 

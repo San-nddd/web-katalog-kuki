@@ -1,21 +1,28 @@
-# GitHub Copilot — Kuki Bakehouse (DRAFT v0.2)
+# Instruksi GitHub Copilot — Kuki Bakehouse (Mode Hemat Token)
 
-Kamu adalah **pelaksana software development mandiri** dalam sesi Copilot Agent. Tujuanmu menyelesaikan backlog Kuki Bakehouse, bukan hanya menjelaskan langkah. Baca `AGENTS.md`, `docs/AUTONOMOUS_WORKFLOW.md`, `docs/TASK_BOARD.md`, `docs/PROJECT_STATUS.md`, serta PRD sebelum mengedit.
+Jawab dalam Bahasa Indonesia. Kerjakan tugas yang diminta saja; **minimal diff, minimal command, minimal output**. Gunakan skill `.github/skills/kuki-clean-ui-code/SKILL.md` untuk tugas merapikan UI atau kode.
 
-**Pola kerja:** pilih `READY+AUTO` → audit file terkait → implement minimal → test sungguhan → benahi error → update dokumentasi & log → teruskan ke tugas AUTO berikutnya. Jangan meminta konfirmasi tiap file/tugas AUTO. Hormati approval platform jika muncul. Tugas sensitif harus `BLOCKED/NEED_APPROVAL`; dapat lanjut tugas aman lain.
+## Wajib
+- Baca **hanya file aktual yang berkaitan** dengan tugas beserta pemanggil/dependensi langsung jika perlu. Jangan menebak struktur proyek atau memindai seluruh repository tanpa alasan.
+- UI publik, Admin/Management, Maps, dan Kuki Assistant yang telah disetujui **tidak boleh di-redesign** kecuali diminta. Pertahankan perilaku dan responsivitas.
+- Kode sederhana: nama jelas, fungsi secukupnya, CSS lokal, tanpa abstraksi/helper/dependency/komentar berlebihan. Jangan membuat kode jadi rumit demi terlihat canggih.
+- Hindari AI slop: glassmorphism, glow/gradient berlebihan, shadow besar, emoji dekoratif, badge/kartu generik, animasi tanpa fungsi, atau semua teks bold. Ikuti warna/font/spacing existing.
+- Jangan ubah fitur di luar tugas atau menambahkan Blog, absensi, e-commerce/checkout web, tabel `produk_varian`, atau aplikasi Owner terpisah. Produk adalah baris mandiri dalam `katalog_produk` berelasi ke `kategoris`. POS Flutter masih terpisah.
+- URL Instagram/TikTok diatur sesuai `KukiSocialLinks.jsx` aktual. Jangan buat URL palsu atau mengubah cara konfigurasi tanpa diminta.
 
-**Aturan yang tidak boleh dilanggar:**
-- Jangan mengubah UI/UX disetujui tanpa referensi dan izin, termasuk navbar, CSS, tema, icon, aset dan animasi.
-- Jangan mengubah/menghapus fitur, endpoint, skema database, rute auth, role, stok atau catatan keuangan yang sudah berjalan tanpa approval khusus.
-- Jangan memperkenalkan checkout ecommerce website: website hanya katalog dan pemesanan manual.
-- Pertahankan notifikasi Chat Admin, testimonial & komentar, stok, produksi, opname, riwayat mutasi, laporan, Owner/Management, AI Assistant & handover.
-- Gunakan bahasa Indonesia pada log, dokumentasi, komentar penting dan identifier ketika konsisten dengan module; jangan reformat/refactor masif tanpa manfaat langsung.
-- Cek `git status` dan isi file sebelum edit; jangan overwrite perubahan pengguna. Kode yang belum diverifikasi = status UNKNOWN, bukan sudah selesai.
-- Jangan menjalankan migrasi/seeding, upgrade mayor, script installer lama, deployment atau operasi destruktif otomatis. Jangan menghapus `.env`, DB, upload, history.
-- Jangan menyimpan rahasia di docs/log/commit. Validasi server-side role dan transaksi sensitif.
-- Flutter: audit folder `kasir/` dahulu; target Android tablet dan rancangan iPadOS. Tampilan mengikuti referensi pengguna yang benar-benar tersedia.
-- Login & absensi pegawai kembali dalam scope PRD tetapi schema, role, kebijakan dan desain perlu keputusan owner; tidak ada foto wajah/GPS/biometrik mentah secara default.
-- Setiap task harus memperbarui `docs/TASK_BOARD.md`, `docs/PROJECT_STATUS.md`, `docs/logs/WORK_LOG.md` dan modul docs yang berubah. Jika error, append `docs/logs/ERROR_LOG.md` dengan solusi atau blocker.
-- Periksa hasil `npm run build`, `php artisan test`, `flutter analyze` atau pengujian lain HANYA jika environment benar-benar tersedia; laporkan skipped dengan alasannya, jangan klaim lulus tanpa menjalankan.
+## Kebijakan pengujian — HEMAT TOKEN, proporsional risiko
+1. **CSS, teks, spacing, ikon, perubahan visual kecil:** cukup baca diff dan lakukan pengecekan manual terarah bila tersedia. **Tidak perlu** `npm run build`, `npm run lint`, test suite, browser otomatis, screenshot multi-viewport, atau menambah test baru secara default.
+2. **JSX/React sederhana (import, render, tombol):** cukup **maksimal satu** pemeriksaan terarah yang relevan (mis. lint file yang diubah) bila alat sudah tersedia. Jangan jalankan lint seluruh proyek hanya untuk satu komponen.
+3. **Logika fitur, state, route, atau integrasi:** uji kasus terkait perubahan saja. Build hanya bila perubahan lintas modul membuatnya perlu atau pengguna meminta.
+4. **Auth, permission, database, stok, transaksi, keamanan, perubahan destruktif:** lakukan validasi/pengujian yang memadai sesuai risiko; jangan mengorbankan keamanan untuk hemat token. Tes lebih luas bila memang diperlukan.
+5. **Full test suite, audit semua halaman, dan banyak viewport** hanya bila pengguna meminta, atau ada alasan teknis kuat yang dijelaskan singkat.
 
-**Definisi selesai:** acceptance criteria terpenuhi, tes terkait lulus (atau keterbatasan didokumentasi), tidak ada perubahan scope, tidak ada regresi, ada penjelasan dalam `docs/modules/`, log & file status diperbarui. Jangan otomatis merge/deploy.
+Jangan menjalankan command yang sama berkali-kali tanpa perubahan relevan. Jika satu pemeriksaan gagal, telusuri penyebabnya dan perbaiki sebelum mengulang. Jangan membuat file test, script test, atau laporan panjang untuk edit kecil. Jangan menginstal package hanya untuk testing tanpa kebutuhan. Jangan mengklaim lulus test yang belum dijalankan.
+
+## Respons akhir (maks. 4 baris/butir untuk tugas kecil)
+- **Diubah:** file dan inti perubahannya.
+- **Tetap:** UI/fitur yang dijaga (jika relevan).
+- **Cek:** jenis pengecekan yang benar-benar dilakukan, atau "belum diuji".
+- **Perlu tindakan:** hanya bila ada langkah manual penting.
+
+Langsung kerjakan tugas; jangan membuat rencana, tabel audit, atau uraian panjang untuk perubahan sederhana kecuali pengguna meminta.

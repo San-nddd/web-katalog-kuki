@@ -42,4 +42,12 @@ return [
         'timeout' => 30,
     ],
 
+    // Leaflet: pencarian alamat dan routing melalui Laravel, bukan API key di browser.
+    'kuki_location' => [
+        'api_key' => env('HEIGIT_API_KEY'),
+        'store_lat' => env('KUKI_STORE_LAT'),
+        'store_lng' => env('KUKI_STORE_LNG'),
+        'walking_demo_fallback' => env('KUKI_FOOT_DEMO_FALLBACK', false),
+    ],
+
 ];

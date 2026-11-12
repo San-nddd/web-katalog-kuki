@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MutasiStok;
 use App\Models\OpnameStok;
-use App\Models\ProduksiHarian;
 use App\Models\produk;
+use App\Models\ProduksiHarian;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -37,6 +37,7 @@ class LaporanInventarisController extends Controller
         if ($tanggalAwal->diffInDays($tanggalAkhir) > self::MAX_DAYS) {
             throw ValidationException::withMessages(['tanggal_selesai' => ['Rentang laporan maksimal 366 hari.']]);
         }
+
         return [$mulai, $selesai];
     }
 
@@ -154,6 +155,7 @@ class LaporanInventarisController extends Controller
     private function csvAman($nilai): string
     {
         $teks = (string) ($nilai ?? '');
+
         // Mencegah formula injection saat CSV dibuka di Excel / spreadsheet lain.
         return preg_match('/^[\s]*[=+\-@]/u', $teks) ? "'".$teks : $teks;
     }

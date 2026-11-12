@@ -1,0 +1,8 @@
+<?php
+// Tambahkan ke dalam array return di config/services.php yang sudah ada.
+// Jangan mengganti isi config/services.php.
+'kuki_location' => [
+    'api_key' => env('HEIGIT_API_KEY'),
+    'store_lat' => env('KUKI_STORE_LAT'),
+    'store_lng' => env('KUKI_STORE_LNG'),
+],

@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ChatButton from './ChatButton'
 import ChatWindow from './ChatWindow'
+import { getProduk } from '../services/produkService'
+import { isPurchaseIntent } from './kukiChatIntents.mjs'
+import { submitPurchaseWithHandover } from './kukiPurchaseFlow.mjs'
 import {
   getSessionId,
   buatSession,
@@ -40,6 +43,12 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
   const [showHandover, setShowHandover] = useState(false)
   const [handoverLoading, setHandoverLoading] = useState(false)
   const [handoverError, setHandoverError] = useState('')
+  const [catalogProducts, setCatalogProducts] = useState([])
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  const [catalogLoaded, setCatalogLoaded] = useState(false)
+  const [conversationVersion, setConversationVersion] = useState(0)
+  const sendingRef = useRef(false)
+  const purchaseHandoverRef = useRef(false)
 
   const open = controlledOpen ?? internalOpen
 
@@ -50,6 +59,24 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
     },
     [onOpenChange],
   )
+
+  // Produk dari Laravel, bukan mock data; gagal muat tidak mengganggu chat.
+  useEffect(() => {
+    if (!open || catalogLoaded) return undefined
+    let active = true
+    setCatalogLoading(true)
+    getProduk()
+      .then((data) => {
+        if (!active) return
+        setCatalogProducts(Array.isArray(data) ? data : [])
+        setCatalogLoaded(true)
+      })
+      .catch((error) => {
+        if (active) console.warn('Katalog untuk chat belum dapat dimuat:', error)
+      })
+      .finally(() => { if (active) setCatalogLoading(false) })
+    return () => { active = false }
+  }, [open, catalogLoaded])
 
   const greeting = {
     id: 'greeting',
@@ -91,7 +118,8 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
 
       setMessages((prev) => mergeMessages(prev, serverMessages))
 
-      if (serverStatus) {
+      // Selama auto-handover, abaikan hasil polling AI_ACTIVE yang sudah kedaluwarsa.
+      if (serverStatus && !(purchaseHandoverRef.current && serverStatus === 'AI_ACTIVE')) {
         setStatus(serverStatus)
       }
 
@@ -105,34 +133,69 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
     }
   }, [])
 
+  /**
+   * Saat pelanggan secara eksplisit ingin membeli, panggil handover Laravel ASLI.
+   * - Sesi sudah ada: handover dulu, lalu simpan pesan ke chat yang terkunci AI.
+   * - Sesi baru: endpoint handover lama mengembalikan 404. Bootstrap dengan
+   *   tepat SATU request chat, lalu ulang handover.
+   * Tidak menampilkan balasan AI produk pada proses checkout/pemesanan manual.
+   */
+  const handlePurchaseHandover = async (message, sessionId) => {
+    const { handover: result, chatError } = await submitPurchaseWithHandover({
+      sessionId,
+      message,
+      productId: product?.id,
+      requestHandover: mintaHandoverKeAdmin,
+      sendMessage: kirimPesanAssistant,
+    })
+
+    if (getSessionId() !== sessionId) return
+
+    if (!result) throw new Error('Permintaan handover belum mendapat konfirmasi server.')
+    setStatus(result.status || 'HANDOVER_PENDING')
+    setHandoverExpiresAt(result.handover_expires_at ?? null)
+    setShowHandover(false)
+
+    if (chatError) {
+      setHandoverError(
+        'Admin sudah dihubungi, tetapi penyimpanan pesan belum dapat dipastikan. Periksa riwayat sebelum mengirim ulang.',
+      )
+    }
+    void syncObrolan()
+  }
+
   const handleSend = async (text) => {
+    if (sendingRef.current || handoverLoading || status === 'CLOSED') return
+    const sessionId = getSessionId()
     const aiLocked = AI_LOCKED_STATUSES.has(status)
+    const purchaseIntent = !aiLocked && isPurchaseIntent(text)
+
+    sendingRef.current = true
+    if (purchaseIntent) purchaseHandoverRef.current = true
 
     setMessages((prev) => [
       ...prev.filter((message) => !message.error),
       { id: nextId(), sender: 'user', text, local: true },
     ])
-
-    setLoading(!aiLocked)
+    setLoading(!aiLocked && !purchaseIntent)
+    setHandoverLoading(purchaseIntent)
     setHandoverError('')
-
-    if (!aiLocked) {
-      setShowHandover(false)
-    }
+    if (!aiLocked) setShowHandover(false)
 
     try {
-      /*
-        Endpoint tetap sama.
-        Backend yang menjadi pengaman utama:
-        - AI_ACTIVE -> boleh OpenRouter
-        - HANDOVER_PENDING / WAITING_ADMIN / ADMIN_ACTIVE -> simpan pesan user saja
-      */
+      if (purchaseIntent) {
+        await handlePurchaseHandover(text, sessionId)
+        return
+      }
+
+      // Jalur chat normal tetap menggunakan endpoint dan logika lama.
       const result = await kirimPesanAssistant({
-        sessionId: getSessionId(),
+        sessionId,
         message: text,
         productId: product?.id,
       })
 
+      if (getSessionId() !== sessionId) return
       const nextStatus = getStatusFromResponse(result) ?? status
       const needsHandover = result.metadata?.needs_handover === true
       const escalated = result.metadata?.escalated === true
@@ -154,51 +217,38 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
 
       setStatus(nextStatus)
       setHandoverExpiresAt(result.handover_expires_at ?? null)
-
-      if (
-        nextStatus === 'AI_ACTIVE' &&
-        (needsHandover || escalated)
-      ) {
+      if (nextStatus === 'AI_ACTIVE' && (needsHandover || escalated)) {
         setShowHandover(true)
       } else if (nextStatus !== 'AI_ACTIVE') {
         setShowHandover(false)
       }
-
-      // Respons chat sudah diterima. Polling hanya untuk sinkronisasi riwayat,
-      // bukan bagian dari waktu tunggu jawaban AI.
-      setLoading(false)
       void syncObrolan()
     } catch (error) {
-      if (!aiLocked) {
-        const teks =
-          error?.message && /kendala|hubung/i.test(error.message)
-            ? error.message
-            : ERROR_TEXT
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: nextId(),
-            sender: 'bot',
-            text: teks,
-            error: true,
-            local: true,
-          },
-        ])
+      if (getSessionId() !== sessionId) return
+      if (purchaseIntent) {
+        // Jangan mengaku handover berhasil tanpa konfirmasi Laravel.
+        setShowHandover(true)
+        setHandoverError(
+          'Belum berhasil menghubungkan ke Admin. Coba tombol Minta Bantuan Admin atau periksa koneksi.',
+        )
+      } else if (!aiLocked) {
+        const teks = error?.message && /kendala|hubung/i.test(error.message)
+          ? error.message : ERROR_TEXT
+        setMessages((prev) => [...prev, {
+          id: nextId(), sender: 'bot', text: teks, error: true, local: true,
+        }])
       } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: nextId(),
-            sender: 'system',
-            text: 'Pesan belum berhasil dikirim. Silakan coba lagi.',
-            error: true,
-            local: true,
-          },
-        ])
+        setMessages((prev) => [...prev, {
+          id: nextId(), sender: 'system',
+          text: 'Pesan belum berhasil dikirim. Silakan coba lagi.',
+          error: true, local: true,
+        }])
       }
     } finally {
+      sendingRef.current = false
+      purchaseHandoverRef.current = false
       setLoading(false)
+      setHandoverLoading(false)
     }
   }
 
@@ -228,6 +278,7 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
   }
 
   const handleStartNewConversation = () => {
+    setConversationVersion((version) => version + 1)
     // Ganti session ID terlebih dahulu agar polling berikutnya
     // tidak mengambil percakapan CLOSED sebelumnya.
     buatSession()
@@ -254,6 +305,7 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
       {!open && <ChatButton onClick={() => setOpen(true)} />}
 
       <ChatWindow
+        key={conversationVersion}
         open={open}
         onClose={() => setOpen(false)}
         messages={[greeting, ...messages]}
@@ -267,6 +319,9 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
         status={status}
         handoverExpiresAt={handoverExpiresAt}
         onStartNewConversation={handleStartNewConversation}
+        catalogProducts={catalogProducts}
+        catalogLoading={catalogLoading}
+        contextProduct={product}
       />
     </>
   )

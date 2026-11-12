@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProduksiHarian;
 use App\Models\MutasiStok;
 use App\Models\produk;
+use App\Models\ProduksiHarian;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +14,11 @@ use Illuminate\Validation\ValidationException;
 class ProduksiHarianController extends Controller
 {
     private const TIMEZONE = 'Asia/Jakarta';
+
     private const MAX_JUMLAH_BATCH = 10000;
+
     private const MAX_CETAK_SESI = 500;
+
     private const MAX_STOK = 4294967295; // stok INT UNSIGNED (jika skema berbeda, sesuaikan)
 
     /** Ringkasan produksi harian; default hari ini zona WIB. */
@@ -35,6 +38,7 @@ class ProduksiHarianController extends Controller
         $data = $records->map(function (ProduksiHarian $batch) {
             $belum = max(0, $batch->jumlah_produksi - $batch->jumlah_label_tercetak);
             $stok = (int) ($batch->produk?->stok ?? 0);
+
             return [
                 'id' => $batch->id,
                 'produk_id' => $batch->produk_id,
@@ -164,6 +168,7 @@ class ProduksiHarianController extends Controller
             }
 
             $row->increment('jumlah_label_tercetak', $jumlah);
+
             return $row->fresh();
         });
 

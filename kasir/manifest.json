@@ -1,0 +1,60 @@
+{
+  "base": "Kuki_Bakehouse_Flutter_POS_Design_V1_1",
+  "files": {
+    "lib/data/api_client.dart": {
+      "acceptable_sha256": [
+        "710a2ae51e9c4743750eccfd23a490f3ca4e9e83f01a793c95c7af11b47db9b4",
+        "d63944d2246ad8ba54923de00b00375b0ec734f025306b2859b5bf113927eed8"
+      ],
+      "new_sha256": "379cf2c6c4427d1eb52d9ca4339f50e626daa0d32b79c3abe6d86b4288f8756e"
+    },
+    "lib/data/local_db.dart": {
+      "acceptable_sha256": [
+        "43d4522bf32113d62b9c95042c8721d2f83c6239f84a817a9c2c6917d4180360"
+      ],
+      "new_sha256": "a5bec410653868a6ce562f4391c6d3eaac14910f4146c14740495d93fc2599f7"
+    },
+    "lib/main.dart": {
+      "acceptable_sha256": [
+        "aa12570caa08ea759d37f762a4e2aaf26395fdf1680d1e2fb0076d10fa8b9641"
+      ],
+      "new_sha256": "f16febb99bbac6c3014ef54d5eb72da2f9a25bdb31f7609579aef8cf74a73cf2"
+    },
+    "lib/screens/login_screen.dart": {
+      "acceptable_sha256": [
+        "2760005597699bc379fc40622d995a08558773f6bb8e40a79a01e44e41a184d2"
+      ],
+      "new_sha256": "8c0d1177437a46e53f7bbf52a5cd5b8e7d0f233c92366b37ad687a78a8db130f"
+    },
+    "lib/screens/pos_shell.dart": {
+      "acceptable_sha256": [
+        "bbd154feab2348efa4e7257d62b7b4b3faeb3ccddeb488bb2f605ef6d3d1f617"
+      ],
+      "new_sha256": "bbc737f86ecfb1a417c3956e246fc2f9985ff14ef9be6ea31b69fee7207464fe"
+    },
+    "lib/screens/register_screen.dart": {
+      "acceptable_sha256": [
+        "590a1f2d896fbee0839fb84ecaf2f0ebe365733be75dd59b33a766526d7689b6"
+      ],
+      "new_sha256": "932b4a43fb08f5b82efaf3d596b5578b795166d22cef8dfbd14d103bb07a8581"
+    },
+    "lib/screens/settings_screen.dart": {
+      "acceptable_sha256": [
+        "e1b0fc0284d8bef14e76d684d21cc7b1d3eab293e782f2527045bc1637ab54f2"
+      ],
+      "new_sha256": "219757a03fde89b103a3149bb9bd525c8644fe4bef083fb7a0c4d1edfe1fc99f"
+    },
+    "lib/state/pos_controller.dart": {
+      "acceptable_sha256": [
+        "a2188fe2dfcf2f37194f1ed8a9fe951c1876c4dbc8b6e8f247958c5014eb0258"
+      ],
+      "new_sha256": "5428be1dc5a070f1be1a2bd6128c15848368540c4b257210aa2633f4d357c6ce"
+    },
+    "lib/widgets/common.dart": {
+      "acceptable_sha256": [
+        "84788deb237dedd19515d70d41bb84b49a7efc7e56900015b53d57a1313eb6b4"
+      ],
+      "new_sha256": "0164688cf4a4410fb827dbccab1f8d389da2a959fbe93c8dba52604d97468f76"
+    }
+  }
+}

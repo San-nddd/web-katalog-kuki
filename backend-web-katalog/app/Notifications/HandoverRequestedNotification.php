@@ -11,8 +11,7 @@ class HandoverRequestedNotification extends Notification
     public function __construct(
         private readonly int|string $obrolanId,
         private readonly string $pesan
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {

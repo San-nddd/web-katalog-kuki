@@ -144,7 +144,6 @@ export default function ProduksiHarianPage() {
 
   useEffect(() => {
     let aktif = true
-    setLoading(true)
     Promise.all([getProduk(), getProduksiHarian()])
       .then(([items, data]) => {
         if (!aktif) return

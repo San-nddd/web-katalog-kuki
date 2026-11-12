@@ -169,13 +169,28 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.4rem 0.75rem;
-  background: var(--orange);
-  color: var(--brown-dark);
+  
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.badge-item--halal {
+  width: 82px;
+  height: 82px;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 12px;
+ 
+}
+
+.badge-item--halal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 @media (max-width: 768px) {

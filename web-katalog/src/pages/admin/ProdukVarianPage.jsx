@@ -30,6 +30,13 @@ function pesanError(error) {
   return error?.message || 'Terjadi kesalahan. Silakan coba lagi.'
 }
 
+function ambilProdukVarian(produkId) {
+  return Promise.all([
+    getProdukById(produkId),
+    getAdminVarianProduk(produkId),
+  ])
+}
+
 function ProdukVarianPage() {
   const { id: produkId } = useParams()
   const [produk, setProduk] = useState(null)
@@ -42,12 +49,8 @@ function ProdukVarianPage() {
   const [message, setMessage] = useState('')
 
   const muat = useCallback(async () => {
-    setLoading(true)
     try {
-      const [dataProduk, dataVarian] = await Promise.all([
-        getProdukById(produkId),
-        getAdminVarianProduk(produkId),
-      ])
+      const [dataProduk, dataVarian] = await ambilProdukVarian(produkId)
       setProduk(dataProduk)
       setVarian(dataVarian)
       setError('')
@@ -59,8 +62,22 @@ function ProdukVarianPage() {
   }, [produkId])
 
   useEffect(() => {
-    muat()
-  }, [muat])
+    let aktif = true
+    ambilProdukVarian(produkId)
+      .then(([dataProduk, dataVarian]) => {
+        if (!aktif) return
+        setProduk(dataProduk)
+        setVarian(dataVarian)
+        setError('')
+      })
+      .catch((err) => {
+        if (aktif) setError(pesanError(err))
+      })
+      .finally(() => {
+        if (aktif) setLoading(false)
+      })
+    return () => { aktif = false }
+  }, [produkId])
 
   const setField = (name) => (event) => {
     setForm((prev) => ({ ...prev, [name]: event.target.value }))
@@ -120,6 +137,7 @@ function ProdukVarianPage() {
       })
       setForm({ ...FORM_KOSONG })
       setMessage(editMode ? 'Varian berhasil diperbarui.' : 'Varian berhasil ditambahkan.')
+      setLoading(true)
       await muat()
     } catch (err) {
       setError(pesanError(err))
@@ -142,6 +160,7 @@ function ProdukVarianPage() {
       await hapusVarianProduk(produkId, item.id)
       if (form.id === item.id) setForm({ ...FORM_KOSONG })
       setMessage(`Varian "${item.namaVarian}" berhasil dihapus.`)
+      setLoading(true)
       await muat()
     } catch (err) {
       setError(pesanError(err))
@@ -165,7 +184,10 @@ function ProdukVarianPage() {
       <section className="admin-card">
         <div className="admin-card-head">
           <h2 className="display-font">{"Varian:"} {produk?.nama || "Memuat produk..."}</h2>
-          <button type="button" className="admin-btn admin-btn-ghost" onClick={muat} disabled={loading || saving}>
+          <button type="button" className="admin-btn admin-btn-ghost" onClick={() => {
+            setLoading(true)
+            muat()
+          }} disabled={loading || saving}>
             {"Muat Ulang"}
           </button>
         </div>

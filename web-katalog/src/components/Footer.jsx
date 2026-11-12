@@ -18,10 +18,10 @@ function Footer() {
             <span className="footer-cta-indent">Know What&apos;s Baking</span>
           </h2>
           <p className="footer-cta-text">
-            Ikuti newsletter kami untuk resep, promo mingguan, dan cerita terbaru dari dapur Kuki Bakehouse.
+            Ikuti media sosial kami untuk resep, promo mingguan, dan cerita terbaru dari dapur Kuki Bakehouse.
           </p>
-          <a href="mailto:kuki.bakehousee@gmail.com" className="btn btn-primary">
-            Join Newsletter
+          <a href="https://www.instagram.com/kuki.bake.house?srtk=MXgxNTVmcnZhazNmZw==" className="btn btn-primary">
+            Follow Us
           </a>
         </div>
       </div>
@@ -50,13 +50,15 @@ function Footer() {
                   <PhoneIcon /> +62 851-3524-3310
                 </li>
                 <li>
-                  <MailIcon /> kuki.bakehousee@gmail.com
+                  <MailIcon /> <a href="mailto:kuki.bakehousee@gmail.com">kuki.bakehousee@gmail.com</a>
                 </li>
               </ul>
               
               <div className="footer-badges">
                 <span className="badge-item display-font">Since 2021</span>
-                <span className="badge-item display-font">HALAL MUI </span>
+                <span className="badge-item badge-item--halal">
+                  <img src="/halal-mui-latest.png" alt="Logo Halal Indonesia" />
+                </span>
                 <span className="badge-item display-font">#1 Tiramisu Sodok di Sumedang</span>
               </div>
             </div>

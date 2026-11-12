@@ -1,0 +1,58 @@
+/* Seluruh selector scoped: tidak mengubah Navbar, Hero, Product Card, Footer, atau CSS global. */
+.kuki-location-map { width: min(1160px, calc(100% - 32px)); margin: 72px auto; color: #3c3028; font-family: inherit; }
+.kuki-location-map__heading { text-align: center; margin-bottom: 28px; }
+.kuki-location-map__eyebrow { display: inline-block; color: #956846; font-size: .8rem; font-weight: 1000; letter-spacing: .13em; margin-bottom: 7px; }
+.kuki-location-map__heading h2 { margin: 0 0 8px; font-size: clamp(1.7rem, 3vw, 2.5rem); line-height: 1.2; }
+.kuki-location-map__heading p { margin: 0; color: #72685d; }
+.kuki-location-map__layout { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+.kuki-location-map__controls { border: 1px solid #eaded0; background: #fffcf7; border-radius: 20px; padding: 24px; min-width: 0; }
+.kuki-location-map__controls h3 { margin: 0 0 3px; font-size: 1.3rem; }
+.kuki-location-map__address { color: #746b62; margin: 0 0 16px; }
+.kuki-location-map__hint { line-height: 1.7; font-size: .92rem; }
+.kuki-location-map__controls button, .kuki-location-map__controls input, .kuki-location-map__controls select { font: inherit; }
+.kuki-location-map__controls button { cursor: pointer; }
+.kuki-location-map__controls button:disabled { cursor: not-allowed; opacity: .6; }
+.kuki-location-map__primary, .kuki-location-map__secondary { width: 100%; border-radius: 11px; padding: 11px 14px; }
+.kuki-location-map__primary { background: #895b3d; color: white; border: 1px solid #895b3d; font-weight: 900 !important; margin-top: 12px; }
+.kuki-location-map__secondary { background: #fff; color: #6e4b36; border: 1px solid #c8aa91; margin-bottom: 14px; }
+.kuki-location-map__search label, .kuki-location-map__mode { display: block; font-weight: 850; font-size: .9rem; margin: 7px 0; }
+.kuki-location-map__search-row { display: flex; gap: 6px; }
+.kuki-location-map__search-row input { flex: 1; min-width: 0; border: 1px solid #c8b8a8; border-radius: 9px; background: white; color: #302b27; padding: 10px; }
+.kuki-location-map__search-row button { border-radius: 9px; border: 1px solid #895b3d; background: #895b3d; color: white; padding: 10px 13px; }
+.kuki-location-map__results { max-height: 170px; overflow-y: auto; margin-top: 8px; border: 1px solid #e8dcd1; border-radius: 10px; background: white; }
+.kuki-location-map__results button { width: 100%; display: block; text-align: left; border: 0; border-bottom: 1px solid #f0e9e2; color: #3c3028; background: transparent; padding: 10px; }
+.kuki-location-map__results button:hover { background: #f9f1e7; }
+.kuki-location-map__selected { font-size: .9rem; padding: 12px 0; line-height: 1.5; }
+.kuki-location-map__controls select { width: 100%; padding: 10px; border: 1px solid #c8b8a8; border-radius: 9px; background: #fff; color: #3c3028; }
+.kuki-location-map__summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 50px; margin-top: 13px; }
+.kuki-location-map__summary > div { display: flex; flex-direction: column; gap: 10px;  border-radius: 11px; padding: 12px; }
+.kuki-location-map__summary span { color: #655b52; font-size: .8rem; }
+.kuki-location-map__notice { background: #f6eee5; border-radius: 11px; padding: 12px; font-size: .89rem; line-height: 1.5; }
+.kuki-location-map__controls small { display: block; font-size: .78rem; color: #71675d; line-height: 1.5; margin-top: 14px; }
+.kuki-location-map__canvas { min-width: 0; min-height: 490px; border: 1px solid #eaded0; border-radius: 20px; overflow: hidden; background: #eee8df; z-index: 0; }
+.kuki-location-map__canvas .leaflet-control-attribution { font-size: 11px; }
+.kuki-location-map__controls button:focus-visible, .kuki-location-map__controls input:focus-visible, .kuki-location-map__controls select:focus-visible { outline: 3px solid #6b9bb5; outline-offset: 2px; }
+@media (max-width: 820px) {
+  .kuki-location-map { margin: 52px auto; }
+  .kuki-location-map__layout { grid-template-columns: 1fr; }
+  .kuki-location-map__controls { padding: 18px; }
+  .kuki-location-map__canvas { min-height: 360px; }
+}
+
+/* Bagian baru berdiri sendiri. Tidak menimpa sections.css yang sudah disetujui. */
+.kuki-location-entry { background: var(--cream, #fff6d9); padding: 1px 0; }
+.kuki-location-map--placeholder { min-height: 360px; }
+.kuki-location-map__skeleton {
+  height: 240px;
+  border-radius: 20px;
+  background: #f1e5d7;
+  opacity: .75;
+}
+@media (max-width: 820px) {
+  .kuki-location-map--placeholder { min-height: 280px; }
+  .kuki-location-map__skeleton { height: 180px; }
+}
+.kuki-location-map{
+
+  font-family: 'Lilita One', 'Arial Narrow', Impact, sans-serif;
+}

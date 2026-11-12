@@ -27,10 +27,18 @@ class MutasiStokController extends Controller
             'produk:id,nama_produk,barcode',
             'pengguna:id,name',
         ]);
-        if (isset($filters['produk_id'])) $query->where('produk_id', $filters['produk_id']);
-        if (isset($filters['jenis'])) $query->where('jenis', $filters['jenis']);
-        if (isset($filters['tanggal_mulai'])) $query->whereDate('created_at', '>=', $filters['tanggal_mulai']);
-        if (isset($filters['tanggal_selesai'])) $query->whereDate('created_at', '<=', $filters['tanggal_selesai']);
+        if (isset($filters['produk_id'])) {
+            $query->where('produk_id', $filters['produk_id']);
+        }
+        if (isset($filters['jenis'])) {
+            $query->where('jenis', $filters['jenis']);
+        }
+        if (isset($filters['tanggal_mulai'])) {
+            $query->whereDate('created_at', '>=', $filters['tanggal_mulai']);
+        }
+        if (isset($filters['tanggal_selesai'])) {
+            $query->whereDate('created_at', '<=', $filters['tanggal_selesai']);
+        }
 
         $page = $query->orderByDesc('id')->paginate(20);
 

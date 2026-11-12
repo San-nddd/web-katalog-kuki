@@ -33,7 +33,7 @@ class User extends Authenticatable
     {
         $role = $this->getAttribute('role');
 
-        if (!is_string($role) || $role === '') {
+        if (! is_string($role) || $role === '') {
             // Jangan beri izin Admin ketika data role tidak tersedia.
             return null;
         }

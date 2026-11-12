@@ -12,8 +12,7 @@ class CustomerNewMessageNotification extends Notification
         private readonly int|string $obrolanId,
         private readonly int|string $pesanId,
         private readonly string $pesan
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {

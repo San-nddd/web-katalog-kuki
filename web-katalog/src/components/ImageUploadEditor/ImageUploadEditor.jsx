@@ -63,27 +63,14 @@ export default function ImageUploadEditor({
   const [pixels, setPixels] = useState(null)
 
   useEffect(() => {
-    if (!sourceFile) {
-      setSourceUrl('')
-      return
-    }
-    const url = URL.createObjectURL(sourceFile)
-    setSourceUrl(url)
-    const img = new Image()
-    img.onload = () => setOriginalRatio(img.naturalWidth / img.naturalHeight)
-    img.src = url
-    return () => URL.revokeObjectURL(url)
-  }, [sourceFile])
+    if (!sourceUrl) return undefined
+    return () => URL.revokeObjectURL(sourceUrl)
+  }, [sourceUrl])
 
   useEffect(() => {
-    if (!editedFile) {
-      setEditedPreview('')
-      return
-    }
-    const url = URL.createObjectURL(editedFile)
-    setEditedPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [editedFile])
+    if (!editedPreview) return undefined
+    return () => URL.revokeObjectURL(editedPreview)
+  }, [editedPreview])
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -108,13 +95,19 @@ export default function ImageUploadEditor({
   function startEdit(file) {
     resetControls()
     setError('')
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => setOriginalRatio(img.naturalWidth / img.naturalHeight)
+    img.src = url
     setSourceFile(file)
+    setSourceUrl(url)
     setIsOpen(true)
   }
 
   function closeEditor() {
     setIsOpen(false)
     setSourceFile(null) // jangan mengganti file yang sudah disetujui jika Batal
+    setSourceUrl('')
     setError('')
   }
 
@@ -191,6 +184,7 @@ export default function ImageUploadEditor({
         filename: sourceFile.name,
       })
       setEditedFile(result.file)
+      setEditedPreview(URL.createObjectURL(result.file))
       onChange?.(result.file, result.metadata)
       closeEditor()
     } catch (err) {

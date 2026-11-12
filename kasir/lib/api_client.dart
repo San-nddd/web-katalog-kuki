@@ -1,116 +1,223 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'models.dart';
+import '../core/models.dart';
+import 'models.dart' as legacy;
 
-class ApiError implements Exception {
-  final String message;
+class ApiProblem implements Exception {
   final int status;
-  ApiError(this.message, [this.status = 0]);
-  @override String toString() => message;
+  final String message;
+  const ApiProblem(this.status, this.message);
+  @override
+  String toString() => message;
+}
+
+class LoginResult {
+  final String token;
+  final String name;
+  final String role;
+  const LoginResult(this.token, this.name, this.role);
 }
 
 class ApiClient {
-  ApiClient._();
-  static final ApiClient instance = ApiClient._();
-  static const String baseUrl = String.fromEnvironment('API_BASE_URL',
-      defaultValue: 'http://10.0.2.2:8000/api');
-  static const _storage = FlutterSecureStorage();
-  String? _token;
+  static final ApiClient instance = ApiClient();
+
+  String baseUrl;
+  String? token;
   String? staffName;
   String? staffCode;
+  ApiClient({this.baseUrl = 'http://10.0.2.2:8000'});
 
-  Future<void> restore() async { _token = await _storage.read(key: 'kuki_pos_token'); }
-  bool get signedIn => _token?.isNotEmpty ?? false;
-  Future<dynamic> request(String method, String path, {Map<String, dynamic>? body}) async {
-    final uri = Uri.parse('$baseUrl$path');
+  Future<dynamic> request(
+    String method,
+    String path, {
+    Object? data,
+    String? idempotencyKey,
+  }) async {
+    final server = Uri.tryParse(baseUrl.trim());
+    if (server == null ||
+        !['http', 'https'].contains(server.scheme) ||
+        server.host.isEmpty) {
+      throw const ApiProblem(
+        0,
+        'Alamat server harus berupa http://IP:8000 atau https://domain.',
+      );
+    }
+    // Alamat yang dimasukkan adalah akar Laravel, bukan URL /api.
+    if (server.path.isNotEmpty && server.path != '/') {
+      throw const ApiProblem(
+        0,
+        'Isi alamat server tanpa /api atau path tambahan. Contoh: http://192.168.1.10:8000',
+      );
+    }
+    final uri = server.replace(path: path);
+    final headers = <String, String>{
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+    if (token != null && token!.isNotEmpty) {
+      headers['Authorization'] = 'Bearer ${token!}';
+    }
+    if (idempotencyKey != null) headers['Idempotency-Key'] = idempotencyKey;
+    late http.Response result;
     try {
-      // Avoid reusing mutable Request across retries; each call constructs a new one.
-      final req = http.Request(method, uri);
-      req.headers.addAll({'Accept': 'application/json', 'Content-Type': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token'});
-      if (body != null) req.body = jsonEncode(body);
-      final client = http.Client();
-      late final String responseBody;
-      late final int statusCode;
-      try {
-        final streamed = await client.send(req).timeout(const Duration(seconds: 18));
-        statusCode = streamed.statusCode;
-        responseBody = await streamed.stream.bytesToString().timeout(const Duration(seconds: 18));
-      } finally { client.close(); }
-      final decoded = responseBody.isEmpty ? <String, dynamic>{} : jsonDecode(responseBody);
-      final data = asMap(decoded);
-      if (statusCode < 200 || statusCode >= 300) {
-        final fieldErrors = asMap(data['errors']);
-        final firstError = fieldErrors.values.isNotEmpty ? fieldErrors.values.first : null;
-        final msg = firstError is List && firstError.isNotEmpty
-            ? '${firstError.first}' : '${data['message'] ?? 'Server menolak permintaan.'}';
-        throw ApiError(msg, statusCode);
+      final body = data == null ? null : jsonEncode(data);
+      if (method == 'POST') {
+        result = await http
+            .post(uri, headers: headers, body: body)
+            .timeout(const Duration(seconds: 15));
+      } else if (method == 'GET') {
+        result = await http
+            .get(uri, headers: headers)
+            .timeout(const Duration(seconds: 15));
+      } else {
+        throw StateError('Metode HTTP tidak didukung');
       }
-      return data['data'];
-    } on ApiError { rethrow; }
-      on TimeoutException { throw ApiError('Koneksi ke server habis waktu. Periksa jaringan dan status transaksi.'); }
-      on FormatException { throw ApiError('Response Laravel tidak berbentuk JSON yang valid.'); }
-      catch (_) { throw ApiError('Tidak dapat terhubung ke Laravel API. Periksa URL server dan jaringan.'); }
+    } on TimeoutException {
+      throw ApiProblem(
+        0,
+        'Server tidak merespons dalam 15 detik. Pastikan Laravel menyala, IP komputer benar, dan Android tersambung ke jaringan yang sama.',
+      );
+    } on http.ClientException catch (error) {
+      throw ApiProblem(0, 'Gagal menghubungi server: ${error.message}');
+    }
+    dynamic parsed;
+    try {
+      parsed = jsonDecode(result.body);
+    } catch (_) {
+      parsed = null;
+    }
+    if (result.statusCode < 200 || result.statusCode >= 300) {
+      final content = unwrapMap(parsed);
+      final message = asText(content['message']).isNotEmpty
+          ? asText(content['message'])
+          : 'HTTP ${result.statusCode} pada $path';
+      throw ApiProblem(result.statusCode, message);
+    }
+    return parsed;
   }
 
-  Future<void> login(String code, String pin) async {
-    final data = asMap(await request('POST', '/pos/login', body: {'kode': code, 'pin': pin}));
-    final token = data['token']?.toString();
-    if (token == null || token.isEmpty) throw ApiError('Token login tidak ditemukan.');
-    _token = token;
-    final staff = asMap(data['pegawai']);
-    staffName = '${staff['nama'] ?? ''}';
-    staffCode = '${staff['kode'] ?? ''}';
-    await _storage.write(key: 'kuki_pos_token', value: token);
+  Future<LoginResult> login(String kode, String pin) async {
+    final res = unwrapMap(
+      await request(
+        'POST',
+        '/api/pos/login',
+        data: {'kode': kode.trim().toUpperCase(), 'pin': pin},
+      ),
+    );
+    final data = unwrapMap(res['data']);
+    final pegawai = unwrapMap(data['pegawai']);
+    final value = asText(data['token']);
+    if (value.isEmpty) {
+      throw const ApiProblem(
+        400,
+        'Login berhasil tetapi API tidak mengembalikan token POS.',
+      );
+    }
+    token = value;
+    staffName = asText(pegawai['nama']);
+    staffCode = asText(pegawai['kode']);
+    return LoginResult(value, asText(pegawai['nama'] ?? kode), 'kasir');
   }
-  Future<bool> validate() async {
-    if (!signedIn) return false;
+
+  Future<void> logout() async {
     try {
-      final data = asMap(await request('GET', '/pos/me'));
-      final staff = asMap(data['pegawai']);
-      staffName = '${staff['nama'] ?? ''}';
-      staffCode = '${staff['kode'] ?? ''}';
-      return true;
-    } on ApiError catch (e) {
-      if (e.status == 401) { await clear(); return false; }
-      rethrow;
+      if (token?.isNotEmpty ?? false) {
+        await request('POST', '/api/pos/logout');
+      }
+    } finally {
+      token = null;
+      staffName = null;
+      staffCode = null;
     }
   }
-  Future<void> clear() async {
-    _token = null; staffName = null; staffCode = null;
-    await _storage.delete(key: 'kuki_pos_token');
+
+  Future<List<legacy.PosProduct>> catalog() async {
+    final result = unwrapMap(await request('GET', '/api/pos/catalog'));
+    return unwrapList(result['data']).map(legacy.PosProduct.fromJson).toList();
   }
-  Future<void> logout() async {
-    try { if (signedIn) await request('POST', '/pos/logout'); } finally { await clear(); }
+
+  Future<Map<String, dynamic>> shift() async {
+    final result = unwrapMap(await request('GET', '/api/pos/shift'));
+    return unwrapMap(result['data']);
   }
-  Future<List<PosProduct>> catalog() async {
-    final data = await request('GET','/pos/catalog');
-    return (data as List).map(PosProduct.fromJson).toList();
+
+  Future<void> startShift() async {
+    await request('POST', '/api/pos/shift/start');
   }
-  Future<Map<String, dynamic>> shift() async => asMap(await request('GET','/pos/shift'));
-  Future<void> startShift() async => await request('POST','/pos/shift/start');
-  Future<void> endShift() async => await request('POST','/pos/shift/end');
-  Future<PosReceipt> checkout(LocalOrder order, {required String method, required int paid,
-      required bool verified}) async {
-    final data = await request('POST','/pos/transactions', body: {
-      'id_client': order.clientId, 'items': order.payload,
-      'jenis_pesanan': order.type, 'nomor_meja': order.table.isEmpty ? null : order.table,
-      'nama_pelanggan': order.name.isEmpty ? null : order.name,
-      'catatan': order.notes.isEmpty ? null : order.notes,
-      'metode_bayar': method, 'dibayar': paid, 'verifikasi_manual': verified,
-    });
-    return PosReceipt(data);
+
+  Future<void> endShift() async {
+    await request('POST', '/api/pos/shift/end');
   }
-  Future<Map<String, dynamic>> history({String? from, String? until, int page = 1}) async {
-    final p = <String, String>{
-      'page': '$page',
-      'dari': ?from,
-      'sampai': ?until,
+
+  Future<legacy.PosReceipt> checkout(
+    legacy.LocalOrder order, {
+    required String method,
+    required int paid,
+    required bool verified,
+  }) async {
+    final result = unwrapMap(
+      await request(
+        'POST',
+        '/api/pos/transactions',
+        data: {
+          'id_client': order.clientId,
+          'items': order.payload,
+          'jenis_pesanan': order.type,
+          'nomor_meja': order.table.isEmpty ? null : order.table,
+          'nama_pelanggan': order.name.isEmpty ? null : order.name,
+          'catatan': order.notes.isEmpty ? null : order.notes,
+          'metode_bayar': method,
+          'dibayar': paid,
+          'verifikasi_manual': verified,
+        },
+        idempotencyKey: order.clientId,
+      ),
+    );
+    return legacy.PosReceipt(result['data']);
+  }
+
+  Future<Map<String, dynamic>> history({int page = 1}) async {
+    final result = unwrapMap(
+      await request('GET', '/api/pos/transactions?page=$page'),
+    );
+    return unwrapMap(result['data']);
+  }
+
+  Future<Map<String, dynamic>> report(String from, String until) async {
+    final query = Uri(queryParameters: {'dari': from, 'sampai': until}).query;
+    final result = unwrapMap(await request('GET', '/api/pos/report?$query'));
+    return unwrapMap(result['data']);
+  }
+
+  Future<void> sendSale(Sale sale) async {
+    final body = {
+      'client_uuid': sale.uuid,
+      'client_created_at': sale.createdAt.toUtc().toIso8601String(),
+      'cashier': sale.cashier,
+      'shift_client_uuid': sale.shiftId,
+      'payment_method': sale.method,
+      'subtotal': sale.subtotal,
+      'discount': sale.discount,
+      'total': sale.total,
+      'paid': sale.paid,
+      'note': sale.note,
+      'items': sale.lines
+          .map(
+            (line) => {
+              'produk_id': line['product_id'],
+              'jumlah': line['quantity'],
+              'harga_satuan': line['unit_price'],
+            },
+          )
+          .toList(),
     };
-    return asMap(await request('GET','/pos/transactions?${Uri(queryParameters:p).query}'));
+    // Laravel HARUS memvalidasi stok & harga, menjamin client_uuid unik, dan mengembalikan 2xx untuk replay.
+    await request(
+      'POST',
+      '/api/pos/transaksi',
+      data: body,
+      idempotencyKey: sale.uuid,
+    );
   }
-  Future<Map<String, dynamic>> report(String from, String until) async =>
-    asMap(await request('GET','/pos/report?${Uri(queryParameters:{'dari': from,'sampai': until}).query}'));
 }

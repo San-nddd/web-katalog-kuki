@@ -15,6 +15,9 @@ React Router
 
 Route web publik di `web-katalog/src/App.jsx`: `/`, `/category`, `/contact`, `/bakers`, `/katalog`, `/produk/:id`.
 
+## Maps dan navigasi
+Fitur peta interaktif, pencarian alamat, geolocation untuk rute, dan routing menuju toko telah dihapus dari website. Tidak ada lagi endpoint `/api/public/kuki-maps/search` atau `/api/public/kuki-maps/route` di Laravel. Alamat toko tetap ditampilkan sebagai teks biasa pada `web-katalog/src/components/Footer.jsx` dan `web-katalog/src/pages/ContactPage.jsx`; `MapPinIcon` hanya ikon dekoratif di samping teks, bukan tautan peta atau akses lokasi.
+
 ## Route API yang diverifikasi
 | Method | Path | Fungsi |
 |---|---|---|
@@ -38,14 +41,14 @@ Pembacaan katalog bersifat publik. Route katalog tidak menambahkan checkout, pem
 ## Tes dan keterbatasan
 - `npm run build` (`web-katalog/`): **PASS**, exit 0, pada baseline 2026-10-26.
 - Lint baseline sebelum perbaikan: **FAIL**, 24 errors/1 warning. Hasil terkini seluruh frontend setelah KUKI-QA-002..004: **FAIL**, 21 errors/1 warning; belum dipisahkan per modul.
-- Backend test baseline awal: **FAIL**, 33 passed/9 failed/1 error. Suite terkini setelah QA-005: **PASS**, 49 tests/259 assertions. Belum ada validasi khusus render katalog end-to-end.
+- Backend test baseline awal: **FAIL**, 33 passed/9 failed/1 error. Suite pada 2026-10-29 saat KUKI-MAP-001: **FAIL**, 47 passed/1 failed/1 error, sama sebelum dan sesudah patch; hasil sebelumnya 49/49 pada 2026-10-26 tidak tereproduksi. Belum ada validasi khusus render katalog end-to-end.
 - `ProductCarousel.jsx` memakai `currentIndexRef` dan `translateX` sebagai sumber posisi. State `currentIndex` yang tidak dibaca dihapus pada KUKI-QA-003; focused ESLint dan build PASS, tanpa perubahan tampilan.
 - `DetailProdukPage.jsx` tidak memakai nilai varian dari callback `PilihanVarianProduk`; state/callback parent yang tidak dibaca dihapus pada KUKI-QA-004. Selector tetap mengelola pilihannya sendiri dan UI detail tidak berubah.
 - Lint penuh terbaru setelah perbaikan terisolasi pada `ChatWindow.jsx`, `ProductCarousel.jsx`, dan `DetailProdukPage.jsx`: **FAIL**, 21 errors dan 1 warning. Tidak semua error merupakan temuan modul katalog.
 
 ## Risiko / hal yang belum tervalidasi
 - Fallback dummy dapat membuat tampilan tetap terisi saat backend gagal atau data produksi kosong. Jangan menganggap data tampilan fallback sebagai data katalog resmi.
-- Tidak ada validasi browser/interaksi visual pada task ini.
+- Smoke browser pada task KUKI-MAP-001 memuat `/` dan `/katalog` tanpa console/page error dan tanpa elemen peta interaktif; ini bukan tes end-to-end API penuh.
 
 **Sumber:** `web-katalog/src/App.jsx`, `src/pages/KatalogPage.jsx`, `src/services/api.js`, `src/services/produkService.js`, `src/services/kategoriService.js`, `backend-web-katalog/routes/api.php`, controller produk/kategori.  
 **TASK-ID:** `KUKI-P0-005` — 2026-10-26.

@@ -37,9 +37,7 @@ class OpenRouterService
      * - Error akun/API key (401/402/403) langsung dihentikan karena
      *   mengganti model tidak akan menyelesaikan masalah tersebut.
      *
-     * @param  string  $systemPrompt
      * @param  array<int, array{role: string, text: string}>  $history
-     * @param  string  $message
      */
     public function generate(string $systemPrompt, array $history, string $message): ?string
     {

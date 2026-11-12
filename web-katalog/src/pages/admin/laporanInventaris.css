@@ -26,9 +26,9 @@
 
 /* Informasi ekspor dan koreksi — mengikuti tema Admin yang sudah ada. */
 .kuki-laporan-export-info{font-size:.82rem;line-height:1.55;opacity:.75;margin:12px 0 0}
-.kuki-laporan-correction-info{border:1px solid rgba(170,123,86,.32);border-left:3px solid #aa7b56;border-radius:7px;padding:13px 16px;background:rgba(170,123,86,.045);line-height:1.65}
+
 .kuki-laporan-correction-info strong{font-size:.94rem}
-.kuki-laporan-correction-info p{margin:5px 0 0;font-size:.87rem}
+.kuki-laporan-correction-info p{margin:5px 0 0;font-size:.87rem;margin-top:5px}
 .kuki-laporan-correction-info a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 
 /* Aksi ekspor: konsisten dengan layout Admin tanpa kotak dekoratif berlebihan. */

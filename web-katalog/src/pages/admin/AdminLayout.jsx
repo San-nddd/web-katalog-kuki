@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
+import logoKuki from '../../assets/Kuki.png'
 import { currentUser, logout } from '../../services/authService'
 import {
   getAdminPreferences,
@@ -84,7 +85,7 @@ function AdminLayout({ title, children }) {
   const [pushStatus, setPushStatus] = useState('checking')
   const [pushError, setPushError] = useState('')
 
-  
+
   const initializedNotificationsRef = useRef(false)
   const knownNotificationIdsRef = useRef(new Set())
   const toastTimerRef = useRef(null)
@@ -344,25 +345,36 @@ function AdminLayout({ title, children }) {
     >
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <img src="src/assets/Kuki.png" alt="Kuki Bakehouse" className="admin-brand-logo"/>
+          <img
+            src={logoKuki}
+            alt="Kuki Bakehouse"
+            className="admin-brand-logo"
+          />
           <div>
-            <strong>{"Kuki Admin"}</strong>
-            <small>{"Konten Katalog"}</small>
+            <strong>{"Kuki Bakehouse"}</strong>
+            <small>{"ADMIN WORKSPACE"}</small>
           </div>
         </div>
 
-        <nav className="admin-nav">
+        <nav className="admin-nav" aria-label="Navigasi administrasi">
+          <span className="admin-nav-group">IKHTISAR</span>
           <NavLink to="/admin" end>
             {"Dashboard"}
           </NavLink>
           {user?.role === 'admin' && (
             <NavLink to="/management/dashboard">{"Dashboard Manajemen"}</NavLink>
           )}
+          <span className="admin-nav-group">KATALOG</span>
           <NavLink to="/admin/produk">{copy.products}</NavLink>
           <NavLink to="/admin/kategori">{copy.categories}</NavLink>
+          <span className="admin-nav-group">OPERASIONAL</span>
           <NavLink to="/admin/produksi-harian">Produksi Harian</NavLink>
           <NavLink to="/admin/mutasi-stok">Riwayat Mutasi Stok</NavLink>
           <NavLink to="/admin/opname-stok">Stock Opname</NavLink>
+          {user?.role === 'admin' && <NavLink to="/admin/pegawai">Manajemen Pegawai</NavLink>}
+          <NavLink to="/admin/management/laporan-inventaris">Laporan Inventaris</NavLink>
+          <NavLink to="/admin/management/laporan-penjualan">Laporan Penjualan</NavLink>
+          <span className="admin-nav-group">PELAYANAN</span>
           {user?.role === 'admin' && <NavLink to="/admin/testimonial">{"Testimonial"}</NavLink>}
           <NavLink to="/admin/chat">
             {copy.chat}
@@ -372,6 +384,7 @@ function AdminLayout({ title, children }) {
               </span>
             )}
           </NavLink>
+          <span className="admin-nav-group">LAINNYA</span>
           <NavLink to="/admin/settings">{copy.settings}</NavLink>
           <Link to="/">{copy.viewSite}</Link>
         </nav>

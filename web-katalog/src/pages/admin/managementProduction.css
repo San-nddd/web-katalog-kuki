@@ -9,7 +9,7 @@
 .management-production-bars { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: .8rem; padding: .5rem .4rem; border-bottom: 1px solid rgba(100,60,30,.2); }
 .management-production-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; gap: .22rem; font-variant-numeric: tabular-nums; }
 .management-production-track { height: 140px; width: min(100%,55px); display: flex; align-items: flex-end; border-radius: 5px 5px 0 0; background: rgba(100,60,30,.065); overflow: hidden; }
-.management-production-bar { width: 100%; min-height: 0; border-radius: 5px 5px 0 0; background: var(--orange, #d8843f); }
+.management-production-bar { width: 100%; min-height: 0; border-radius: 5px 5px 0 0; background: var(--kb-caramel, #c98552); }
 .management-production-number, .management-production-dayname, .management-production-day small { font-size: .78rem; }
 .management-production-alerts { margin: 0; padding: 0 0 0 1.2rem; }
 .management-production-alerts li { margin: .55rem 0; line-height: 1.55; }

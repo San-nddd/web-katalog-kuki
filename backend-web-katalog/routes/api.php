@@ -15,7 +15,9 @@ use App\Http\Controllers\Api\TestimonialCommentController;
 use App\Http\Controllers\Api\ProdukVarianController;
 use App\Http\Controllers\Api\ProduksiHarianController;
 use App\Http\Controllers\Api\LaporanInventarisController;
+use App\Http\Controllers\Api\LaporanPenjualanController;
 use App\Http\Controllers\Api\Pos\PosController;
+use App\Http\Controllers\Api\KukiLocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +50,10 @@ Route::post('/testimonial/{testimonial}/komentar', [TestimonialCommentController
 
 // Authentication
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+
+// Lokasi Kuki (Leaflet): publik, key HeiGIT diproses hanya oleh Laravel.
+Route::get('/public/kuki-map/geocode', [KukiLocationController::class, 'geocode'])->middleware('throttle:10,1');
+Route::post('/public/kuki-map/route', [KukiLocationController::class, 'route'])->middleware('throttle:10,1');
 
 
 /*
@@ -106,7 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         });
 
-        // Varian Produk (Legacy)
+        // Varian Produk 
         Route::get('/admin/produk/{produk}/varian', [ProdukVarianController::class, 'adminIndex']);
         Route::post('/admin/produk/{produk}/varian', [ProdukVarianController::class, 'store']);
         Route::put('/admin/produk/{produk}/varian/{varian}', [ProdukVarianController::class, 'update']);
@@ -128,6 +134,8 @@ Route::prefix('management')
         Route::get('/dashboard', [ManagementDashboardController::class, 'show']);
         Route::get('/laporan-inventaris', [LaporanInventarisController::class, 'index']);
         Route::get('/laporan-inventaris/export', [LaporanInventarisController::class, 'exportCsv']);
+        Route::get('/laporan-penjualan', [LaporanPenjualanController::class, 'index']);
+        Route::get('/laporan-penjualan/export', [LaporanPenjualanController::class, 'export']);
     });
 
 
@@ -159,11 +167,11 @@ Route::prefix('admin/testimonial')
 
     });
 
-// Riwayat Mutasi Stok — GET Admin/Owner, koreksi hanya Admin.
+// Riwayat Mutasi Stok
 Route::get('/admin/mutasi-stok', [MutasiStokController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
 Route::post('/admin/mutasi-stok/koreksi', [MutasiStokController::class, 'koreksi'])->middleware(['auth:sanctum', 'can:manage-admin']);
 
-// STOCK OPNAME — Admin/Owner boleh membaca, hanya Admin boleh mengubah.
+// STOCK OPNAME 
 Route::get('/admin/opname-stok', [\App\Http\Controllers\Api\StockOpnameController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
 Route::get('/admin/opname-stok/ringkasan-pengeluaran', [\App\Http\Controllers\Api\StockOpnameController::class, 'ringkasanPengeluaran'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
 Route::get('/admin/opname-stok/{opnameStok}', [\App\Http\Controllers\Api\StockOpnameController::class, 'show'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
@@ -174,7 +182,11 @@ Route::post('/admin/opname-stok/{opnameStok}/batalkan', [\App\Http\Controllers\A
 Route::post('/admin/opname-stok/pengeluaran', [\App\Http\Controllers\Api\StockOpnameController::class, 'pengeluaran'])->middleware(['auth:sanctum', 'can:manage-admin']);
 
 
-//POS 
+/*
+|--------------------------------------------------------------------------
+| POS KASIR
+|--------------------------------------------------------------------------
+*/ 
 Route::prefix('pos')
     ->middleware(['auth:sanctum', 'can:manage-pos'])
     ->group(function () {
@@ -184,5 +196,5 @@ Route::prefix('pos')
         Route::put('/transaksi/{transaksi}', [PosController::class, 'update']);
         Route::delete('/transaksi/{transaksi}', [PosController::class, 'destroy']);
     });
-    // Flutter POS Kuki Bakehouse
+
 require __DIR__ . '/pos.php';

@@ -17,12 +17,14 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import AdminRoute from './pages/admin/AdminRoute'
 import ManagementRoute from './pages/admin/ManagementRoute'
 import ManagementDashboardPage from './pages/admin/ManagementDashboardPage'
-import LaporanInventarisPage from './pages/admin/LaporanInventarisPage'
 import RiwayatStokPage from './pages/admin/RiwayatStokPage'
 import StockOpnamePage from './pages/admin/StockOpnamePage'
 import './pages/sections.css'
 import './App.css'
 import SmoothScroll from './components/SmoothScroll'
+import LaporanInventarisPage from './pages/admin/LaporanInventarisPage'
+import ManajemenPegawaiPosPage from './pages/admin/ManajemenPegawaiPosPage'
+import LaporanPenjualanPage from './pages/admin/LaporanPenjualanPage'
 function App() {
   console.log("URL API Saat Ini:", import.meta.env.VITE_API_BASE_URL);
 
@@ -42,14 +44,6 @@ function App() {
           element={
             <ManagementRoute>
               <ManagementDashboardPage />
-            </ManagementRoute>
-          }
-        />
-        <Route
-          path="/management/laporan-inventaris"
-          element={
-            <ManagementRoute>
-              <LaporanInventarisPage />
             </ManagementRoute>
           }
         />
@@ -138,14 +132,15 @@ function App() {
         <Route path="/management/mutasi-stok" element={<ManagementRoute><RiwayatStokPage readOnly /></ManagementRoute>} />
         <Route path="/admin/opname-stok" element={<AdminRoute><StockOpnamePage /></AdminRoute>} />
         <Route path="/management/opname-stok" element={<ManagementRoute><StockOpnamePage readOnly /></ManagementRoute>} />
-        <Route
-  path="*"
-  element={
-    <div style={{ padding: 30 }}>
-      Route React tidak ditemukan: {window.location.pathname}
-    </div>
-  }
-/>
+        {/* Pegawai POS: hanya akun Admin, tanpa akses pengunjung. */}
+        <Route path="/admin/pegawai" element={<AdminRoute><ManajemenPegawaiPosPage /></AdminRoute>} />
+        {/* Halaman Admin: gunakan URL dan guard Admin. */}
+        <Route path="/admin/management/laporan-inventaris" element={<AdminRoute><LaporanInventarisPage /></AdminRoute>} />
+        <Route path="/admin/management/laporan-penjualan" element={<AdminRoute><LaporanPenjualanPage /></AdminRoute>} />
+        {/* Halaman Owner/Management: akses read-only dengan guard Management. */}
+        <Route path="/management/laporan-inventaris" element={<ManagementRoute><LaporanInventarisPage /></ManagementRoute>} />
+        <Route path="/management/laporan-penjualan" element={<ManagementRoute><LaporanPenjualanPage /></ManagementRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   )

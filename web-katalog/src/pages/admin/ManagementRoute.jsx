@@ -18,12 +18,16 @@ function ManagementRoute({ children }) {
   const [pesan, setPesan] = useState('')
   const [percobaan, setPercobaan] = useState(0)
 
+  const retryAccessCheck = () => {
+    setStatus('memeriksa')
+    setPesan('')
+    setPercobaan((n) => n + 1)
+  }
+
   useEffect(() => {
     if (!hasToken) return undefined
 
     let aktif = true
-    setStatus('memeriksa')
-    setPesan('')
 
     api.get('/auth/user')
       .then((response) => {
@@ -77,7 +81,7 @@ function ManagementRoute({ children }) {
       <h1>{status === 'ditolak' ? 'Akses Management ditolak' : 'Pemeriksaan login gagal'}</h1>
       <p>{pesan}</p>
       {status === 'gagal' && (
-        <button type="button" onClick={() => setPercobaan((n) => n + 1)}>
+        <button type="button" onClick={retryAccessCheck}>
           Coba lagi
         </button>
       )}

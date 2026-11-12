@@ -1,0 +1,18 @@
+/* Scoped ke halaman Pegawai POS: tidak mengubah tema/layout lain. */
+.pegawai-pos-page { display: grid; gap: 1rem; }
+.pegawai-pos-intro { margin: 0; line-height: 1.6; opacity: .8; }
+.pegawai-pos-grid { display: grid; grid-template-columns: minmax(280px, .88fr) minmax(360px, 1.4fr); gap: 1rem; align-items: start; }
+.pegawai-pos-hint { font-size: .84rem; line-height: 1.5; opacity: .7; }
+.pegawai-pos-list-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem; }
+.pegawai-pos-scroll { max-width: 100%; overflow-x: auto; }
+.pegawai-pos-table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+.pegawai-pos-table th, .pegawai-pos-table td { text-align: left; padding: .85rem .65rem; border-bottom: 1px solid rgba(120,120,120,.18); }
+.pegawai-pos-table th { font-weight: 700; opacity: .72; font-size: .84rem; }
+.pegawai-pos-table td:last-child { white-space: nowrap; }
+.pegawai-pos-status { display: inline-block; font-weight: 700; font-size: .81rem; padding: .3rem .55rem; border-radius: 99px; }
+.pegawai-pos-aktif { background: rgba(41,139,76,.13); color: #217b46; }
+.pegawai-pos-nonaktif { background: rgba(150,98,24,.14); color: #995400; }
+.pegawai-pos-backdrop { position: fixed; inset: 0; z-index: 1100; background: rgba(14,18,17,.57); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.pegawai-pos-dialog { width: min(100%, 480px); max-height: 90vh; overflow: auto; }
+.pegawai-pos-dialog h2 { margin-top: 0; }
+@media (max-width: 900px) { .pegawai-pos-grid { grid-template-columns: 1fr; } }

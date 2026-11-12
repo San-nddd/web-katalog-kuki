@@ -68,12 +68,10 @@ class PushSubscriptionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' =>
-                'Notifikasi browser berhasil diaktifkan.',
+            'message' => 'Notifikasi browser berhasil diaktifkan.',
             'data' => [
                 'id' => $subscription->id,
-                'endpoint' =>
-                    $subscription->endpoint,
+                'endpoint' => $subscription->endpoint,
             ],
         ], 201);
     }
@@ -85,8 +83,7 @@ class PushSubscriptionController extends Controller
         Request $request
     ): JsonResponse {
         $validated = $request->validate([
-            'endpoint' =>
-                'required|string|max:1024',
+            'endpoint' => 'required|string|max:1024',
         ]);
 
         $request->user()
@@ -96,8 +93,7 @@ class PushSubscriptionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' =>
-                'Notifikasi browser berhasil dinonaktifkan.',
+            'message' => 'Notifikasi browser berhasil dinonaktifkan.',
             'data' => null,
         ]);
     }

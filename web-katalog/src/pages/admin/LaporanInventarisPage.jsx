@@ -56,9 +56,6 @@ function LaporanInventarisPage() {
 
   useEffect(() => {
     let active = true
-    setLoading(true)
-    setHasilKoreksi(null)
-    setError('')
     getLaporanInventaris(filterAktif.mulai, filterAktif.selesai)
       .then((data) => {
         if (!active) return
@@ -86,6 +83,9 @@ function LaporanInventarisPage() {
     event.preventDefault()
     if (!mulai || !selesai) return setError('Tanggal mulai dan selesai wajib diisi.')
     if (mulai > selesai) return setError('Tanggal akhir tidak boleh lebih awal dari tanggal mulai.')
+    setLoading(true)
+    setHasilKoreksi(null)
+    setError('')
     setFilterAktif({ mulai, selesai })
     setReload((v) => v + 1)
   }, [mulai, selesai])

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\produk;
-use Illuminate\Support\Facades\DB;
-use App\Models\ProduksiHarian;
 use App\Models\MutasiStok;
+use App\Models\produk;
+use App\Models\ProduksiHarian;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -57,6 +57,7 @@ class produkController extends Controller
                         'keterangan' => 'Stok awal saat produk ditambahkan.',
                     ]);
                 }
+
                 return $created;
             });
 
@@ -139,6 +140,7 @@ class produkController extends Controller
                         'keterangan' => 'Stok diubah melalui form Edit Produk.',
                     ]);
                 }
+
                 return $locked;
             });
 
@@ -295,7 +297,6 @@ class produkController extends Controller
         $request->merge(['barcode' => $barcode === '' ? null : $barcode]);
     }
 
- 
     private function generateBarcode(): string
     {
         do {

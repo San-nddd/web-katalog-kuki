@@ -47,6 +47,10 @@ export function normalizeMessage(message) {
   }
 }
 
+export function messageIdentityKey(message) {
+  return `${message.sender}::${String(message.id)}`
+}
+
 export function getMessagesFromResponse(response) {
   const payload = response?.data ?? response
 

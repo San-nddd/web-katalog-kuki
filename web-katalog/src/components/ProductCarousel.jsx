@@ -4,7 +4,8 @@ import { ArrowLeftIcon, ArrowRightIcon } from './icons'
 import { formatRupiah } from '../utils/mockData'
 import './ProductCarousel.css'
 
-const RESUME_DELAY = 1500
+const SLIDE_MS = 420
+const INACTIVITY_MS = 5000
 
 function ProductCarousel({
   products = [],
@@ -14,59 +15,41 @@ function ProductCarousel({
   autoPlay = false,
   autoPlayInterval = 4000,
 }) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStartX, setDragStartX] = useState(0)
   const [translateX, setTranslateX] = useState(0)
-  const [shake, setShake] = useState(false)
-  const [isInteracting, setIsInteracting] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [itemsPerView, setItemsPerView] = useState(4)
   const [jumping, setJumping] = useState(false)
 
   const trackRef = useRef(null)
   const itemWidthRef = useRef(0)
   const currentIndexRef = useRef(0)
-  const resumeTimeoutRef = useRef(null)
-  const loopTimeoutRef = useRef(null)
+  const dragRef = useRef(null)
+  const suppressClickRef = useRef(false)
+  const movingRef = useRef(false)
+  const moveTimeoutRef = useRef(null)
+  const inactivityTimerRef = useRef(null)
 
-  const duplicatedProducts = products.length > 0
-    ? [
-        ...products.slice(-itemsPerView),
-        ...products,
-        ...products.slice(0, itemsPerView),
-      ]
+  const cloneCount = Math.min(itemsPerView, products.length)
+  const duplicatedProducts = products.length
+    ? [...products.slice(-cloneCount), ...products, ...products.slice(0, cloneCount)]
     : []
-
-  const baseIndex = itemsPerView
-
-  const setIndexAndTranslate = useCallback((index, animate = true) => {
-    if (animate) {
-      setShake(true)
-      window.setTimeout(() => setShake(false), 300)
-    }
-
-    currentIndexRef.current = index
-    setTranslateX(-index * itemWidthRef.current)
-  }, [])
+  const baseIndex = cloneCount
 
   const jumpTo = useCallback((index) => {
     setJumping(true)
     currentIndexRef.current = index
     setTranslateX(-index * itemWidthRef.current)
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setJumping(false))
-    })
+    requestAnimationFrame(() => requestAnimationFrame(() => setJumping(false)))
   }, [])
 
   const measureAndSync = useCallback(() => {
     const track = trackRef.current
-    if (!track || track.children.length === 0) return
+    if (!track?.firstElementChild) return
 
-    const firstChild = track.children[0]
     const style = window.getComputedStyle(track)
     const gap = Number.parseFloat(style.columnGap || style.gap || '0') || 0
-    const width = firstChild.getBoundingClientRect().width
-
+    const width = track.firstElementChild.getBoundingClientRect().width
     if (!width) return
 
     itemWidthRef.current = width + gap
@@ -76,7 +59,6 @@ function ProductCarousel({
   useEffect(() => {
     const updateItemsPerView = () => {
       const width = window.innerWidth
-
       if (width >= 1200) setItemsPerView(4)
       else if (width >= 900) setItemsPerView(3)
       else if (width >= 600) setItemsPerView(2)
@@ -85,27 +67,23 @@ function ProductCarousel({
 
     updateItemsPerView()
     window.addEventListener('resize', updateItemsPerView)
-
     return () => window.removeEventListener('resize', updateItemsPerView)
   }, [])
 
-  // Penting: produk dari API datang setelah render pertama.
-  // Karena itu ukuran kartu diukur lagi setiap products/itemsPerView berubah.
   useEffect(() => {
     if (!products.length) return undefined
 
+    // API dapat mengisi produk setelah render pertama.
     const frame = requestAnimationFrame(() => {
       measureAndSync()
       jumpTo(baseIndex)
     })
 
     const track = trackRef.current
-    const observer =
-      track && typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => measureAndSync())
-        : null
-
-    if (track && observer) observer.observe(track)
+    const observer = track && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(measureAndSync)
+      : null
+    if (observer) observer.observe(track)
 
     return () => {
       cancelAnimationFrame(frame)
@@ -113,128 +91,118 @@ function ProductCarousel({
     }
   }, [products.length, itemsPerView, baseIndex, measureAndSync, jumpTo])
 
-  const stepNext = useCallback((withShake = false) => {
-    if (!products.length || itemWidthRef.current <= 0) return
+  // Perpindahan hanya menggunakan CSS transform; tidak ada animasi shake.
+  const finishMove = useCallback(() => {
+    if (!movingRef.current) return
+    movingRef.current = false
+    if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current)
+    moveTimeoutRef.current = null
 
-    const nextIndex = currentIndexRef.current + 1
-    setIndexAndTranslate(nextIndex, withShake)
+    const index = currentIndexRef.current
+    if (index >= baseIndex + products.length) jumpTo(baseIndex)
+    else if (index < baseIndex) jumpTo(baseIndex + products.length - 1)
+  }, [baseIndex, products.length, jumpTo])
 
-    if (loopTimeoutRef.current) {
-      clearTimeout(loopTimeoutRef.current)
+  const moveTo = useCallback((index) => {
+    if (!itemWidthRef.current || movingRef.current) return
+    movingRef.current = true
+    currentIndexRef.current = index
+    setTranslateX(-index * itemWidthRef.current)
+    // Fallback jika transitionend tidak dikirim browser.
+    moveTimeoutRef.current = window.setTimeout(finishMove, SLIDE_MS + 100)
+  }, [finishMove])
+
+  const moveBy = useCallback((direction) => {
+    if (!products.length || movingRef.current) return
+    moveTo(currentIndexRef.current + direction)
+  }, [products.length, moveTo])
+
+  // Jeda saat ada aktivitas; setelah 5 detik tanpa interaksi, autoplay lanjut.
+  // Saat jari / tombol mouse masih ditekan, hitung mundur belum dimulai.
+  const pauseAutoPlay = useCallback((pointerDown = false) => {
+    if (inactivityTimerRef.current) window.clearTimeout(inactivityTimerRef.current)
+    inactivityTimerRef.current = null
+    setIsPaused(true)
+
+    if (!pointerDown) {
+      inactivityTimerRef.current = window.setTimeout(() => {
+        inactivityTimerRef.current = null
+        setIsPaused(false)
+        // Langsung geser sekali pada detik ke-5, lalu gunakan interval normal.
+        if (autoPlay && products.length && !document.hidden) moveBy(1)
+      }, INACTIVITY_MS)
     }
+  }, [autoPlay, products.length, moveBy])
 
-    if (nextIndex >= baseIndex + products.length) {
-      loopTimeoutRef.current = window.setTimeout(() => {
-        jumpTo(baseIndex)
-      }, 430)
+  // Pointer Events menyatukan mouse dan sentuhan. Scroll vertikal HP tetap normal.
+  const handlePointerDown = useCallback((event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    if (movingRef.current) return
+
+    suppressClickRef.current = false
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      deltaX: 0,
+      active: false,
     }
-  }, [products.length, baseIndex, setIndexAndTranslate, jumpTo])
-
-  const stepPrev = useCallback((withShake = true) => {
-    if (!products.length || itemWidthRef.current <= 0) return
-
-    const prevIndex = currentIndexRef.current - 1
-    setIndexAndTranslate(prevIndex, withShake)
-
-    if (loopTimeoutRef.current) {
-      clearTimeout(loopTimeoutRef.current)
-    }
-
-    if (prevIndex < baseIndex) {
-      loopTimeoutRef.current = window.setTimeout(() => {
-        jumpTo(baseIndex + products.length - 1)
-      }, 430)
-    }
-  }, [products.length, baseIndex, setIndexAndTranslate, jumpTo])
-
-  const pauseAutoPlay = useCallback(() => {
-    if (resumeTimeoutRef.current) {
-      clearTimeout(resumeTimeoutRef.current)
-    }
-
-    setIsInteracting(true)
-  }, [])
-
-  const scheduleResumeAutoPlay = useCallback(() => {
-    if (resumeTimeoutRef.current) {
-      clearTimeout(resumeTimeoutRef.current)
-    }
-
-    resumeTimeoutRef.current = window.setTimeout(() => {
-      setIsInteracting(false)
-    }, RESUME_DELAY)
-  }, [])
-
-  const handleDragStart = useCallback((event) => {
-    if (event.type === 'mousedown' && event.button !== 0) return
-
-    const clientX =
-      event.type === 'mousedown'
-        ? event.clientX
-        : event.touches?.[0]?.clientX
-
-    if (clientX == null) return
-
-    setIsDragging(true)
-    setDragStartX(clientX)
-    pauseAutoPlay()
+    pauseAutoPlay(true)
   }, [pauseAutoPlay])
 
-  const handleDragMove = useCallback((event) => {
-    if (!isDragging) return
+  const handlePointerMove = useCallback((event) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
 
-    const clientX =
-      event.type === 'mousemove'
-        ? event.clientX
-        : event.touches?.[0]?.clientX
-
-    if (clientX == null) return
-
-    const deltaX = clientX - dragStartX
-    const currentTranslate = -currentIndexRef.current * itemWidthRef.current
-
-    setTranslateX(currentTranslate + deltaX)
-  }, [isDragging, dragStartX])
-
-  const handleDragEnd = useCallback(() => {
-    if (!isDragging) return
-
-    setIsDragging(false)
-
-    const baseTranslate = -currentIndexRef.current * itemWidthRef.current
-    const dragDistance = translateX - baseTranslate
-    const threshold = itemWidthRef.current * 0.15
-
-    if (dragDistance < -threshold) {
-      stepNext(true)
-    } else if (dragDistance > threshold) {
-      stepPrev(true)
-    } else {
-      setTranslateX(baseTranslate)
-    }
-
-    scheduleResumeAutoPlay()
-  }, [isDragging, translateX, stepNext, stepPrev, scheduleResumeAutoPlay])
-
-  // Autoplay sengaja TIDAK pause hanya karena mouse sedang berada di atas carousel.
-  // Pause hanya saat user benar-benar drag/touch/klik tombol navigasi.
-  useEffect(() => {
-    if (!autoPlay || !products.length || isInteracting) return undefined
-
-    const id = window.setInterval(() => {
-      if (!document.hidden) {
-        stepNext(false)
+    const deltaX = event.clientX - drag.startX
+    const deltaY = event.clientY - drag.startY
+    if (!drag.active) {
+      if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        dragRef.current = null // Biarkan halaman scroll vertikal.
+        pauseAutoPlay()
+        return
       }
-    }, autoPlayInterval)
+      drag.active = true
+      setIsDragging(true)
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    }
 
-    return () => window.clearInterval(id)
-  }, [autoPlay, autoPlayInterval, products.length, isInteracting, stepNext])
+    drag.deltaX = deltaX
+    setTranslateX(-currentIndexRef.current * itemWidthRef.current + deltaX)
+  }, [pauseAutoPlay])
+
+  const handlePointerEnd = useCallback((event, canceled = false) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    dragRef.current = null
+    pauseAutoPlay()
+    if (!drag.active) return // Ketuk biasa: tautan produk tetap bisa dibuka.
+
+    suppressClickRef.current = true
+    setIsDragging(false)
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    const threshold = Math.max(36, itemWidthRef.current * 0.15)
+    const direction = canceled || Math.abs(drag.deltaX) < threshold
+      ? 0
+      : drag.deltaX < 0 ? 1 : -1
+    moveTo(currentIndexRef.current + direction)
+  }, [moveTo, pauseAutoPlay])
 
   useEffect(() => {
-    return () => {
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current)
-      if (loopTimeoutRef.current) clearTimeout(loopTimeoutRef.current)
-    }
+    if (!autoPlay || !products.length || isPaused) return undefined
+    const id = window.setInterval(() => {
+      if (!document.hidden) moveBy(1)
+    }, autoPlayInterval)
+    return () => clearInterval(id)
+  }, [autoPlay, autoPlayInterval, products.length, isPaused, moveBy])
+
+  useEffect(() => () => {
+    if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current)
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current)
   }, [])
 
   if (!products.length) return null
@@ -257,16 +225,26 @@ function ProductCarousel({
           </div>
         )}
 
-        <div className="product-carousel-wrapper">
+        <div
+          className="product-carousel-wrapper"
+          onPointerEnter={(event) => {
+            if (event.pointerType === 'mouse' || event.pointerType === 'pen') pauseAutoPlay()
+          }}
+          onPointerMove={(event) => {
+            if (!dragRef.current && (event.pointerType === 'mouse' || event.pointerType === 'pen')) {
+              pauseAutoPlay()
+            }
+          }}
+          onFocusCapture={() => pauseAutoPlay()}
+        >
           {showNav && (
             <button
               type="button"
               className="carousel-arrow carousel-prev"
-              onClick={() => stepPrev(true)}
-              onMouseDown={pauseAutoPlay}
-              onMouseUp={scheduleResumeAutoPlay}
-              onTouchStart={pauseAutoPlay}
-              onTouchEnd={scheduleResumeAutoPlay}
+              onClick={() => {
+                pauseAutoPlay()
+                moveBy(-1)
+              }}
               aria-label="Produk sebelumnya"
             >
               <ArrowLeftIcon width="20" height="20" />
@@ -276,22 +254,32 @@ function ProductCarousel({
           <div className="product-carousel-viewport">
             <div
               ref={trackRef}
-              className={`product-carousel-track ${shake ? 'shake' : ''}`}
+              className="product-carousel-track"
               style={{
                 transform: `translate3d(${translateX}px, 0, 0)`,
-                '--translate-x': `${translateX}px`,
-                transition:
-                  isDragging || jumping
-                    ? 'none'
-                    : 'transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1)',
+                transition: isDragging || jumping
+                  ? 'none'
+                  : `transform ${SLIDE_MS}ms cubic-bezier(0.2, 0.7, 0.2, 1)`,
+                touchAction: 'pan-y',
+                userSelect: isDragging ? 'none' : undefined,
               }}
-              onMouseDown={handleDragStart}
-              onMouseMove={handleDragMove}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-              onTouchStart={handleDragStart}
-              onTouchMove={handleDragMove}
-              onTouchEnd={handleDragEnd}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={(event) => handlePointerEnd(event)}
+              onPointerCancel={(event) => handlePointerEnd(event, true)}
+              onTransitionEnd={(event) => {
+                if (event.target === event.currentTarget && event.propertyName === 'transform') {
+                  finishMove()
+                }
+              }}
+              onClickCapture={(event) => {
+                if (suppressClickRef.current) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  suppressClickRef.current = false
+                }
+              }}
+              onDragStart={(event) => event.preventDefault()}
             >
               {duplicatedProducts.map((product, index) => (
                 <Link
@@ -348,11 +336,10 @@ function ProductCarousel({
             <button
               type="button"
               className="carousel-arrow carousel-next"
-              onClick={() => stepNext(true)}
-              onMouseDown={pauseAutoPlay}
-              onMouseUp={scheduleResumeAutoPlay}
-              onTouchStart={pauseAutoPlay}
-              onTouchEnd={scheduleResumeAutoPlay}
+              onClick={() => {
+                pauseAutoPlay()
+                moveBy(1)
+              }}
               aria-label="Produk berikutnya"
             >
               <ArrowRightIcon width="20" height="20" />

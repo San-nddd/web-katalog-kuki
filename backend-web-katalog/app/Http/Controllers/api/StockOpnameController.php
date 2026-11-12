@@ -24,8 +24,11 @@ class StockOpnameController extends Controller
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
         $query = OpnameStok::query()->with(['pembuat:id,name', 'penyelesai:id,name'])->withCount('detail');
-        if (isset($filter['status'])) $query->where('status', $filter['status']);
+        if (isset($filter['status'])) {
+            $query->where('status', $filter['status']);
+        }
         $page = $query->orderByDesc('id')->paginate(15);
+
         return response()->json(['success' => true, 'data' => [
             'items' => $page->getCollection()->map(fn (OpnameStok $opname) => $this->ringkasan($opname))->values(),
             'page' => $page->currentPage(),
@@ -37,6 +40,7 @@ class StockOpnameController extends Controller
     public function show(OpnameStok $opnameStok): JsonResponse
     {
         $opnameStok->load(['pembuat:id,name', 'penyelesai:id,name', 'detail.produk:id,nama_produk,barcode,stok']);
+
         return response()->json(['success' => true, 'data' => [
             ...$this->ringkasan($opnameStok),
             'catatan' => $opnameStok->catatan,
@@ -64,7 +68,9 @@ class StockOpnameController extends Controller
         $ids = collect($data['produk_ids'])->map(fn ($id) => (int) $id)->sort()->values()->all();
         $opname = DB::transaction(function () use ($request, $ids, $data) {
             $items = produk::query()->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get(['id', 'stok']);
-            if ($items->count() !== count($ids)) throw ValidationException::withMessages(['produk_ids' => ['Ada produk yang tidak ditemukan.']]);
+            if ($items->count() !== count($ids)) {
+                throw ValidationException::withMessages(['produk_ids' => ['Ada produk yang tidak ditemukan.']]);
+            }
             $opname = OpnameStok::create([
                 'status' => 'draft',
                 'catatan' => trim((string) ($data['catatan'] ?? '')) ?: null,
@@ -77,8 +83,10 @@ class StockOpnameController extends Controller
                     'stok_sistem' => (int) ($item->stok ?? 0),
                 ]);
             }
+
             return $opname;
         });
+
         return response()->json(['success' => true, 'message' => 'Sesi stock opname dibuat.', 'data' => ['id' => $opname->id]], 201);
     }
 
@@ -93,20 +101,25 @@ class StockOpnameController extends Controller
         ]);
         DB::transaction(function () use ($opnameStok, $data) {
             $opname = OpnameStok::query()->lockForUpdate()->findOrFail($opnameStok->id);
-            if ($opname->status !== 'draft') throw ValidationException::withMessages(['items' => ['Sesi opname sudah selesai atau dibatalkan.']]);
+            if ($opname->status !== 'draft') {
+                throw ValidationException::withMessages(['items' => ['Sesi opname sudah selesai atau dibatalkan.']]);
+            }
             $rows = OpnameStokDetail::query()->where('opname_id', $opname->id)->lockForUpdate()->get()->keyBy('id');
             if ($rows->count() !== count($data['items'])) {
                 throw ValidationException::withMessages(['items' => ['Semua produk dalam sesi harus dihitung dan disimpan bersama.']]);
             }
             foreach ($data['items'] as $input) {
                 $row = $rows->get((int) $input['id']);
-                if (! $row) throw ValidationException::withMessages(['items' => ['Ada detail opname yang tidak valid.']]);
+                if (! $row) {
+                    throw ValidationException::withMessages(['items' => ['Ada detail opname yang tidak valid.']]);
+                }
                 $row->update([
                     'stok_fisik' => (int) $input['stok_fisik'],
                     'catatan' => trim((string) ($input['catatan'] ?? '')) ?: null,
                 ]);
             }
         });
+
         return response()->json(['success' => true, 'message' => 'Hasil hitung fisik disimpan; stok sistem belum berubah.']);
     }
 
@@ -115,7 +128,9 @@ class StockOpnameController extends Controller
     {
         $changed = DB::transaction(function () use ($request, $opnameStok) {
             $opname = OpnameStok::query()->lockForUpdate()->findOrFail($opnameStok->id);
-            if ($opname->status !== 'draft') throw ValidationException::withMessages(['status' => ['Sesi sudah diproses.']]);
+            if ($opname->status !== 'draft') {
+                throw ValidationException::withMessages(['status' => ['Sesi sudah diproses.']]);
+            }
             $details = OpnameStokDetail::query()->where('opname_id', $opname->id)->orderBy('produk_id')->lockForUpdate()->get();
             if ($details->isEmpty() || $details->contains(fn ($row) => $row->stok_fisik === null)) {
                 throw ValidationException::withMessages(['stok_fisik' => ['Semua stok fisik harus diisi dan disimpan sebelum finalisasi.']]);
@@ -135,7 +150,9 @@ class StockOpnameController extends Controller
                 $sebelum = (int) $item->stok;
                 $sesudah = (int) $row->stok_fisik;
                 $selisih = $sesudah - $sebelum;
-                if ($selisih === 0) continue; // Tanpa perubahan stok, tak perlu menulis mutasi.
+                if ($selisih === 0) {
+                    continue;
+                } // Tanpa perubahan stok, tak perlu menulis mutasi.
                 $item->stok = $sesudah;
                 $item->save();
                 MutasiStok::create([
@@ -156,8 +173,10 @@ class StockOpnameController extends Controller
                 'diselesaikan_oleh_id' => $request->user()?->getAuthIdentifier(),
                 'diselesaikan_pada' => now('Asia/Jakarta'),
             ]);
+
             return $total;
         });
+
         return response()->json(['success' => true, 'message' => "Stock opname diselesaikan. {$changed} produk mengalami perubahan stok."]);
     }
 
@@ -165,9 +184,12 @@ class StockOpnameController extends Controller
     {
         DB::transaction(function () use ($opnameStok) {
             $opname = OpnameStok::query()->lockForUpdate()->findOrFail($opnameStok->id);
-            if ($opname->status !== 'draft') throw ValidationException::withMessages(['status' => ['Hanya sesi draft yang bisa dibatalkan.']]);
+            if ($opname->status !== 'draft') {
+                throw ValidationException::withMessages(['status' => ['Hanya sesi draft yang bisa dibatalkan.']]);
+            }
             $opname->update(['status' => 'dibatalkan']);
         });
+
         return response()->json(['success' => true, 'message' => 'Sesi opname dibatalkan. Stok tidak berubah.']);
     }
 
@@ -185,14 +207,21 @@ class StockOpnameController extends Controller
         $row = DB::transaction(function () use ($request, $data) {
             $item = produk::query()->lockForUpdate()->findOrFail($data['produk_id']);
             $sebelum = (int) ($item->stok ?? 0);
-            if ($sebelum !== (int) $data['stok_sebelum']) throw ValidationException::withMessages(['stok_sebelum' => ['Stok berubah, muat ulang sebelum menyimpan.']]);
+            if ($sebelum !== (int) $data['stok_sebelum']) {
+                throw ValidationException::withMessages(['stok_sebelum' => ['Stok berubah, muat ulang sebelum menyimpan.']]);
+            }
             $jumlah = (int) $data['jumlah'];
-            if ($jumlah > $sebelum) throw ValidationException::withMessages(['jumlah' => ['Jumlah tidak boleh melebihi stok tersedia.']]);
+            if ($jumlah > $sebelum) {
+                throw ValidationException::withMessages(['jumlah' => ['Jumlah tidak boleh melebihi stok tersedia.']]);
+            }
             $sesudah = $sebelum - $jumlah;
             $item->stok = $sesudah;
             $item->save();
             $keterangan = trim($data['keterangan']);
-            if ($data['jenis'] === 'kedaluwarsa') $keterangan .= ' | Kedaluwarsa: '.$data['tanggal_kedaluwarsa'];
+            if ($data['jenis'] === 'kedaluwarsa') {
+                $keterangan .= ' | Kedaluwarsa: '.$data['tanggal_kedaluwarsa'];
+            }
+
             return MutasiStok::create([
                 'produk_id' => $item->id,
                 'pengguna_id' => $request->user()?->getAuthIdentifier(),
@@ -203,6 +232,7 @@ class StockOpnameController extends Controller
                 'keterangan' => $keterangan,
             ]);
         });
+
         return response()->json(['success' => true, 'message' => 'Pengeluaran barang tersimpan dan tercatat pada Mutasi Stok.', 'data' => ['id' => $row->id]], 201);
     }
 
@@ -217,6 +247,7 @@ class StockOpnameController extends Controller
             ->whereDate('created_at', '>=', $mulai)
             ->whereDate('created_at', '<=', $selesai)
             ->groupBy('jenis')->get()->keyBy('jenis');
+
         return response()->json(['success' => true, 'data' => [
             'mulai' => $mulai,
             'selesai' => $selesai,

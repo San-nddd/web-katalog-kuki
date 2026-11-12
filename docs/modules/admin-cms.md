@@ -23,9 +23,14 @@ LoginPage -> authService.login()
 | Produksi | `/admin/produksi-harian` | GET/POST `/api/admin/produksi-harian`, POST konfirmasi cetak |
 | Testimonial | `/admin/testimonial` | `/api/admin/testimonial` dan `/komentar` (moderasi, foto, kelola) |
 | Chat pelanggan | `/admin/chat` | `/api/admin/obrolan` (daftar, detail, pesan, balas, ambil, selesai, baca) |
-| Management | `/management/dashboard`, inventaris/opname/mutasi | `/api/management/*`, sebagian GET `/api/admin/*` dengan Gate baca Management |
+| Management | `/management/dashboard`, laporan inventaris/penjualan, opname/mutasi | `/api/management/*`, sebagian GET `/api/admin/*` dengan Gate baca Management |
 
 Sumber halaman/service berada di `web-katalog/src/pages/admin/` dan `src/services/`. Route serta middleware ada di `backend-web-katalog/routes/api.php`; implementasi izin ada di `app/Providers/AppServiceProvider.php` dan `app/Models/User.php`.
+
+## Identitas Admin
+Sidebar Admin dan Management menampilkan logo `web-katalog/src/assets/Kuki.png` melalui import asset pada `AdminLayout.jsx` dan `ManagementLayout.jsx`. Ukuran 44×44 menggunakan `object-fit: contain`, tanpa bingkai pada gambar/wrapper. Teks brand dan susunan navigasi dipertahankan.
+
+Styling Admin, Management, dan Login dipusatkan di `web-katalog/src/pages/admin/admin.css`; aturan responsive dan tema refined diletakkan setelah style dasarnya agar urutan cascade yang dipakai tetap konsisten.
 
 ## Batas role teramati
 - Login backend menerima role terotorisasi `admin` dan `owner`; token dibuat via Sanctum.
@@ -39,7 +44,24 @@ Sumber halaman/service berada di `web-katalog/src/pages/admin/` dan `src/service
 - Produk yang sudah memiliki riwayat mutasi stok tidak dapat dihapus melalui endpoint dan menerima 409. Owner menyetujui perlindungan ledger; test kini memastikan produk dan riwayatnya tetap ada.
 - Migration additive nullable `metadata_ai` menyelaraskan schema dengan model/form/Assistant. Migration ini belum dijalankan terhadap database production.
 - `php artisan test`: **PASS**, 49 tes / 259 assertions. Pengujian menggunakan SQLite in-memory.
-- Navigation di `ManagementLayout.jsx` menampilkan `/management/laporan-penjualan`; `App.jsx` yang diperiksa tidak mendaftarkan route React tersebut. Halaman laporan bisnis tidak diverifikasi dan tidak dibuat dalam task ini.
+- Route laporan penjualan sebelumnya belum terdaftar di React walaupun menu Management sudah menautkannya. `KUKI-FIN-002` menambahkan halaman `/management/laporan-penjualan` (serta route CMS Admin) dan API read-only `/api/management/laporan-penjualan`.
+
+## Laporan penjualan
+```text
+Management/Admin
+  -> LaporanPenjualanPage.jsx
+  -> laporanPenjualanService.js
+  -> GET /api/management/laporan-penjualan[ /export ]
+  -> LaporanPenjualanController
+  -> pos_transaksi + relasi pos_pegawai
+```
+
+- Backend memaksa `auth:sanctum` dan Gate `view-management-dashboard` (Admin/Owner); frontend route memakai guard yang sesuai.
+- Filter tanggal membaca `dibayar_pada`, maksimal 93 hari; laporan menampilkan total, jumlah dan rata-rata transaksi, agregat metode pembayaran, serta rincian 30 transaksi per halaman.
+- Batas tanggal dihitung sebagai hari kalender Asia/Jakarta lalu dikonversi ke UTC, sesuai `config/app.php` dan timestamp POS; laporan Management dan endpoint `/api/pos/report` memakai batas yang sama.
+- Ekspor CSV memakai periode yang sama. Halaman tidak memakai angka mock; periode kosong menampilkan hasil agregat nol dan tabel kosong dari query database.
+- Batas keputusan: angka adalah total transaksi tersimpan, bukan laba/HPP; laporan ini tidak mengubah, membatalkan, atau menghapus transaksi. Aturan HPP, akuntansi dan refund masih menunggu DEC-FIN-001.
+- Tes fitur dibuat di `tests/Feature/LaporanPenjualanAccessTest.php`. Pada 2026-11-12, runner PHPUnit SQLite terhalang migration lokal yang hanya mendukung MySQL. Query agregat, filter tanggal, pagination, dan CSV diuji terpisah memakai schema SQLite in-memory; middleware route diperiksa dengan `route:list -v`.
 
 ## Tes dan keterbatasan
 - `php artisan route:list --except-vendor`: **PASS**, 67 route terdaftar; ini hanya bukti pendaftaran route.

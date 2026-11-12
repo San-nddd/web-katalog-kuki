@@ -303,10 +303,12 @@
 }
 
 @media (max-width: 480px) {
-  /* HP: sengaja lebih kecil supaya ada ruang napas di kiri/kanan. */
+  /* Sisakan ruang untuk panah dan tampilkan satu kartu utuh pada layar kecil. */
   .product-carousel-item-link {
-    min-width: 185px;
-    max-width: 210px;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 
   .product-carousel-card {
@@ -368,20 +370,11 @@
   }
 
   .product-carousel-viewport {
-    padding: 0 3.35rem;
+    padding: 0 clamp(2.1rem, 10vw, 2.6rem);
   }
 }
 
 @media (max-width: 380px) {
-  .product-carousel-item-link {
-    min-width: 170px;
-    max-width: 195px;
-  }
-
-  .product-carousel-viewport {
-    padding: 0 3rem;
-  }
-
   .product-carousel-name {
     font-size: 0.92rem;
   }

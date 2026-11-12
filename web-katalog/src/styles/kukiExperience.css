@@ -1,0 +1,23 @@
+/* Kuki Experience extension. All classes prefixed to avoid altering approved site styles. */
+.kuki-experience-social,.kuki-experience-recs { color: inherit; }
+.kuki-experience-social { text-align:center; padding: 32px 16px; }
+.kuki-experience-eyebrow { text-transform:uppercase; letter-spacing:.16em; font-size:.76rem; opacity:.65; margin:0 0 8px; }
+.kuki-experience-social h2 { margin:0 0 16px; font: inherit; font-size:clamp(1.5rem,3vw,2.3rem); }
+.kuki-experience-social-list { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; }
+.kuki-experience-social-list a { display:inline-flex; align-items:center; gap:9px; border:1px solid currentColor; border-radius:999px; padding:10px 16px; color:inherit; text-decoration:none; background:transparent; }
+.kuki-experience-social-list a:focus-visible,.kuki-experience-social-list a:hover { outline:2px solid currentColor; outline-offset:2px; }
+.kuki-experience-recs { margin:18px 0; }
+.kuki-experience-recs-head { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:8px; margin:0 0 14px; }
+.kuki-experience-recs-head h3 { font-size:1.12rem; margin:0; }
+.kuki-experience-recs-head span { font-size:.8rem; opacity:.7; }
+.kuki-experience-product { display:flex; flex-direction:column; gap:5px; padding:8px; color:inherit; background:rgba(240,221,201,.24); border:1px solid rgba(100,78,65,.15); border-radius:12px; text-decoration:none; min-height:145px; }
+.kuki-experience-product img { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:8px; }
+.kuki-experience-product strong { font-size:.9rem; }
+.kuki-experience-product span { font-size:.86rem; }
+.kuki-experience-product small { opacity:.66; }
+.kuki-experience-faq { padding:10px 14px; border-top:1px solid rgba(100,78,65,.15); }
+.kuki-experience-faq strong { display:block; font-size:.85rem; margin-bottom:7px; }
+.kuki-experience-faq-items { display:flex; flex-wrap:wrap; gap:6px; }
+.kuki-experience-faq-items button { background:transparent; border:1px solid rgba(100,78,65,.35); border-radius:18px; color:inherit; font:inherit; font-size:.8rem; padding:7px 10px; cursor:pointer; }
+.kuki-experience-faq-items button:disabled { opacity:.5; cursor:default; }
+.kuki-experience-faq-items .kuki-experience-contact { background:#5b362b; color:white; }

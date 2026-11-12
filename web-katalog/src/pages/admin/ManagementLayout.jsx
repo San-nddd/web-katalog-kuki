@@ -1,14 +1,13 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { currentUser, logout } from '../../services/authService'
 import './admin.css'
 import './management.css'
+import logoKuki from '../../assets/Kuki.png'
 
 
 
 function ManagementLayout({ title = 'Dashboard Manajemen', children }) {
   const navigate = useNavigate()
-  const location = useLocation()
-  const onDashboard = location.pathname === '/management/dashboard'
   const user = currentUser()
   // Akun manager lama memiliki hak akses operasional yang sama dengan admin.
   // Setelah normalisasi role, backend akan mengembalikan role admin.
@@ -31,7 +30,11 @@ function ManagementLayout({ title = 'Dashboard Manajemen', children }) {
     <div className="admin-layout management-layout">
       <aside className="admin-sidebar management-sidebar">
         <div className="admin-brand">
-          <span className="admin-logo" aria-hidden="true">K</span>
+          <img
+            src={logoKuki}
+            alt="Kuki Bakehouse"
+            className="admin-brand-logo"
+          />
           <div>
             <strong>Manajemen Kuki</strong>
             <small>Ringkasan Bisnis</small>
@@ -39,11 +42,14 @@ function ManagementLayout({ title = 'Dashboard Manajemen', children }) {
         </div>
 
         <nav className="admin-nav management-nav" aria-label="Navigasi manajemen">
-          <Link to="/management/dashboard">Dashboard Management</Link>
-          <Link to="/management/mutasi-stok">Riwayat Mutasi Stok</Link>
-          <Link to="/management/opname-stok">Stock Opname</Link>
-          <Link to="/management/laporan-inventaris">Laporan Inventaris</Link>
-          <Link to="/management/laporan-penjualan">Laporan Penjualan</Link>
+          <NavLink to="/management/dashboard">Dashboard Management</NavLink>
+          <NavLink to="/management/mutasi-stok">Riwayat Mutasi Stok</NavLink>
+          <NavLink to="/management/opname-stok">Stock Opname</NavLink>
+          <NavLink to="/management/laporan-inventaris">Laporan Inventaris</NavLink>
+          <NavLink to="/management/laporan-penjualan">Laporan Penjualan</NavLink>
+          {isAdminManager && (
+            <Link className="management-admin-nav-link" to="/admin">Kembali ke Admin CMS</Link>
+          )}
         </nav>
 
         <div className="admin-user">
@@ -57,9 +63,6 @@ function ManagementLayout({ title = 'Dashboard Manajemen', children }) {
             Keluar
           </button>
           <Link className="management-admin-link" to="/">Lihat situs publik</Link>
-          {isAdminManager && (
-            <Link className="management-admin-link" to="/admin">Buka CMS Admin</Link>
-          )}
         </div>
       </aside>
 

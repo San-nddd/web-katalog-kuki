@@ -1,21 +1,23 @@
 name: kuki_pos
-version: 0.1.0+1
-description: Kuki Bakehouse tablet POS - Laravel REST API
+description: Kuki Bakehouse tablet-first POS for Android and iPadOS
 publish_to: none
+version: 1.0.0+1
 environment:
-  sdk: '>=3.8.0 <4.0.0'
+  sdk: '>=3.9.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter
   http: ^1.3.0
   intl: ^0.20.2
   uuid: ^4.5.1
-  flutter_secure_storage: ^10.3.4
+  flutter_secure_storage: 10.3.4
   mobile_scanner: ^7.4.2
+  sqflite: ^2.4.2
+  path: ^1.9.1
   pdf: ^3.11.3
   printing: 5.14.3
-  # Kunci image ke versi yang kompatibel dengan archive <4.1 dari pdf.
-  image: 4.5.4
+  crypto: ^3.0.6
+  connectivity_plus: ^7.3.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -23,4 +25,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/branding/kuki_logo.png
+    - assets/images/
+    - assets/branding/

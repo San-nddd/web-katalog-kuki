@@ -61,10 +61,6 @@ function DetailProdukPage() {
 
       <section className="section section-dark detail-section">
         <div className="container">
-          <Link to="/katalog" className="detail-back">
-            <ArrowLeftIcon width="16" height="16" /> Kembali ke katalog
-          </Link>
-
           {status === 'loading' && (
             <p className="detail-status" role="status">
               Memuat produk...

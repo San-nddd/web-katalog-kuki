@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import KukiSocialLinks from '../components/KukiSocialLinks'
+import KukiLocationLoader from '../components/KukiLocationLoader'
 import KukiAssistant from '../components/KukiAssistant'
 import ProductCarousel from '../components/ProductCarousel'
 import { ArrowLeftIcon, ArrowRightIcon, QuoteIcon } from '../components/icons'
@@ -509,12 +511,12 @@ function HomePage() {
               </HeroIcon>
               Since 2021
             </span>
-            <span className="hero-badge display-font">
-              <HeroIcon>
-                <path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.3-7.5 9.5-4.4-1.2-7.5-4.9-7.5-9.5V6L12 3z" />
-                <path d="M8.8 12l2.2 2.2 4.2-4.4" />
-              </HeroIcon>
-              Halal MUI
+            <span className="hero-badge hero-badge--halal" aria-label="Label Halal Indonesia">
+              <img
+                className="hero-badge-logo--halal"
+                src="/halal-mui-latest.png"
+                alt="Logo Halal Indonesia"
+              />
             </span>
             <span className="hero-badge display-font">
               <HeroIcon>
@@ -616,7 +618,11 @@ function HomePage() {
         </div>
       </section>
 
+      <KukiLocationLoader />
+
       <KukiAssistant />
+
+      <KukiSocialLinks />
 
       <Footer />
     </div>

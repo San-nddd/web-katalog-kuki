@@ -31,15 +31,20 @@ export default function BarcodePrintButton({
   const [media, setMedia] = useState('a4')
   const [modeJumlah, setModeJumlah] = useState('stok')
   const [jumlahManual, setJumlahManual] = useState('1')
-  const [stokTerbaru, setStokTerbaru] = useState(null)
-  const [loadingStok, setLoadingStok] = useState(false)
-  const [errorStok, setErrorStok] = useState('')
+  const [hasilStok, setHasilStok] = useState(null)
   const [error, setError] = useState('')
 
   const validKode = Boolean(String(value ?? '').trim()) && !disabled && canPrint
   const analisis = useMemo(() => analisisLabel(value, ukuranId, kerapatanId), [value, ukuranId, kerapatanId])
   const stokAwal = Number(stok)
   const adaStokAwal = stok !== null && stok !== undefined && Number.isSafeInteger(stokAwal) && stokAwal >= 0
+  const barcodeProduk = String(value ?? '').trim()
+  const hasilStokSaatIni = hasilStok?.produkId === produkId && hasilStok?.barcode === barcodeProduk
+    ? hasilStok
+    : null
+  const stokTerbaru = hasilStokSaatIni?.stok ?? null
+  const loadingStok = open && produkId !== undefined && produkId !== null && !hasilStokSaatIni
+  const errorStok = hasilStokSaatIni?.error ?? ''
   const stokSaatIni = stokTerbaru ?? (adaStokAwal ? stokAwal : null)
   const stokTerbatas = stokSaatIni !== null ? Math.min(stokSaatIni, BATAS_CETAK_LABEL) : null
   const nilaiManual = jumlahManual.trim() === '' ? NaN : Number(jumlahManual)
@@ -50,20 +55,8 @@ export default function BarcodePrintButton({
   const bolehCetak = validKode && !loadingStok && !errorStok && !analisis.error && jumlahValid
 
   useEffect(() => {
-    if (!open) return
+    if (!open || produkId === undefined || produkId === null) return
     let aktif = true
-    setError('')
-    setErrorStok('')
-    setStokTerbaru(null)
-    setModeJumlah('stok')
-    setJumlahManual('1')
-
-    if (produkId === undefined || produkId === null) {
-      setLoadingStok(false)
-      return () => { aktif = false }
-    }
-
-    setLoadingStok(true)
     getProdukById(produkId)
       .then((item) => {
         if (!aktif) return
@@ -71,18 +64,32 @@ export default function BarcodePrintButton({
         if (!Number.isSafeInteger(jumlah) || jumlah < 0) {
           throw new Error("Stok produk dari API tidak valid.")
         }
-        if (String(item?.barcode ?? '').trim() !== String(value ?? '').trim()) {
+        if (String(item?.barcode ?? '').trim() !== barcodeProduk) {
           throw new Error("Barcode produk berubah di database. Muat ulang daftar produk sebelum mencetak.")
         }
-        setStokTerbaru(jumlah)
+        setHasilStok({ produkId, barcode: barcodeProduk, stok: jumlah, error: '' })
         setJumlahManual(String(Math.min(Math.max(jumlah, 1), BATAS_CETAK_LABEL)))
       })
       .catch((err) => {
-        if (aktif) setErrorStok(err?.message ||"Gagal mengambil stok terbaru. Coba lagi.")
+        if (aktif) {
+          setHasilStok({
+            produkId,
+            barcode: barcodeProduk,
+            stok: null,
+            error: err?.message || "Gagal mengambil stok terbaru. Coba lagi.",
+          })
+        }
       })
-      .finally(() => { if (aktif) setLoadingStok(false) })
     return () => { aktif = false }
-  }, [open, produkId, value])
+  }, [open, produkId, barcodeProduk])
+
+  function handleOpen() {
+    setError('')
+    setHasilStok(null)
+    setModeJumlah('stok')
+    setJumlahManual('1')
+    setOpen(true)
+  }
 
   function handlePrint() {
     setError('')
@@ -103,7 +110,7 @@ export default function BarcodePrintButton({
         className={`admin-btn admin-btn-ghost ${className}`.trim()}
         disabled={!validKode}
         title={validKode ? ("Cetak label " + productName) : "Simpan barcode produk terlebih dahulu"}
-        onClick={() => setOpen(true)}>
+        onClick={handleOpen}>
         {"Cetak"}
       </button>
 

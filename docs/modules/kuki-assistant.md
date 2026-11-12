@@ -47,9 +47,21 @@ Suite Laravel terakhir: 49 tests / 259 assertions PASS. Dua respons 503 sebelumn
 
 Pada `KUKI-QA-002`, pelanggaran purity initializer `Date.now()` di `ChatWindow.jsx` diperbaiki dengan lazy initializer. ESLint terarah untuk file tersebut PASS; build production PASS. Full lint frontend masih FAIL dengan 21 errors/1 warning; error lain tidak diubah karena beberapa file terkait sudah memiliki perubahan lokal pengguna.
 
+### Pembaruan audit algoritma — KUKI-AUDIT-001 (2026-10-29)
+- Klasifikasi intent sekarang memprioritaskan pertanyaan lokasi/alamat ketika hanya nama/kategori produk yang disebut. Kartu tetap muncul untuk intent produk yang eksplisit seperti harga, stok, pilihan, atau rekomendasi.
+- Jika nama produk muncul lengkap pada pertanyaan, hasil dibatasi ke produk dengan nama exact tersebut; query kategori umum tetap dapat menampilkan beberapa produk dalam kategori yang sama.
+- `buildProductCardRows()` menghubungkan balasan bot dengan pertanyaan pengguna yang masih menunggu secara FIFO; balasan Admin menghapus antrean. Ini menghindari kartu menggunakan pertanyaan pengguna yang lebih baru ketika ada lebih dari satu pesan menunggu.
+- Pengiriman chat dan handover memakai pengaman in-flight per `session_id`. Respons dari sesi yang sudah diganti tidak mengubah pesan/status sesi baru.
+- Highlight memakai `sender + message.id`, bukan teks pesan, sehingga dua pesan identik tetap dapat ditandai/dihapus secara terpisah.
+- Test regresi `web-katalog/tests/test-chat-products.mjs` mencakup lokasi + istilah produk, intent eksplisit, exact match, urutan pasangan balasan, dan reset saat Admin membalas. `test-chat-message-identity.mjs` memeriksa ID highlight yang berbeda untuk teks identik.
+- Audit menemukan file migration `metadata_ai` tidak ada walau keputusan DEC-QA-002 menyatakan sudah diterapkan. Migration nullable forward-only telah dibuat sesuai approval yang tercatat; tidak ada migrasi database production yang dijalankan.
+- Verifikasi 2026-10-29: Node test produk PASS; ESLint terarah untuk matcher dan `ChatWindow.jsx` PASS; build PASS (peringatan chunk >500 kB); full lint FAIL (25 error/1 warning); Laravel 49 test/259 assertion PASS. ESLint terarah `KukiAssistant.jsx` masih melaporkan dua temuan `set-state-in-effect` pada effect katalog dan polling; tidak diubah karena bukan akar bug sesi yang diperbaiki.
+
 ## Risiko / hal yang belum tervalidasi
 - Pengiriman push notifikasi bergantung pada subscription dan konfigurasi lingkungan, tidak dibuktikan di sini.
 - Siklus timeout handover, isolasi sesi antar pelanggan, dan jawaban provider perlu uji terarah sebelum klaim siap produksi.
+- Rendering browser, polling lambat lintas sesi, dan permintaan bersamaan belum diuji melalui test UI/integrasi frontend.
+- Owner menetapkan Maps aktif dengan sengaja; area itu dikecualikan dari audit/perubahan KUKI-AUDIT-001. POS/pegawai masih memerlukan approval.
 - Jangan mengekspos credential provider ke browser atau log/dokumentasi.
 
 **Sumber:** `KukiAssistant.jsx`, `assistantService.js`, `AssistantController.php`, `KukiAssistantService.php`, `OpenRouterService.php`, `AdminChatController.php`, `routes/api.php`, `AssistantApiTest.php`.  

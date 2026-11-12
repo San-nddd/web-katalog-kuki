@@ -10,20 +10,20 @@
 
 .admin-settings-intro h2 {
   margin: 0;
-  color: var(--brown-dark);
+  color: var(--kb-ink, var(--brown-dark));
   font-size: clamp(1.5rem, 3vw, 2rem);
 }
 
 .admin-settings-intro p {
   margin: 0.35rem 0 0;
-  color: var(--muted-cream);
+  color: var(--kb-muted, var(--muted-cream));
 }
 
 .admin-settings-kicker {
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  color: var(--orange) !important;
+  letter-spacing: 0.09em;
+  color: var(--kb-caramel, #c98552) !important;
 }
 
 .admin-settings-saved {
@@ -43,10 +43,11 @@
 }
 
 .admin-settings-card {
-  background: var(--cream-card);
-  border: 2px solid var(--brown-dark);
-  border-radius: var(--radius);
-  box-shadow: 5px 5px 0 var(--brown-dark);
+  background: var(--kb-surface, var(--cream-card));
+  border: 1px solid var(--kb-border, #c6a481);
+  border-top: 3px solid var(--kb-caramel);
+  border-radius: 12px;
+  box-shadow: none;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -67,7 +68,7 @@
 
 .admin-settings-card-head h3 {
   margin: 0;
-  color: var(--brown-dark);
+  color: var(--kb-ink, var(--brown-dark));
   font-size: 1.05rem;
 }
 
@@ -85,10 +86,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 2px solid var(--brown-dark);
-  border-radius: 12px;
-  background: var(--orange);
-  color: var(--brown-dark);
+  border: 1px solid var(--kb-border, #e4d1bf);
+  border-radius: 10px;
+  background: var(--kb-caramel);
+  color: var(--kb-primary-ink);
   font-weight: 800;
 }
 
@@ -129,10 +130,10 @@
   min-width: 150px;
   max-width: 220px;
   padding: 0.55rem 0.7rem;
-  border: 2px solid var(--brown-dark);
+  border: 1px solid var(--kb-border, #e4d1bf);
   border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--brown-dark);
+  background: var(--kb-surface, #fff);
+  color: var(--kb-ink, #35231e);
   font-family: inherit;
   font-weight: 600;
 }
@@ -159,7 +160,7 @@
   height: 26px;
   border-radius: 999px;
   background: #c6b8aa;
-  border: 2px solid var(--brown-dark);
+  border: 1px solid var(--kb-border, #e4d1bf);
   position: relative;
   transition: 0.2s ease;
 }
@@ -177,7 +178,7 @@
 }
 
 .admin-switch input:checked + .admin-switch-track {
-  background: var(--orange);
+  background: var(--kb-caramel, #c98552);
 }
 
 .admin-switch input:checked + .admin-switch-track::after {
@@ -292,7 +293,7 @@
 .admin-layout.admin-theme-dark .admin-settings-card {
   background: #251a15;
   border-color: #694a38;
-  box-shadow: 5px 5px 0 #0b0806;
+  box-shadow: none;
 }
 
 .admin-layout.admin-theme-dark .admin-table tbody tr:hover {

@@ -290,6 +290,54 @@ html.lenis body {
   }
 }
 
+@media (max-width: 768px) {
+  .hero-badges {
+    position: relative;
+    inset: auto;
+    width: min(100%, 30rem);
+    height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .5rem;
+    margin: 0 0 1.3rem;
+    padding: 0;
+  }
+
+  .hero-badges .hero-badge {
+    position: relative;
+    inset: auto;
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    transform: rotate(var(--tilt, 0deg));
+    animation: none;
+    box-shadow: 0 2px 0 rgba(24, 8, 3, .16);
+  }
+
+  .hero-badges .hero-badge:nth-child(1) {
+    justify-self: start;
+  }
+
+  .hero-badges .hero-badge:nth-child(3) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    max-width: min(100%, 22rem);
+    font-size: clamp(.65rem, 3vw, .78rem);
+    line-height: 1.25;
+    padding: .42rem .65rem;
+  }
+
+  .hero-badges .hero-badge--halal {
+    justify-self: end;
+    min-width: 2.8rem;
+    min-height: 2.8rem;
+    transform: rotate(7deg);
+  }
+
+  .hero-content { padding-top: 3.2rem !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero,
   .hero-collage,
@@ -1588,7 +1636,7 @@ html.lenis body {
 
 @media (max-width: 768px) {
   .category-loop {
-    --tile-w: 150px;
+    --tile-w: clamp(140px, calc(100vw - 7.5rem), 280px);
     --gap: 1rem;
   }
 
@@ -1598,6 +1646,19 @@ html.lenis body {
 
   .testimonial-track {
     --gap: 1rem;
+  }
+
+  .testimonial-card {
+    width: 100%;
+    box-sizing: border-box;
+    aspect-ratio: 1.2 / 1;
+    min-height: clamp(15rem, 68vw, 22rem);
+    padding: clamp(1.1rem, 4vw, 1.5rem) clamp(1rem, 5vw, 1.5rem) 4rem;
+  }
+
+  .testimonial-text {
+    margin-bottom: clamp(1rem, 4vw, 1.5rem);
+    overflow-wrap: anywhere;
   }
 }
 
@@ -1901,4 +1962,40 @@ html.lenis body {
   .about-store-layout { gap: 1.5rem; }
   .about-store-eyebrow { margin-bottom: 0.85rem; }
   .about-store-title { margin-bottom: 1rem; }
+}
+
+
+/* ===== Halal MUI badge logo ===== */
+.hero-badge--halal {
+  padding: .3rem .45rem;
+  background: var(--cream);
+}
+
+.hero-badge-logo--halal {
+  display: block;
+  width: auto;
+  height: clamp(3rem, 5vw, 3.5rem);
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .hero-badge--halal {
+    padding: .25rem .4rem;
+  }
+
+  .hero-badge-logo--halal {
+    height: clamp(3rem, 12vw, 3.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .categories-section .section-title-inner,
+  .categories-section .section-title-text,
+  .categories-section .title-mask {
+    max-width: 100%;
+  }
+
+  .categories-section .section-title-text {
+    font-size: clamp(1.75rem, 8.5vw, 2.6rem);
+  }
 }

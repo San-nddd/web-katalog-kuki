@@ -1,0 +1,137 @@
+/* Scoped enhancement only for Kuki Assistant. Original ChatWindow.css stays untouched. */
+.chat-window.kuki-chat-v2 {
+  width: 405px;
+  height: min(650px, calc(100dvh - 7rem));
+  border: 1px solid var(--brown-dark);
+  border-radius: 19px;
+  background: var(--cream);
+  box-shadow: 0 16px 40px rgba(58, 27, 13, .17);
+  isolation: isolate;
+}
+
+.kuki-chat-v2 .chat-header {
+  position: relative;
+  padding: 1rem .9rem;
+  min-height: 85px;
+  gap: .7rem;
+  background: var(--brown-dark);
+  border-bottom: 1px solid var(--brown-deep);
+}
+
+.kuki-chat-v2 .chat-header-info { flex: 1; gap: .05rem; }
+.kuki-chat-v2 .chat-header h3 { font-size: 1.22rem; color: var(--cream); line-height: 1.12; }
+.kuki-chat-mascot {
+  width: 48px; height: 48px; flex: 0 0 48px;
+  display: block; object-fit: cover; object-position: center 20%;
+  border-radius: 12px;
+  background: #f8e6cc;
+}
+.kuki-chat-eyebrow { font-size: .61rem; letter-spacing: .12em; font-weight: 800; color: var(--peach); }
+.kuki-chat-presence { display: flex; align-items: center; gap: .32rem; font-size: .68rem; color: var(--cream); line-height: 1.35; }
+.kuki-chat-presence-dot { width: 7px; height: 7px; flex: 0 0 7px; background: #bde4a4; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
+.kuki-chat-v2 .chat-context { max-width: 190px; font-size: .64rem; color: var(--peach); }
+.kuki-chat-header-actions { display: flex; align-items: center; gap: .25rem; align-self: flex-start; }
+.kuki-chat-v2 .chat-close, .kuki-pin-toggle {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255, 246, 217, .33); color: var(--cream);
+  background: rgba(255, 246, 217, .09); border-radius: 12px; width: 29px; height: 30px;
+  padding: 0; font: inherit; font-weight: 700; cursor: pointer;
+}
+.kuki-pin-toggle svg, .kuki-chat-v2 .chat-close svg { display: block; }
+.kuki-pin-count { position: absolute; top: -6px; right: -5px; padding: 0 3px; min-width: 14px; height: 15px; border-radius: 100px; background: #ffdb95; color: #532d22; display: grid; place-items: center; font-size: .58rem; }
+.kuki-pin-toggle:hover, .kuki-chat-v2 .chat-close:hover { color: var(--brown-dark); background: var(--orange); }
+
+.chat-window.kuki-chat-v2 .chat-body {
+  background: var(--cream);
+  gap: .65rem; padding: 1rem .85rem 6.5rem;
+}
+.kuki-chat-v2 .chat-message {
+  border-radius: 14px; line-height: 1.42;
+  box-shadow: 0 1px 3px rgba(75, 45, 23, .04);
+}
+.kuki-chat-v2 .chat-message.bot { background: var(--cream); border-color: var(--brown-deep); border-bottom-left-radius: 5px; }
+.kuki-chat-v2 .chat-message.user { background: var(--orange); border-color: var(--brown-dark); color: var(--brown-dark); border-bottom-right-radius: 5px; }
+.kuki-chat-v2 .chat-message.admin { align-self: flex-start; background: #f1f7e8; color: #3c3825; border: 1px solid #c9daa9; border-radius: 16px 16px 16px 5px; }
+.kuki-message-heading { display: flex; justify-content: space-between; align-items: center; gap: .6rem; }
+.kuki-message-pin { display: inline-flex; align-items: center; gap: .25rem; border: 0; border-radius: 7px; padding: .25rem .35rem; color: #8e5c3d; background: transparent; font-size: .68rem; font-weight: 700; cursor: pointer; line-height: 1.1; }
+.kuki-pin-label { font-size: .66rem; }
+.kuki-message-pin:hover, .kuki-message-pin.is-pinned { background: #fff0ca; color: #67402d; }
+.kuki-chat-v2 .chat-message.user .kuki-message-pin:hover { background: rgba(255,255,255,.5); }
+.kuki-chat-v2 .chat-message p { white-space: pre-wrap; }
+.kuki-chat-product-intro { max-width: 96% !important; }
+.kuki-answer-more { margin-top: .4rem; font-size: .74rem; color: #70492e; }
+.kuki-answer-more summary { cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.kuki-answer-more p { margin-top: .45rem !important; padding-top: .4rem; border-top: 1px dashed #ead2aa; }
+
+/* Actual API-backed product cards inside the conversation (horizontal scroll). */
+.kuki-product-results { width: 100%; min-width: 0; padding: .65rem 0 .2rem; }
+.kuki-results-title { display: flex; align-items: center; gap: .35rem; color: #5a321f; font-size: .78rem; margin: 0 0 .5rem .15rem; }
+.kuki-results-title strong { flex: 1; }
+.kuki-results-count { font-size: .64rem; background: #fce5c0; border-radius: 999px; padding: .2rem .4rem; }
+.kuki-product-scroll { display: flex; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; gap: .65rem; padding: 0 .2rem .55rem; scrollbar-width: thin; scrollbar-color: #c68d61 transparent; }
+.kuki-product-card { min-width: 166px; max-width: 166px; overflow: hidden; flex: 0 0 166px; scroll-snap-align: start; background: #fffdf5; border: 1px solid #e7d8c6; border-radius: 14px; box-shadow: 0 2px 9px rgba(77, 48, 33, .06); }
+.kuki-product-photo { height: 115px; position: relative; overflow: hidden; background: #f4e9db; display: grid; place-items: center; }
+.kuki-product-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.kuki-product-photo-fallback { display: grid; place-items: center; width: 100%; height: 100%; color: #966c4b; background: #f4e9db; }
+.kuki-product-stock { position: absolute; top: .4rem; left: .4rem; padding: .16rem .36rem; color: #315039; background: #e8f5d9; border: 1px solid #a5cb9f; font-size: .62rem; font-weight: 800; border-radius: 999px; }
+.kuki-product-info { display: flex; flex-direction: column; align-items: stretch; gap: .2rem; padding: .65rem; }
+.kuki-product-category { color: #956846; text-transform: uppercase; letter-spacing: .05em; font-size: .6rem; font-weight: 800; }
+.kuki-product-info strong { color: #4d3021; font-size: .83rem; line-height: 1.22; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; min-height: 2em; }
+.kuki-product-price { color: #a45d26; font-size: .78rem; font-weight: 800; }
+.kuki-product-link { margin-top: .35rem; display: flex; align-items: center; justify-content: space-between; gap: .3rem; padding: .48rem .55rem; border-radius: 10px; background: #5a321f; color: #fff7e8 !important; font-weight: 750; font-size: .72rem; text-decoration: none; }
+.kuki-product-link:hover, .kuki-product-link:focus-visible { background: #c27942; color: #29180f !important; }
+
+/* Suggestion TOPICS are buttons, not cards. */
+.kuki-quick-section { width: 100%; padding: .65rem .2rem .35rem; background: transparent; border: 0; margin-top: .2rem; }
+.kuki-quick-label { color: #7a4a2e; font-size: .76rem; font-weight: 700; margin: .05rem 0 .55rem .2rem; }
+.kuki-quick-buttons { display: flex; flex-wrap: wrap; gap: .4rem; }
+.kuki-quick-button { display: inline-flex; align-items: center; gap: .38rem; border: 1px solid #dbc7ae; background: #fffdf9; border-radius: 999px; padding: .48rem .65rem; color: #5c3724; font-family: inherit; font-size: .74rem; font-weight: 650; line-height: 1.25; cursor: pointer; transition: border-color .16s ease, background .16s ease; }
+.kuki-quick-button svg { flex: 0 0 auto; }
+.kuki-quick-button:hover:not(:disabled) { background: #f6e9d8; border-color: #b78b63; }
+.kuki-quick-button:disabled { opacity: .55; cursor: not-allowed; }
+.kuki-quick-admin { background: #603d2c; border-color: #603d2c; color: #fff7e9; }
+.kuki-quick-admin:hover:not(:disabled) { background: #a4653d; }
+.kuki-catalog-loading { display: block; font-size: .68rem; color: #9a7656; margin: .25rem; }
+
+/* Popup pinboard, no impact on composer or chat scroll layout. */
+.kuki-highlight-panel { position: absolute; z-index: 70; left: 9px; right: 9px; top: 88px; max-height: min(285px, 55%); overflow-y: auto; border: 2px solid #d9aa72; border-radius: 16px; background: #fffaf0; box-shadow: 0 12px 28px rgba(79, 44, 23, .23); padding: .7rem; color: #593725; }
+.kuki-highlight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .45rem; font-size: .85rem; }
+.kuki-highlight-header strong { display: inline-flex; gap: .45rem; align-items: center; }
+.kuki-highlight-header button { display: grid; place-items: center; border: 0; background: #f7e5ca; border-radius: 8px; padding: .3rem; cursor: pointer; }
+.kuki-highlight-panel p { font-size: .78rem; margin: .6rem 0; }
+.kuki-highlight-panel ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
+.kuki-highlight-panel li { display: flex; align-items: center; gap: .3rem; padding: .45rem; background: #fff1da; border-radius: 12px; }
+.kuki-highlight-panel li button { display: grid; place-items: center; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.kuki-highlight-panel li button:first-child { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; align-items: stretch; gap: .17rem; }
+.kuki-highlight-panel li button span { font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+/* Keep the existing absolute composer pin fix. Restyle only. */
+.kuki-chat-v2 .chat-input-area { background: var(--cream); border-top: 1px solid var(--brown-deep); }
+.kuki-chat-v2 .chat-input-area input { border-radius: 999px; background: var(--cream); border: 1.5px solid var(--brown-deep); color: var(--brown-dark); padding-left: 1rem; }
+.kuki-chat-v2 .chat-send { border-radius: 12px; background: var(--brown-dark); color: var(--cream); }
+.kuki-chat-v2 .chat-send:hover:not(:disabled) { background: var(--orange); color: var(--brown-dark); }
+.kuki-chat-v2 :is(button,a,summary):focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+@media (max-width: 768px) {
+  .chat-window.kuki-chat-v2 { width: auto; left: .65rem; right: .65rem; bottom: 4.7rem; height: min(630px, calc(100dvh - 5.6rem)); max-height: calc(100dvh - 5.6rem); border-radius: 23px; }
+  .kuki-chat-v2 .chat-header { min-height: 78px; padding: .7rem; }
+  .kuki-chat-v2 .chat-header h3 { font-size: 1.1rem; }
+  .kuki-chat-mascot { width: 42px; height: 42px; flex-basis: 42px; }
+  .kuki-highlight-panel { top: 78px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kuki-chat-v2 .chat-message, .kuki-chat-v2 .chat-window { animation: none; transition: none; }
+  .kuki-quick-button { transition: none; }
+}
+
+/* V2.2 — tautan lokasi untuk pertanyaan alamat, tanpa mengubah bubble/card lama. */
+.kuki-chat-v2 .kuki-map-link-note {
+  align-self: flex-start; max-width: 92%; display: grid; gap: .5rem;
+  padding: .68rem .8rem; border-radius: 12px; border: 1px solid #e5d2bb;
+  background: #fffaf1; color: #63412b; font-size: .77rem; line-height: 1.5;
+}
+.kuki-chat-v2 .kuki-map-link {
+  width: fit-content; display: inline-flex; align-items: center; gap: .4rem;
+  padding: .48rem .7rem; border-radius: 9px; background: #603d2c;
+  color: #fffaf0 !important; font-weight: 650; text-decoration: none;
+}
+.kuki-chat-v2 .kuki-map-link:hover { background: #825339; }

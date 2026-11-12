@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { HeadphonesIcon, SendIcon } from './icons'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Bookmark, BookmarkCheck, X, Trash2, Headset, Send, MapPin, ArrowUpRight } from 'lucide-react'
 import { normalizeMessage } from './chatUtils'
+import KukiChatProductCards from './KukiChatProductCards'
+import KukiChatSuggestions from './KukiChatSuggestions'
+import { selectProductsForChat } from './chatProductMatcher.mjs'
+import { isStoreLocationQuestion, KUKI_MAP_HREF, KUKI_MAP_SECTION_ID } from './kukiChatIntents.mjs'
+import kukiMascot from '../assets/Kuki-Mascot.png'
 import './ChatWindow.css'
+import './KukiChatUpgrade.css'
 
 const BOTTOM_THRESHOLD = 80
 
@@ -63,8 +69,14 @@ function ChatWindow({
   status = 'AI_ACTIVE',
   handoverExpiresAt = null,
   onStartNewConversation,
+  catalogProducts = [],
+  catalogLoading = false,
+  contextProduct = null,
 }) {
   const [text, setText] = useState('')
+  const [pins, setPins] = useState([])
+  const [showHighlights, setShowHighlights] = useState(false)
+  const messageNodesRef = useRef(new Map())
   const [now, setNow] = useState(() => Date.now())
   const bodyRef = useRef(null)
   const isNearBottomRef = useRef(true)
@@ -74,6 +86,37 @@ function ChatWindow({
   const handledByAdmin = status === 'ADMIN_ACTIVE'
   const conversationClosed = status === 'CLOSED'
   const aiLocked = handoverPending || waitingForAdmin || handledByAdmin
+
+  // Highlight hanya di memori komponen (reset ketika sesi baru dimulai).
+
+  const pinKey = (message) => `${message.sender}::${message.text}`
+  const togglePin = (message) => {
+    const key = pinKey(message)
+    setPins((prev) => prev.some((p) => p.key === key)
+      ? prev.filter((p) => p.key !== key)
+      : [...prev, { key, sender: message.sender, text: message.text }])
+  }
+
+  const visibleMessages = messages
+    .filter((raw) => !isLifecycleSystemMessage(raw))
+    .map(normalizeForWindow)
+
+  // Kartu muncul setelah balasan AI untuk pertanyaan produk, bukan pada pesan Admin.
+  // Semua data diambil dari API katalog melalui parent KukiAssistant.
+  let questionForReply = null
+  const messageRows = visibleMessages.map((message) => {
+    let cardProducts = []
+    if (message.sender === 'user') questionForReply = message.text
+    else if (message.sender === 'bot' && questionForReply) {
+      if (!message.error && !message.needsHandover && !message.escalated) {
+        cardProducts = selectProductsForChat(catalogProducts, questionForReply, contextProduct)
+      }
+      questionForReply = null
+    } else if (message.sender === 'admin') {
+      questionForReply = null
+    }
+    return { message, cardProducts }
+  })
 
   const secondsRemaining = useMemo(() => {
     if (!handoverPending || !handoverExpiresAt) return null
@@ -145,6 +188,17 @@ function ChatWindow({
     onSend(value)
   }
 
+  const handleMapClick = (event) => {
+    // Pada homepage yang sama: scroll langsung tanpa reload.
+    // Di halaman detail produk: biarkan anchor /#lokasi-kuki membawa ke homepage.
+    const target = document.getElementById(KUKI_MAP_SECTION_ID)
+    if (window.location.pathname === '/' && target) {
+      event.preventDefault()
+      onClose?.()
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   const senderLabel = (sender) => {
     if (sender === 'bot') return 'Kuki'
     if (sender === 'admin') return 'Admin'
@@ -154,26 +208,52 @@ function ChatWindow({
 
   return (
     <div
-      className={`chat-window ${open ? 'open' : ''}`}
+      className={`chat-window kuki-chat-v2 ${open ? 'open' : ''}`}
       aria-hidden={!open}
     >
       <div className="chat-header">
+        <img className="kuki-chat-mascot" src={kukiMascot} alt="Maskot Kuki Bakehouse" />
         <div className="chat-header-info">
+          <span className="kuki-chat-eyebrow">KUKI BAKEHOUSE</span>
           <h3>Kuki Assistant</h3>
-          {contextName && (
-            <span className="chat-context">Konteks: {contextName}</span>
-          )}
+          <span className="kuki-chat-presence">
+            <span className="kuki-chat-presence-dot" aria-hidden="true" />
+            {conversationClosed ? 'Percakapan selesai' : aiLocked ? 'Sedang terhubung ke Admin' : 'Siap bantu pilih menu'}
+          </span>
+          {contextName && <span className="chat-context">Konteks: {contextName}</span>}
         </div>
-
-        <button
-          type="button"
-          className="chat-close"
-          onClick={onClose}
-          aria-label="Tutup chat"
-        >
-          ✕
-        </button>
+        <div className="kuki-chat-header-actions">
+          <button type="button" className="kuki-pin-toggle"
+            onClick={() => setShowHighlights((v) => !v)}
+            aria-expanded={showHighlights} aria-label={`Highlight obrolan (${pins.length})`}
+            title="Highlight obrolan">
+            <Bookmark size={17} strokeWidth={1.8} aria-hidden="true" />
+            {pins.length > 0 && <span className="kuki-pin-count">{pins.length}</span>}
+          </button>
+          <button type="button" className="chat-close" onClick={onClose} aria-label="Tutup chat"><X size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+        </div>
       </div>
+
+      {showHighlights && (
+        <aside className="kuki-highlight-panel" aria-label="Pesan yang di-highlight">
+          <div className="kuki-highlight-header"><strong><Bookmark size={16} strokeWidth={1.8} aria-hidden="true" /> Highlight obrolan</strong>
+            <button type="button" onClick={() => setShowHighlights(false)} aria-label="Tutup highlight"><X size={16} strokeWidth={1.8} aria-hidden="true" /></button>
+          </div>
+          {pins.length === 0 ? <p>Belum ada pesan yang disimpan. Gunakan tombol bookmark pada pesan penting.</p> : (
+            <ul>{pins.map((pin) => (
+              <li key={pin.key}>
+                <button type="button" onClick={() => {
+                  setShowHighlights(false)
+                  messageNodesRef.current.get(pin.key)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }}><strong>{pin.sender === 'bot' ? 'Kuki' : pin.sender === 'user' ? 'Kamu' : pin.sender === 'admin' ? 'Admin' : 'Sistem'}</strong>
+                  <span>{pin.text}</span>
+                </button>
+                <button type="button" onClick={() => setPins((prev) => prev.filter((p) => p.key !== pin.key))} aria-label="Hapus highlight"><Trash2 size={15} strokeWidth={1.8} aria-hidden="true" /></button>
+              </li>
+            ))}</ul>
+          )}
+        </aside>
+      )}
 
       <div
         className="chat-body"
@@ -181,53 +261,63 @@ function ChatWindow({
         onScroll={handleBodyScroll}
         aria-live="polite"
       >
-        {messages
-          .filter((rawMessage) => !isLifecycleSystemMessage(rawMessage))
-          .map((rawMessage) => {
-          const message = normalizeForWindow(rawMessage)
-
+        {messageRows.map(({ message, cardProducts }, index) => {
+          const key = pinKey(message)
+          const isPinned = pins.some((pin) => pin.key === key)
+          const hasCards = cardProducts.length > 0
+          const displayName = senderLabel(message.sender)
           return (
-            <div
-              key={message.id}
-              className={[
-                'chat-message',
-                message.sender,
-                message.error ? 'error' : '',
-                message.needsHandover ? 'needs-handover' : '',
-                message.escalated ? 'escalated' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              style={
-                message.sender === 'admin'
-                  ? {
-                      alignSelf: 'flex-start',
-                      maxWidth: '85%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.15rem',
-                      padding: '0.6rem 0.85rem',
-                      background: '#ffffff',
-                      color: 'var(--brown-dark)',
-                      border: '1px solid var(--brown-deep)',
-                      borderRadius: 'var(--radius-sm)',
-                      boxShadow: '0 2px 7px rgba(45, 24, 14, 0.08)',
-                    }
-                  : undefined
-              }
-            >
-              <span className="chat-sender">
-                {senderLabel(message.sender)}
-              </span>
-
-              <p>{message.text}</p>
-
-              {message.metadata?.escalation_reason && (
-                <span className="chat-escalation-reason">
-                  {message.metadata.escalation_reason}
-                </span>
+            <Fragment key={`${message.id ?? index}-${index}`}>
+              <div
+                ref={(node) => {
+                  if (node) messageNodesRef.current.set(key, node)
+                  else messageNodesRef.current.delete(key)
+                }}
+                className={[
+                  'chat-message', message.sender,
+                  message.error ? 'error' : '',
+                  message.needsHandover ? 'needs-handover' : '',
+                  message.escalated ? 'escalated' : '',
+                  hasCards ? 'kuki-chat-product-intro' : '',
+                ].filter(Boolean).join(' ')}
+              >
+                <div className="kuki-message-heading">
+                  <span className="chat-sender">{displayName}</span>
+                  {message.id !== 'greeting' && !message.error && (
+                    <button type="button" className={`kuki-message-pin ${isPinned ? 'is-pinned' : ''}`}
+                      aria-label={isPinned ? 'Lepas highlight pesan' : 'Highlight pesan'}
+                      aria-pressed={isPinned} onClick={() => togglePin(message)}>
+                      {isPinned
+                        ? <><BookmarkCheck size={15} strokeWidth={1.8} aria-hidden="true" /><span className="kuki-pin-label">Disimpan</span></>
+                        : <Bookmark size={15} strokeWidth={1.8} aria-hidden="true" />}
+                    </button>
+                  )}
+                </div>
+                {hasCards ? (
+                  <>
+                    <p>Ini pilihan produk yang sesuai dari katalog Kuki.</p>
+                    <details className="kuki-answer-more">
+                      <summary>Baca jawaban AI lengkap</summary>
+                      <p>{message.text}</p>
+                    </details>
+                  </>
+                ) : <p>{message.text}</p>}
+                {message.metadata?.escalation_reason && (
+                  <span className="chat-escalation-reason">{message.metadata.escalation_reason}</span>
+                )}
+              </div>
+              {message.sender === 'user' && isStoreLocationQuestion(message.text) && (
+                <div className="kuki-map-link-note">
+                  <span>Lokasi toko dan rute tersedia di peta website.</span>
+                  <a href={KUKI_MAP_HREF} onClick={handleMapClick} className="kuki-map-link">
+                    <MapPin size={16} strokeWidth={1.8} aria-hidden="true" />
+                    <span>Lihat peta &amp; rute</span>
+                    <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+                  </a>
+                </div>
               )}
-            </div>
+              {hasCards && <KukiChatProductCards products={cardProducts} />}
+            </Fragment>
           )
         })}
 
@@ -263,7 +353,7 @@ function ChatWindow({
                     </>
                   ) : (
                     <>
-                      <HeadphonesIcon width="16" height="16" />
+                      <Headset size={16} strokeWidth={1.8} aria-hidden="true" />
                       Minta Bantuan Admin
                     </>
                   )}
@@ -279,7 +369,7 @@ function ChatWindow({
 
         {handoverPending && (
           <div className="chat-status-notice pending">
-            <HeadphonesIcon width="16" height="16" />
+            <Headset size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>
               Sedang menghubungkan Anda ke Admin
               {secondsRemaining !== null && secondsRemaining > 0
@@ -291,7 +381,7 @@ function ChatWindow({
 
         {waitingForAdmin && (
           <div className="chat-status-notice waiting">
-            <HeadphonesIcon width="16" height="16" />
+            <Headset size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>
               Admin belum dapat merespons langsung. Pesan Anda sudah masuk dan
               akan ditanggapi secepatnya.
@@ -301,7 +391,7 @@ function ChatWindow({
 
         {handledByAdmin && (
           <div className="chat-status-notice active">
-            <HeadphonesIcon width="16" height="16" />
+            <Headset size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>Obrolan ini sedang ditangani oleh Admin Kuki.</span>
           </div>
         )}
@@ -320,6 +410,16 @@ function ChatWindow({
               </button>
             )}
           </div>
+        )}
+
+        {status === 'AI_ACTIVE' && !conversationClosed && (
+          <>
+            {catalogLoading && <span className="kuki-catalog-loading" role="status">Menyiapkan katalog terbaru…</span>}
+            <KukiChatSuggestions
+              onAsk={onSend} onAdmin={onHandover}
+              disabled={loading || handoverLoading}
+            />
+          </>
         )}
       </div>
 
@@ -343,7 +443,7 @@ function ChatWindow({
             disabled={loading || handoverLoading || !text.trim()}
             aria-label="Kirim pesan"
           >
-            <SendIcon width="16" height="16" aria-hidden="true" />
+            <Send size={17} strokeWidth={1.8} aria-hidden="true" />
           </button>
         </form>
       )}
