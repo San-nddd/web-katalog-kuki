@@ -17,7 +17,7 @@ import {
   submitTestimonial,
   submitTestimonialComment,
 } from '../services/testimonialService'
-import heroImg from '../assets/hero.png'
+import heroImg from '../assets/Hero.png'
 import './sections.css'
 
 
