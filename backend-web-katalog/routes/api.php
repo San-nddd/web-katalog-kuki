@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Api\MutasiStokController;
+use App\Http\Controllers\Aapi\MutasiStokController;
 use App\Http\Controllers\AdminChatController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuthController;

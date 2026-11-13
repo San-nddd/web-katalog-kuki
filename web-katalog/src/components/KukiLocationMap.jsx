@@ -222,9 +222,7 @@ export default function KukiLocationMap() {
         <h2 id="kuki-location-title">Temukan Lokasi Kami</h2>
         <p>Lihat lokasi toko dan rute perjalanan langsung di website.</p>
       </div>
-      {!storeReady ? (
-        <p className="kuki-location-map__notice" role="status">Peta belum ditampilkan karena koordinat resmi toko belum diatur. Isi VITE_KUKI_STORE_LAT dan VITE_KUKI_STORE_LNG dengan koordinat yang sudah diverifikasi.</p>
-      ) : (
+     
         <div className="kuki-location-map__layout">
           <div className="kuki-location-map__controls">
             <h3>{STORE_NAME}</h3>
@@ -266,7 +264,7 @@ export default function KukiLocationMap() {
           </div>
           <MapCanvas origin={origin} route={route} onPickOrigin={selectOrigin} />
         </div>
-      )}
+      
     </section>
   )
 }

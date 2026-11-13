@@ -6,6 +6,13 @@ import 'package:http/testing.dart';
 import 'package:kuki_pos/data/api_client.dart';
 
 void main() {
+  test('default server memakai konfigurasi API POS', () {
+    expect(
+      ApiClient().baseUrl,
+      'https://kukibakehouse.smkn1sumedang.sch.id',
+    );
+  });
+
   test(
     'login memakai kode pegawai dan PIN pada endpoint POS Laravel',
     () async {

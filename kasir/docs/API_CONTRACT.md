@@ -1,88 +1,54 @@
 # Kontrak API Laravel untuk Kuki POS
 
-**Status: kontrak usulan.** Ini bukan klaim route yang sudah ada. Pertahankan tabel `kategoris` dan `katalog_produk` yang sekarang; satu rasa/ukuran = satu produk mandiri (`kategori_id`, `sku`, `barcode`, `harga_produk`, `stok`). Tidak ada tabel `produk_varian`.
+**Status:** Implementasi klien Flutter cocok dengan route POS Laravel di `backend-web-katalog/routes/pos.php` dan `PosController`. Root server default adalah `https://kukibakehouse.smkn1sumedang.sch.id`; override pengembangan tersedia melalui `API_BASE_URL`. Jangan menambahkan `/api` ke alamat root.
 
-## 1. Login
+Semua endpoint selain login memakai `Authorization: Bearer <token>`. Respons sukses dibungkus dalam `{"success":true,"data":...}`.
 
-`POST /api/login`
+## Login dan sesi
 
-```json
-{"email":"kasir@example.invalid","password":"contoh"}
-```
-
-Respons minimal:
+`POST /api/pos/login`
 
 ```json
-{"token":"sanctum-personal-access-token","user":{"id":9,"name":"Kasir Kuki","role":"kasir"}}
+{"kode":"KASIR01","pin":"1234"}
 ```
 
-`401` untuk login gagal, `403` akun tanpa akses; jangan simpan password di perangkat. Backend harus mengenakan rate limits dan kebijakan akses yang sesuai.
+Respons `data` berisi `token`, `expires_in_seconds`, dan `pegawai` (`id`, `kode`, `nama`). PIN kasir harus dibuat/diatur melalui alur Admin; jangan menyimpan kredensial di source.
 
-## 2. Katalog
+- `GET /api/pos/me`
+- `POST /api/pos/logout`
 
-`GET /api/produk`, header `Authorization: Bearer <token>` jika API dilindungi.
+## Katalog dan shift
 
-```json
-{"data":[
-  {"id":101,"nama_produk":"Saltbread OG","kategori_id":5,
-   "kategori":{"id":5,"nama":"Saltbread"},"sku":"SAL-OG",
-   "barcode":"899000000001","harga_produk":14000,"stok":36,"stok_minimum":8,
-   "gambar_url":"https://example.invalid/storage/og.jpg"}
-]}
-```
+- `GET /api/pos/catalog` mengembalikan produk dengan `id`, `nama`, `harga`, `stok`, `barcode`, `kategori`, dan `gambar`.
+- `GET /api/pos/shift` mengembalikan `active` dan riwayat shift kasir.
+- `POST /api/pos/shift/start`
+- `POST /api/pos/shift/end`
 
-Dukungan respons: array langsung atau `{data: []}`. **Jika endpoint paginated**, frontend harus diubah untuk mengambil seluruh halaman; saat ini hanya membaca halaman pertama.
+## Riwayat dan laporan
 
-## 3. Transaksi baru (WAJIB untuk sync)
+- `GET /api/pos/transactions?page=1` mengembalikan `items`, `page`, `last_page`, dan `total`.
+- `GET /api/pos/report?dari=YYYY-MM-DD&sampai=YYYY-MM-DD` mengembalikan jumlah transaksi, total penjualan, dan ringkasan metode bayar.
 
-`POST /api/pos/transaksi`
+## Checkout
 
-Header:
-
-```text
-Authorization: Bearer <token>
-Content-Type: application/json
-Idempotency-Key: <client_uuid yang sama saat retry>
-```
-
-Body contoh:
+`POST /api/pos/transactions`
 
 ```json
 {
- "client_uuid":"6e0f5a28-7049-49b7-b5eb-bd4d295ec941",
- "client_created_at":"2026-11-07T09:30:00Z",
- "cashier":"Kasir Kuki", "shift_client_uuid":"uuid-shift-lokal",
- "payment_method":"cash", "subtotal":28000, "discount":0,
- "total":28000, "paid":30000,"note":"",
- "items":[{"produk_id":"101","jumlah":2,"harga_satuan":14000}]
+  "id_client":"6e0f5a28-7049-49b7-b5eb-bd4d295ec941",
+  "items":[{"produk_id":101,"jumlah":2}],
+  "metode_bayar":"tunai",
+  "dibayar":30000,
+  "verifikasi_manual":true,
+  "jenis_pesanan":"takeaway",
+  "nomor_meja":null,
+  "nama_pelanggan":null,
+  "catatan":null
 }
 ```
 
-Aturan kritis backend:
+Server memeriksa shift aktif, stok dan harga dari database, lalu menyimpan transaksi dan mutasi stok dalam transaksi database. `id_client` menjadi kunci idempotensi agar retry dengan ID yang sama tidak menggandakan penjualan. Metode yang didukung: `tunai`, `qris`, dan `transfer`; QRIS/transfer tetap diverifikasi manual, bukan melalui payment gateway.
 
-1. `client_uuid` disimpan dalam **kolom unik** (unique index), diproses dalam satu database transaction. Request ulang UUID yang sama **harus mengembalikan hasil sukses sebelumnya** tanpa mengurangi stok dua kali.
-2. Backend mengambil harga dan stok terkini dari database, memverifikasi harga dan total/discount pada payload (atau mendefinisikan kebijakan harga terkunci). **Jangan percaya nominal dari client**.
-3. Kunci baris produk terkait (`SELECT ... FOR UPDATE` atau setara) dan kurangi stok serta insert transaksi+detail di transaksi SQL **atomik**. Menolak stok minus dengan `409 Conflict`.
-4. `payment_method` hanya `cash`, `transfer`, `qris_manual`; pembayaran manual ditandai sesuai kebijakan verifikasi kasir, bukan transaksi gateway yang berhasil otomatis.
-5. Tolak UUID sama dengan payload berubah; jangan membuat transaksi baru.
-6. Endpoint memvalidasi role `kasir`/`admin`, kuantitas positif, produk valid, dan menyimpan audit waktu.
-7. Balas `200` untuk UUID yang sudah pernah diproses dan `201` untuk order baru. Balas `409` untuk konflik stok, `422` untuk validasi, `401`/`403` untuk autentikasi.
-8. Bila penjualan diterima, stok katalog global yang dibaca React harus mencerminkan transaksi. Hubungkan dengan mutasi stok jika migrasi saat ini mendukungnya.
+## Status verifikasi hosted
 
-Respons contoh:
-
-```json
-{"id":2501,"client_uuid":"6e0f5a28-7049-49b7-b5eb-bd4d295ec941","status":"accepted"}
-```
-
-**PENTING:** Dalam mode offline, beberapa tablet bisa menganggap stok masih ada. Setelah tersambung, server tetap menjadi sumber kebenaran. Konflik ditampilkan untuk rekonsiliasi Admin, tidak boleh dihapus otomatis; proses retur/reversal belum ada.
-
-## 4. Hal yang perlu dicocokkan dengan source backend
-
-- `routes/api.php` (path dan middleware Sanctum)
-- Model User dan penamaan `role`
-- Migrasi `katalog_produk`, `transaksi`, `detail_transaksi`, `mutasi_stok`
-- Kebijakan saat stok habis, diskon, transaksi duplikat, refund
-- CORS, HTTPS, alamat server LAN, storage gambar
-
-**Jangan langsung menyalin migrasi tabel baru dari contoh bila tabel existing sudah ada.** Gunakan adapter endpoint tanpa mengubah source yang disetujui.
+Pada 12 November 2026, pemeriksaan tanpa kredensial ke `GET /api/pos/me` mengembalikan `401` (endpoint terlindungi tersedia). Preflight CORS mengembalikan `204` dengan origin dan header yang mengizinkan aplikasi. Login kasir dan checkout tidak diuji agar tidak membuat sesi atau transaksi pada server operasional.

@@ -43,11 +43,12 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   Future<void> refresh() async {
-    if (mounted)
+    if (mounted) {
       setState(() {
         loading = true;
         error = null;
       });
+    }
     try {
       final data = await ApiClient.instance.catalog();
       if (mounted) setState(() => products = data);
@@ -178,8 +179,9 @@ class _OrdersPageState extends State<OrdersPage> {
                               : (_) => update(() {
                                   method = m;
                                   verified = false;
-                                  if (m != 'tunai')
+                                  if (m != 'tunai') {
                                     cash.text = '${order.total}';
+                                  }
                                 }),
                         ),
                       )
@@ -348,8 +350,9 @@ class _OrdersPageState extends State<OrdersPage> {
                         if (products.any(
                           (p) =>
                               p.barcode.toUpperCase() == v.trim().toUpperCase(),
-                        ))
+                        )) {
                           barcode(v);
+                        }
                       },
                       decoration: const InputDecoration(
                         isDense: true,

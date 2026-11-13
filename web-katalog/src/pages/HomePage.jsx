@@ -474,7 +474,7 @@ function HomePage() {
   useEffect(() => {
     const root = document.querySelector('.landing-page')
     if (!root) return
-    const selector = '.category-loop-item, .testimonial-card, .about-store-photo, .about-store-copy'
+    const selector = '.category-loop-item, .testimonial-card'
     const items = [...root.querySelectorAll(selector)]
     if (!('IntersectionObserver' in window)) return
     const observer = new IntersectionObserver((entries) => {
@@ -587,38 +587,9 @@ function HomePage() {
         </div>
       </section>
 
-      {/* About Kuki Bakehouse — menggantikan galeri mosaik, warna peach tetap dipertahankan. */}
-      <section className="section section-peach about-store-section" id="about">
-        <div className="container">
-          <div className="about-store-layout">
-            <figure className="about-store-photo">
-              <img
-                src="/images/toko-kuki.jpg"
-                alt="Foto toko Kuki Bakehouse"
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-
-            <div className="about-store-copy">
-              <span className="about-store-eyebrow display-font">Our Story · Since 2021</span>
-              <h2 className="about-store-title display-font">
-                A Little Place, <span>Full of Sweet Moments.</span>
-              </h2>
-              <p>
-                Selamat datang di Kuki Bakehouse. Di sini, kami ingin setiap
-                roti, cookies, dan cake menjadi bagian dari momen menyenangkanmu.
-              </p>
-              <p>
-                Dari pilihan rasa hingga detail penyajian, kami percaya hal-hal
-                sederhana bisa terasa lebih istimewa ketika dinikmati bersama.
-              </p>
-            </div>
-          </div>
-        </div>
+      <section className="section section-peach home-location-section">
+        <KukiLocationLoader />
       </section>
-
-      <KukiLocationLoader />
 
       <KukiAssistant />
 

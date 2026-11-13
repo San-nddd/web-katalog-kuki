@@ -2882,14 +2882,16 @@
   gap: 15px;
 }
 .admin-login .admin-login-logo {
-  width: 44px;
-  height: 44px;
+  width: 59px;
+  height: 59px;
+  align-self: center;
   background: var(--kb-wash);
   border: 1px solid var(--kb-line);
   border-radius: 10px;
   color: var(--kb-text);
   box-shadow: none;
   font: 700 25px Georgia,serif;
+  object-fit: contain;
 }
 .admin-login .admin-login-card h1 {
   font-family: 'Segoe UI',system-ui,sans-serif;

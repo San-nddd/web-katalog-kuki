@@ -211,22 +211,7 @@ html.lenis body {
   margin-bottom: 0;
 }
 
-.hero-line {
-  display: block;
-  animation: hero-content-in 0.76s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
 
-.hero-line-1 {
-  animation-delay: 0.46s;
-}
-
-.hero-line-2 {
-  animation-delay: 0.58s;
-}
-
-.hero-cta {
-  animation: hero-content-in 0.72s cubic-bezier(0.2, 0.7, 0.2, 1) 0.82s both;
-}
 
 @keyframes hero-fade {
   from { background-color: #000; }
@@ -472,11 +457,10 @@ html.lenis body {
   position: relative;
 }
 
-/* Tepi bergelombang di atas section peach (mengikuti referensi video) */
-.section-peach::before {
+.section-peach::before,
+.home-location-section::after {
   content: '';
   position: absolute;
-  top: -1px;
   left: 0;
   right: 0;
   height: 22px;
@@ -484,6 +468,15 @@ html.lenis body {
   background-size: 80px 22px;
   background-repeat: repeat-x;
   animation: wave-drift 3.5s linear infinite;
+}
+
+.section-peach::before {
+  top: -1px;
+}
+
+.home-location-section::after {
+  bottom: -1px;
+  transform: scaleY(-1);
 }
 
 /* Satu periode gelombang = 80px, jadi pergeseran 80px mulus tanpa putus */
@@ -1143,7 +1136,8 @@ html.lenis body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .section-peach::before {
+  .section-peach::before,
+  .home-location-section::after {
     animation: none;
   }
   .carousel-arrow,

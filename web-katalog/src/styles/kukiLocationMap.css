@@ -40,7 +40,7 @@
 }
 
 /* Bagian baru berdiri sendiri. Tidak menimpa sections.css yang sudah disetujui. */
-.kuki-location-entry { background: var(--cream, #fff6d9); padding: 1px 0; }
+.kuki-location-entry { background: var(--peach); padding: 1px 0; }
 .kuki-location-map--placeholder { min-height: 360px; }
 .kuki-location-map__skeleton {
   height: 240px;

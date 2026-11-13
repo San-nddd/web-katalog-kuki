@@ -18,10 +18,15 @@ class LoginResult {
   const LoginResult(this.token, this.name, this.role);
 }
 
+const defaultPosApiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://kukibakehouse.smkn1sumedang.sch.id',
+);
+
 class ApiClient {
   String baseUrl;
   String? token;
-  ApiClient({this.baseUrl = 'http://10.0.2.2:8000'});
+  ApiClient({this.baseUrl = defaultPosApiBaseUrl});
 
   Future<dynamic> request(
     String method,
@@ -72,7 +77,7 @@ class ApiClient {
     } on TimeoutException {
       throw ApiProblem(
         0,
-        'Server tidak merespons dalam 15 detik. Pastikan Laravel menyala, IP komputer benar, dan Android tersambung ke jaringan yang sama.',
+        'Server tidak merespons dalam 15 detik. Periksa alamat server dan koneksi internet perangkat.',
       );
     } on http.ClientException catch (error) {
       throw ApiProblem(0, 'Gagal menghubungi server: ${error.message}');

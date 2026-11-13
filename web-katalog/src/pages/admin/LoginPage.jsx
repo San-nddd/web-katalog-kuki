@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { login } from '../../services/authService'
+import kukiMascot from '../../assets/Kuki-Mascot.png'
 import './admin.css'
 function LoginPage() {
   const navigate = useNavigate()
@@ -41,9 +42,7 @@ function LoginPage() {
   return (
     <div className="admin-login">
       <form className="admin-login-card" onSubmit={handleSubmit}>
-        <span className="admin-logo admin-login-logo" aria-hidden="true">
-          {"K"}
-        </span>
+        <img className="admin-logo admin-login-logo" src={kukiMascot} alt="Maskot Kuki Bakehouse" />
         <h1 className="display-font">Admin &amp; Management</h1>
         <p>{"Masuk untuk mengelola atau memantau Kuki Bakehouse."}</p>
 

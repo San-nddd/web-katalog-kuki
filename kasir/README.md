@@ -10,9 +10,9 @@
 
 # Kuki Bakehouse — Tablet POS Flutter
 
-**Target:** tablet Android landscape dan iPadOS landscape. **Arsitektur:** Flutter + SQLite di tablet + Laravel REST API/Sanctum. Desain bakery cream, cokelat, dan caramel; alur kasir cepat dengan katalog dan keranjang berdampingan.
+**Target:** tablet Android landscape dan iPadOS landscape. **Arsitektur:** Flutter + SQLite di tablet + Laravel REST API dengan token sesi POS Bearer. Desain bakery cream, cokelat, dan caramel; alur kasir cepat dengan katalog dan keranjang berdampingan.
 
-> **STATUS JUJUR:** Source Dart lengkap untuk alur POS lokal dan demo tersedia. Folder native `android/` dan `ios/` **dibuat dengan Flutter SDK menggunakan setup** karena Flutter tidak terinstal di lingkungan pembuatan arsip. Project **belum lolos `flutter pub get`, `flutter analyze`, build Android/iOS, atau uji perangkat nyata** di lingkungan ini. Integrasi ke backend memerlukan endpoint POS dan payload yang sesuai dengan kontrak di `docs/API_CONTRACT.md`. Jangan langsung operasikan untuk transaksi nyata sebelum uji end-to-end.
+> **STATUS JUJUR:** Source POS terhubung ke kontrak Laravel di `docs/API_CONTRACT.md`. Analisis dan tes API terarah dapat dijalankan; build Android/iOS dan uji perangkat nyata belum diverifikasi. Route hosted sudah dicek tanpa kredensial, tetapi login kasir dan checkout belum diuji. Jangan gunakan transaksi nyata sebelum validasi operasional.
 
 ## Cara cepat menjalankan (Windows / VS Code)
 
@@ -39,18 +39,18 @@ Setelah `flutter create`, jalankan `./configure_platforms.ps1` agar izin kamera 
 4. Di layar login pilih **Mode DEMO** untuk mencobanya tanpa Laravel. Demo menggunakan `kuki_pos_demo.db` terpisah dan tidak mengirim transaksi ke server.
 5. Buka **Shift** → masukkan modal awal → masuk **Kasir** → tambah produk → pembayaran → cetak struk dari dialog sistem.
 
-## Memakai Laravel lokal
+## Memakai backend Laravel
 
-- **Android Emulator:** API default `http://10.0.2.2:8000`, jalankan Laravel `php artisan serve --host=0.0.0.0` pada jaringan pengembangan terisolasi.
-- **Tablet Android fisik:** ganti URL menjadi `http://IP-LAN-KOMPUTER:8000`. Jangan menggunakan `localhost` tablet.
-- **iPad:** sebaiknya API HTTPS tepercaya. Pada server lokal HTTP bisa perlu pengecualian ATS dan izin local network iOS; lihat `docs/PLATFORMS.md`.
-- Login saat ini mengasumsikan `POST /api/login` mengembalikan Bearer token Sanctum dan objek `user` berisi `name`, `role` (`kasir`/`cashier`/`admin`). Jika backend berbeda, edit hanya `lib/data/api_client.dart`.
-- Katalog `GET /api/produk` membaca `katalog_produk` (produk tiap rasa/ukuran mandiri, bukan master varian).
-- Transaksi `POST /api/pos/transaksi` membutuhkan idempotensi server `client_uuid` dan pengurangan stok atomik. **Endpoint ini belum diverifikasi ada** di Laravel milikmu.
+- Server default POS: `https://kukibakehouse.smkn1sumedang.sch.id`. Alamat harus berupa root domain, tanpa akhiran `/api`.
+- URL tersimpan pada perangkat akan tetap dipakai. Jika sebelumnya tersimpan URL lokal, keluar dari sesi, ubah kolom **Alamat server POS** di layar login, lalu masuk kembali.
+- Untuk pengembangan lokal, override default dengan `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000` pada Android Emulator. Tablet fisik gunakan IP LAN komputer; iPad gunakan HTTPS tepercaya.
+- Login POS memakai kode pegawai dan PIN melalui `POST /api/pos/login`; buat/kelola akun melalui mekanisme Admin yang tersedia. Jangan memasukkan kredensial ke source atau chat.
+- Katalog, shift, riwayat, laporan, dan transaksi memakai endpoint `/api/pos/*`; payload dan respons aktual tercatat di `docs/API_CONTRACT.md`.
+- Pemeriksaan aman ke domain hosted: `GET /api/pos/me` tanpa token mengembalikan `401` dan preflight CORS mengembalikan `204`. Login dan checkout tidak dicoba.
 
 ## Fitur dalam source
 
-- Login Laravel Bearer Sanctum + role check; PIN lokal opsional untuk mengunci antarmuka.
+- Login kode/PIN kasir melalui token sesi POS Bearer; PIN lokal opsional untuk mengunci antarmuka.
 - Layout kasir tablet, katalog, filter kategori, pencarian produk/SKU/barcode, indikator stok rendah.
 - Keranjang, atur jumlah, 6 tab pesanan aktif yang tersimpan di SQLite, diskon nominal, hitung total/kembalian.
 - Pembayaran **tunai**, **transfer manual**, **QRIS manual** (kasir wajib centang telah memverifikasi pembayaran; tidak ada gateway).
@@ -63,7 +63,7 @@ Setelah `flutter create`, jalankan `./configure_platforms.ps1` agar izin kamera 
 
 ## Belum bisa disebut selesai untuk produksi
 
-- Backend Laravel transaksi/idempotensi/locking stok belum disediakan atau diuji terhadap migrasi aktual.
+- Login kasir dan checkout belum diuji end-to-end dengan akun serta data operasional. Sebelum dipakai untuk transaksi, validasi dengan prosedur uji yang disetujui dan data non-produksi.
 - Verifikasi otomatis QRIS/payment gateway belum ada; transfer & QRIS dicatat manual setelah konfirmasi kasir.
 - ESC/POS Bluetooth thermal **langsung tanpa dialog** belum ada; printer via sistem memerlukan driver/AirPrint/layanan printer yang kompatibel.
 - Sync shift ke server, refund/retur, approval pembayaran, dashboard multi-cabang, hardening offline multi-tablet, dan biometrik belum ada.

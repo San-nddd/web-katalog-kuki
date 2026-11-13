@@ -22,4 +22,17 @@ void main() {
     expect(result.categoryName, 'Saltbread');
     expect(result.price, 14000);
   });
+  test('API POS memetakan kategori dan gambar dari respons katalog Laravel', () {
+    final result = Product.fromApi({
+      'id': 123,
+      'nama': 'Saltbread OG',
+      'kategori': 'Saltbread',
+      'harga': 14000,
+      'stok': 10,
+      'barcode': '89900000',
+      'gambar': 'https://example.test/saltbread.jpg',
+    });
+    expect(result.categoryName, 'Saltbread');
+    expect(result.imageUrl, 'https://example.test/saltbread.jpg');
+  });
 }

@@ -45,15 +45,16 @@ class Product {
     categoryName: categoryName, sku: sku, barcode: barcode, imageUrl: imageUrl,
     price: price, stock: stock, minimumStock: minimumStock);
   factory Product.fromApi(Map<String, dynamic> json) {
-    final category = unwrapMap(json['kategori']);
+    final rawCategory = json['kategori'];
+    final category = unwrapMap(rawCategory);
     return Product(
       id: asText(json['id']),
       name: asText(json['nama_produk'] ?? json['nama'] ?? json['name']),
       categoryId: asText(json['kategori_id'] ?? json['category_id'] ?? category['id']),
-      categoryName: asText(json['nama_kategori'] ?? json['category_name'] ?? category['nama'] ?? 'Lainnya'),
+      categoryName: asText(json['nama_kategori'] ?? json['category_name'] ?? category['nama'] ?? (rawCategory is String ? rawCategory : 'Lainnya')),
       sku: asText(json['sku']),
       barcode: asText(json['barcode']),
-      imageUrl: (json['gambar_url'] ?? json['gambar_produk_url'] ?? json['image_url'])?.toString(),
+      imageUrl: (json['gambar_url'] ?? json['gambar_produk_url'] ?? json['image_url'] ?? json['gambar'])?.toString(),
       price: asInt(json['harga_produk'] ?? json['harga'] ?? json['price']),
       stock: asInt(json['stok'] ?? json['stock']),
       minimumStock: asInt(json['stok_minimum'] ?? json['minimum_stock']),

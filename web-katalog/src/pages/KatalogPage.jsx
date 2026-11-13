@@ -57,7 +57,6 @@ function KatalogPage() {
 
   const kategoriParam = searchParams.get('kategori')
   const activeCategory = resolveCategoryName(kategoriParam, categories)
-  // Dari halaman Category: ?kategori=Cakes -> tampilkan semua seri di jenis makanan tersebut
   const activeGroup =
     activeCategory === ALL
       ? foodCategories.find(

@@ -77,9 +77,7 @@ class PosController extends ChangeNotifier {
   Future<void> init() async {
     try {
       if (!kIsWeb) await local.open();
-      api.baseUrl =
-          await _secure.read(key: 'base_url') ??
-          (kIsWeb ? 'http://127.0.0.1:8000' : api.baseUrl);
+      api.baseUrl = await _secure.read(key: 'base_url') ?? api.baseUrl;
       api.token = await _secure.read(key: 'token');
       cashierName = await _secure.read(key: 'cashier') ?? '';
       role = await _secure.read(key: 'role') ?? '';

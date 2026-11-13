@@ -254,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: server,
                     decoration: const InputDecoration(
                       labelText: 'Alamat server POS',
-                      hintText: 'http://10.0.2.2:8000',
+                      hintText: 'https://kukibakehouse.smkn1sumedang.sch.id',
                     ),
                   ),
                   const SizedBox(height: 13),
