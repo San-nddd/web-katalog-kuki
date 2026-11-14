@@ -13,7 +13,16 @@ const storeReady = Boolean(rawLat && rawLng) && Number.isFinite(storeLat) && Num
 
 const STORE_NAME = String(import.meta.env.VITE_KUKI_STORE_NAME || 'Kuki Bakehouse')
 const STORE_ADDRESS = String(import.meta.env.VITE_KUKI_STORE_ADDRESS || 'Alamat toko belum diisi')
-const API_BASE = String(import.meta.env.VITE_KUKI_MAP_API_BASE_URL || '').replace(/\/$/, '')
+
+const API_BASE = String(
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_KUKI_MAP_API_BASE_URL ||
+  'https://kukibakehouse.smkn1sumedang.sch.id'
+)
+  .trim()
+  .replace(/\/api\/?$/, '')
+  .replace(/\/+$/, '')
+
 const TILE_URL = String(import.meta.env.VITE_KUKI_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png')
 const MODES = [
   { value: 'driving-car', label: 'Mobil' },
