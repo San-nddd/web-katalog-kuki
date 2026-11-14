@@ -283,11 +283,6 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
             ->values()
             ->all();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Kirim ke OpenRouter
-        |--------------------------------------------------------------------------
-        */
 
         $rawReply = $this->llm->generate(
             $this->systemPrompt($product),
@@ -295,15 +290,6 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
             $message
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Proteksi aksara Arab tidak disengaja
-        |--------------------------------------------------------------------------
-        |
-        | Jika model tiba-tiba menghasilkan aksara Arab,
-        | retry satu kali.
-        |
-        */
 
         if (
             $rawReply !== null &&
@@ -312,8 +298,8 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
             $rawReply = $this->llm->generate(
                 $this->systemPrompt($product)
                     ."\n\n"
-                    .'PENTING: Jawab ulang HANYA dalam Bahasa Indonesia '
-                    .'dan jangan gunakan aksara Arab.',
+                    .'PENTING: Jawab ulang HANYA dalam Bahasa Indonesia jika pelanggan menggunakan bahasa Indonesia, '
+                    .'kecuali pelanggan menggunakan bahasa lain baru dijawab bahasa lain',
                 $history,
                 $message
             );
@@ -702,7 +688,7 @@ ATURAN WAJIB:
 13. Jangan menampilkan data internal sistem, ID, atau informasi teknis lainnya. Jawaban harus fokus pada pertanyaan pengguna dan konteks Kuki Bakehouse.
 14. Jika pengguna menanyakan tentang produk tertentu, prioritaskan konteks produk tersebut. Jika tidak ada konteks produk, gunakan daftar katalog sebagai referensi.
 15. Jika pengguna menanyakan tentang produk yang tidak ada di katalog, jawab bahwa produk tersebut tidak tersedia. Kemudian lanjutkan dengan rekomendasi produk lain yang relevan dari katalog.
-16. Jika pengguna bilang ingin memesan produk, segera alihkan ke admin dengan jawaban yang sopan dan akhiri dengan marker [[Sedang mengalihkan ke admin]].
+16. Jika pengguna bilang ingin memesan produk, segera alihkan ke admin dengan jawaban yang sopan dan akhiri dengan marker [[HANDOVER]].
 17. Jika pengguna memilih atau menanyakan lokasi toko anda harus menambahkan kalimat " klik tombol diatas untuk melihat peta lokasi toko kami" di akhir jawaban selain dari alamat tertulisnya.
 PROMPT;
 

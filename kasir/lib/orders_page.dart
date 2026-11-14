@@ -320,6 +320,21 @@ class _OrdersPageState extends State<OrdersPage> {
     if (succeeded != true && mounted) setState(() => paying = false);
   }
 
+  // Ambil foto dari katalog terbaru, lalu fallback ke data keranjang.
+  String? getCheckoutImage(PosProduct product) {
+    for (final item in products) {
+      if (item.id == product.id) {
+        final url = item.image?.trim();
+        if (url != null && url.isNotEmpty) return url;
+        break;
+      }
+    }
+    final fallback = product.image?.trim();
+    if (fallback != null && fallback.isNotEmpty) return fallback;
+    debugPrint('Foto checkout kosong: ${product.name} (ID ${product.id})');
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context).width;
@@ -597,6 +612,42 @@ class _OrdersPageState extends State<OrdersPage> {
                     children: order.lines.values
                         .map(
                           (line) => ListTile(
+                            leading: Builder(
+                              builder: (context) {
+                                final imageUrl = getCheckoutImage(line.product);
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(9),
+                                  child: SizedBox(
+                                    width: 52,
+                                    height: 52,
+                                    child: imageUrl == null
+                                        ? const ColoredBox(
+                                            color: Color(0xFFF8F1EB),
+                                            child: Icon(
+                                              Icons.bakery_dining_outlined,
+                                              color: kukiOrange,
+                                            ),
+                                          )
+                                        : Image.network(
+                                            imageUrl,
+                                            width: 52,
+                                            height: 52,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              debugPrint('Foto checkout gagal: ${line.product.name}: $error');
+                                              return const ColoredBox(
+                                                color: Color(0xFFF8F1EB),
+                                                child: Icon(
+                                                  Icons.broken_image_outlined,
+                                                  color: kukiOrange,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                  ),
+                                );
+                              },
+                            ),
                             title: Text(
                               line.product.name,
                               maxLines: 1,

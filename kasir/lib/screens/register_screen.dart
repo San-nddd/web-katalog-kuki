@@ -646,19 +646,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const Divider(height: 15, color: KukiColors.line),
                       itemBuilder: (_, i) {
                         final line = order.lines[i];
+                        final imageUrl = line.product.imageUrl?.trim();
                         return Row(
                           children: [
                             Container(
-                              width: 42,
-                              height: 42,
+                              width: 48,
+                              height: 48,
                               decoration: BoxDecoration(
                                 color: KukiColors.cream,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
-                                Icons.bakery_dining_outlined,
-                                size: 24,
-                                color: KukiColors.mocha,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: imageUrl == null || imageUrl.isEmpty
+                                    ? const Icon(
+                                        Icons.bakery_dining_outlined,
+                                        size: 24,
+                                        color: KukiColors.mocha,
+                                      )
+                                    : Image.network(
+                                        imageUrl,
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, _, _) => const Icon(
+                                          Icons.bakery_dining_outlined,
+                                          size: 24,
+                                          color: KukiColors.mocha,
+                                        ),
+                                      ),
                               ),
                             ),
                             const SizedBox(width: 8),
