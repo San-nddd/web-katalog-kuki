@@ -15,6 +15,21 @@ export async function tambahPegawaiPos({ kode, nama, pin }) {
   return response.data
 }
 
+export async function perbaruiPegawaiPos(id, payload) {
+  const response = await request(`/pos/admin/pegawai/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: payload,
+  })
+  return response.data
+}
+
+export async function hapusPegawaiPos(id) {
+  const response = await request(`/pos/admin/pegawai/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+  return response.data
+}
+
 export async function gantiPinPegawaiPos(id, pin) {
   const response = await request(`/pos/admin/pegawai/${encodeURIComponent(id)}/pin`, {
     method: 'PATCH',

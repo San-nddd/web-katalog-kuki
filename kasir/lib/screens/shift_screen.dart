@@ -25,12 +25,14 @@ class _ShiftScreenState extends State<ShiftScreen> {
     final ctrl = widget.controller;
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: KukiSpace.all(context, percent: 1.9, min: 14, max: 36),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 650),
+          constraints: BoxConstraints(
+            maxWidth: KukiSpace.width(context, 55, min: 320, max: 720),
+          ),
           child: Card(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: KukiSpace.all(context, percent: 1.9, min: 14, max: 36),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -40,7 +42,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                         ? 'Status shift tersimpan di Laravel. API belum menyediakan rekonsiliasi kas akhir.'
                         : 'Untuk memulai operasional kasir dan melihat estimasi kas shift.',
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: KukiSpace.normal(context)),
                   if (ctrl.shiftOpen) ...[
                     const Chip(
                       label: Text('SHIFT TERBUKA'),
@@ -51,7 +53,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                       'ID: ${ctrl.activeShift}',
                       style: const TextStyle(fontSize: 11),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: KukiSpace.normal(context)),
                     if (!kIsWeb)
                       FutureBuilder<int>(
                         future: ctrl.expectedCash(),
@@ -60,7 +62,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: KukiSpace.normal(context)),
                     if (!kIsWeb)
                       TextField(
                         controller: note,
@@ -69,7 +71,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                           labelText: 'Catatan penutupan (opsional)',
                         ),
                       ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: KukiSpace.normal(context)),
                     FilledButton.icon(
                       icon: const Icon(Icons.lock_clock),
                       label: const Text('Tutup shift'),
@@ -94,7 +96,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                           ? 'Buka shift di Laravel sebelum menerima pembayaran.'
                           : 'Buka shift sebelum menerima pembayaran.',
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: KukiSpace.normal(context)),
                     FilledButton.icon(
                       icon: const Icon(Icons.play_arrow),
                       label: const Text('Buka shift'),
@@ -107,11 +109,11 @@ class _ShiftScreenState extends State<ShiftScreen> {
                       },
                     ),
                   ],
-                  const SizedBox(height: 22),
+                  SizedBox(height: KukiSpace.loose(context)),
                   Text(
                     kIsWeb
                         ? 'API menyimpan waktu buka/tutup shift. Rekonsiliasi kas akhir dan catatan shift belum tersedia.'
-                        : 'Catatan: Shift disimpan di tablet ini. Sinkronisasi shift ke Laravel memerlukan endpoint tersendiri.',
+                        : 'Catatan: Shift dan transaksi diselaraskan dengan Laravel saat koneksi tersedia.',
                     style: const TextStyle(
                       fontSize: 12,
                       color: KukiColors.muted,

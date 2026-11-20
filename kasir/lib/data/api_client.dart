@@ -15,12 +15,14 @@ class LoginResult {
   final String token;
   final String name;
   final String role;
-  const LoginResult(this.token, this.name, this.role);
+  final String cashierId;
+
+  const LoginResult(this.token, this.name, this.role, this.cashierId);
 }
 
 const defaultPosApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'https://kukibakehouse.smkn1sumedang.sch.id',
+  defaultValue: 'http://192.168.0.103:8000',
 );
 
 class ApiClient {
@@ -116,7 +118,13 @@ class ApiClient {
       );
     }
     token = value;
-    return LoginResult(value, asText(pegawai['nama'] ?? kode), 'kasir');
+    final role = asText(pegawai['role']).toLowerCase();
+    return LoginResult(
+      value,
+      asText(pegawai['nama'] ?? kode),
+      role.isEmpty ? 'kasir' : role,
+      asText(pegawai['id']),
+    );
   }
 
   Future<Map<String, dynamic>> me() async {
@@ -253,7 +261,7 @@ class ApiClient {
       items: items,
       method: method,
       paid: sale.paid,
-      verified: method == 'tunai' || sale.method == 'qris_manual',
+      verified: method == 'tunai' || sale.verified,
       orderType: valueFor('Tipe: ') == 'Makan di tempat'
           ? 'dine_in'
           : 'takeaway',
@@ -261,5 +269,20 @@ class ApiClient {
       customer: valueFor('Pesanan: ') ?? '',
       note: valueFor('Catatan: ') ?? '',
     );
+  }
+
+  Future<Map<String, dynamic>> cancelSale(
+    String id, {
+    required String jenis,
+    required String alasan,
+  }) async {
+    final result = unwrapMap(
+      await request(
+        'POST',
+        '/api/pos/transactions/${Uri.encodeComponent(id)}/pembatalan',
+        data: {'jenis': jenis, 'alasan': alasan},
+      ),
+    );
+    return unwrapMap(result['data']);
   }
 }

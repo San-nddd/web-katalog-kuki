@@ -31,29 +31,116 @@ class PosController extends Controller
         return $request->attributes->get('pos_pegawai');
     }
 
+    private function isManager(Request $request): bool
+    {
+        return in_array(strtolower((string) $this->staff($request)->role), ['admin', 'owner'], true);
+    }
+
     private function response($data, int $status = 200): JsonResponse
     {
         return response()->json(['success' => true, 'data' => $data], $status);
     }
 
+    private function pegawaiJson(PosPegawai $pegawai): array
+    {
+        if (! array_key_exists('jumlah_transaksi', $pegawai->getAttributes())) {
+            $pegawai->loadCount(['transaksi as jumlah_transaksi', 'absensi as jumlah_shift']);
+        }
+
+        return [
+            'id' => $pegawai->id,
+            'kode' => $pegawai->kode,
+            'nama' => $pegawai->nama,
+            'role' => $pegawai->role,
+            'aktif' => (bool) $pegawai->aktif,
+            'jumlah_transaksi' => (int) $pegawai->jumlah_transaksi,
+            'jumlah_shift' => (int) $pegawai->jumlah_shift,
+        ];
+    }
+
     public function buatPegawai(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'kode' => ['required', 'string', 'min:3', 'max:32', 'regex:/^[A-Za-z0-9_-]+$/', 'unique:pos_pegawai,kode'],
+            'kode' => ['required', 'string', 'min:3', 'max:32', 'regex:/^[A-Za-z0-9_-]+$/'],
             'nama' => ['required', 'string', 'min:2', 'max:120'],
+            'role' => ['sometimes', 'in:kasir,admin,owner'],
             'pin' => ['required', 'string', 'regex:/^[0-9]{4,8}$/'],
         ]);
+        $data['kode'] = Str::upper($data['kode']);
+        $request->merge(['kode' => $data['kode']]);
+        if (PosPegawai::where('kode', $data['kode'])->exists()) {
+            throw ValidationException::withMessages(['kode' => 'Kode kasir sudah digunakan.']);
+        }
         $staff = PosPegawai::create([
-            'kode' => Str::upper($data['kode']), 'nama' => $data['nama'],
+            'kode' => $data['kode'], 'nama' => $data['nama'],
+            'role' => $data['role'] ?? 'kasir',
             'pin_hash' => Hash::make($data['pin']), 'aktif' => true,
         ]);
 
-        return $this->response($staff->only('id', 'kode', 'nama', 'aktif'), 201);
+        return $this->response($this->pegawaiJson($staff), 201);
     }
 
     public function daftarPegawai(): JsonResponse
     {
-        return $this->response(PosPegawai::orderBy('nama')->get(['id', 'kode', 'nama', 'aktif']));
+        $pegawai = PosPegawai::withCount([
+            'transaksi as jumlah_transaksi',
+            'absensi as jumlah_shift',
+        ])->orderBy('nama')->get();
+
+        return $this->response($pegawai->map(fn ($item) => $this->pegawaiJson($item))->values());
+    }
+
+    public function ubahRole(Request $request, PosPegawai $pegawai): JsonResponse
+    {
+        $data = $request->validate(['role' => ['required', 'in:kasir,admin,owner']]);
+        $pegawai->update(['role' => $data['role']]);
+
+        return $this->response($this->pegawaiJson($pegawai));
+    }
+
+    public function perbaruiPegawai(Request $request, PosPegawai $pegawai): JsonResponse
+    {
+        $data = $request->validate([
+            'kode' => ['sometimes', 'required', 'string', 'min:3', 'max:32', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'nama' => ['sometimes', 'required', 'string', 'min:2', 'max:120'],
+            'role' => ['sometimes', 'in:kasir,admin,owner'],
+            'aktif' => ['sometimes', 'boolean'],
+        ]);
+        if (array_key_exists('kode', $data)) {
+            $data['kode'] = Str::upper($data['kode']);
+            $request->merge(['kode' => $data['kode']]);
+            $duplikat = PosPegawai::where('kode', $data['kode'])
+                ->whereKeyNot($pegawai->id)->exists();
+            if ($duplikat) {
+                throw ValidationException::withMessages(['kode' => 'Kode kasir sudah digunakan.']);
+            }
+        }
+        $pegawai->fill($data)->save();
+        if (array_key_exists('aktif', $data) && ! $data['aktif']) {
+            PosSesi::where('pegawai_id', $pegawai->id)->delete();
+        }
+
+        return $this->response($this->pegawaiJson($pegawai->fresh()));
+    }
+
+    public function hapusPegawai(PosPegawai $pegawai): JsonResponse
+    {
+        if (! $pegawai->aktif) {
+            return response()->json(['message' => 'Pegawai sudah nonaktif.'], 409);
+        }
+        $info = $this->pegawaiJson($pegawai);
+        DB::transaction(function () use ($pegawai) {
+            $pegawai->update(['aktif' => false]);
+            PosSesi::where('pegawai_id', $pegawai->id)->delete();
+        });
+        $fresh = $pegawai->fresh();
+        $fresh->setAttribute('jumlah_transaksi', $info['jumlah_transaksi']);
+        $fresh->setAttribute('jumlah_shift', $info['jumlah_shift']);
+
+        return $this->response([
+            'message' => 'Pegawai dinonaktifkan. Riwayat transaksi dan shift tetap disimpan.',
+            'pegawai' => $this->pegawaiJson($fresh),
+        ]);
     }
 
     public function ubahPin(Request $request, PosPegawai $pegawai): JsonResponse
@@ -94,13 +181,13 @@ class PosController extends Controller
         return $this->response([
             'token' => $plain,
             'expires_in_seconds' => 43200,
-            'pegawai' => $staff->only('id', 'kode', 'nama'),
+            'pegawai' => $staff->only('id', 'kode', 'nama', 'role'),
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return $this->response(['pegawai' => $this->staff($request)->only('id', 'kode', 'nama')]);
+        return $this->response(['pegawai' => $this->staff($request)->only('id', 'kode', 'nama', 'role')]);
     }
 
     public function logout(Request $request): JsonResponse
@@ -118,6 +205,7 @@ class PosController extends Controller
                 'nama' => $p->nama_produk,
                 'harga' => (int) round((float) $p->harga_produk),
                 'stok' => (int) ($p->stok ?? 0),
+                'stok_minimum' => (int) ($p->stok_minimum ?? 0),
                 'barcode' => $p->barcode,
                 'kategori' => $p->kategori?->nama_kategori ?? $p->kategori?->nama ?? 'Lainnya',
                 'gambar' => $p->gambar_produk ? asset('storage/'.ltrim($p->gambar_produk, '/')) : null,
@@ -185,6 +273,11 @@ class PosController extends Controller
             'nomor_meja' => $tx->nomor_meja,
             'catatan' => $tx->catatan,
             'metode_bayar' => $tx->metode_bayar,
+            'status_transaksi' => $tx->status_transaksi ?? 'completed',
+            'jenis_pembatalan' => $tx->jenis_pembatalan,
+            'alasan_pembatalan' => $tx->alasan_pembatalan,
+            'dibatalkan_oleh' => $tx->pembatali?->nama,
+            'dibatalkan_pada' => $tx->dibatalkan_pada?->toIso8601String(),
             'subtotal' => $tx->subtotal,
             'total' => $tx->total,
             'dibayar' => $tx->dibayar,
@@ -195,6 +288,32 @@ class PosController extends Controller
                 'jumlah' => $i->jumlah, 'harga' => $i->harga_satuan, 'total' => $i->total,
             ])->values(),
         ];
+    }
+
+    private function replayMatches(array $input, PosTransaksi $tx): bool
+    {
+        $requestedItems = collect($input['items'])
+            ->map(fn ($item) => [
+                'produk_id' => (int) $item['produk_id'],
+                'jumlah' => (int) $item['jumlah'],
+            ])
+            ->sortBy('produk_id')->values()->all();
+        $storedItems = $tx->items
+            ->map(fn ($item) => [
+                'produk_id' => (int) $item->produk_id,
+                'jumlah' => (int) $item->jumlah,
+            ])
+            ->sortBy('produk_id')->values()->all();
+        $clean = fn ($value) => trim((string) ($value ?? ''));
+
+        return $requestedItems === $storedItems
+            && $tx->metode_bayar === $input['metode_bayar']
+            && (int) $tx->dibayar === (int) $input['dibayar']
+            && (bool) $tx->verifikasi_manual === (bool) ($input['verifikasi_manual'] ?? false)
+            && $tx->jenis_pesanan === $input['jenis_pesanan']
+            && $clean($tx->nomor_meja) === $clean($input['nomor_meja'] ?? null)
+            && $clean($tx->nama_pelanggan) === $clean($input['nama_pelanggan'] ?? null)
+            && $clean($tx->catatan) === $clean($input['catatan'] ?? null);
     }
 
     public function checkout(Request $request): JsonResponse
@@ -214,10 +333,16 @@ class PosController extends Controller
         ]);
         $staff = $this->staff($request);
         // Idempotensi: request dengan UUID sama tidak membuat transaksi/mutasi ganda.
-        $existing = PosTransaksi::with(['items', 'pegawai'])->where('id_client', $input['id_client'])->first();
+        $existing = PosTransaksi::with(['items', 'pegawai', 'pembatali'])->where('id_client', $input['id_client'])->first();
         if ($existing) {
             if ((int) $existing->pegawai_id !== (int) $staff->id) {
                 return response()->json(['message' => 'ID transaksi sudah digunakan.'], 409);
+            }
+            if (($existing->status_transaksi ?? 'completed') !== 'completed') {
+                return response()->json(['message' => 'Transaksi ini sudah dibatalkan.'], 409);
+            }
+            if (! $this->replayMatches($input, $existing)) {
+                return response()->json(['message' => 'ID transaksi sudah digunakan dengan detail yang berbeda.'], 409);
             }
 
             return $this->response($this->txJson($existing));
@@ -276,6 +401,7 @@ class PosController extends Controller
                     'nomor_meja' => $input['jenis_pesanan'] === 'dine_in' ? ($input['nomor_meja'] ?? null) : null,
                     'catatan' => $input['catatan'] ?? null,
                     'metode_bayar' => $input['metode_bayar'],
+                    'status_transaksi' => 'completed',
                     'verifikasi_manual' => (bool) ($input['verifikasi_manual'] ?? false),
                     'subtotal' => $total, 'total' => $total,
                     'dibayar' => $paid, 'kembalian' => $paid - $total, 'dibayar_pada' => now(),
@@ -301,12 +427,18 @@ class PosController extends Controller
                     ]);
                 }
 
-                return $this->response($this->txJson($tx->load(['items', 'pegawai'])), 201);
+                return $this->response($this->txJson($tx->load(['items', 'pegawai', 'pembatali'])), 201);
             }, 3);
         } catch (UniqueConstraintViolationException $e) {
             // Perlindungan apabila klien mengirim request id_client sama secara bersamaan.
-            $found = PosTransaksi::with(['items', 'pegawai'])->where('id_client', $input['id_client'])->first();
+            $found = PosTransaksi::with(['items', 'pegawai', 'pembatali'])->where('id_client', $input['id_client'])->first();
             if ($found && (int) $found->pegawai_id === (int) $staff->id) {
+                if (($found->status_transaksi ?? 'completed') !== 'completed') {
+                    return response()->json(['message' => 'Transaksi ini sudah dibatalkan.'], 409);
+                }
+                if (! $this->replayMatches($input, $found)) {
+                    return response()->json(['message' => 'ID transaksi sudah digunakan dengan detail yang berbeda.'], 409);
+                }
                 return $this->response($this->txJson($found));
             }
             throw $e;
@@ -318,13 +450,25 @@ class PosController extends Controller
         $filter = $request->validate([
             'dari' => ['nullable', 'date_format:Y-m-d'],
             'sampai' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:dari'],
+            'metode_bayar' => ['nullable', 'in:tunai,qris,transfer'],
+            'status_transaksi' => ['nullable', 'in:completed,void,retur'],
+            'pegawai_id' => ['nullable', 'integer', 'exists:pos_pegawai,id'],
         ]);
-        $query = PosTransaksi::with(['pegawai', 'items'])->orderByDesc('id');
+        $query = PosTransaksi::with(['pegawai', 'items', 'pembatali'])->orderByDesc('id');
         if (isset($filter['dari'])) {
             $query->whereDate('dibayar_pada', '>=', $filter['dari']);
         }
         if (isset($filter['sampai'])) {
             $query->whereDate('dibayar_pada', '<=', $filter['sampai']);
+        }
+        if (isset($filter['metode_bayar'])) {
+            $query->where('metode_bayar', $filter['metode_bayar']);
+        }
+        if (isset($filter['status_transaksi'])) {
+            $query->where('status_transaksi', $filter['status_transaksi']);
+        }
+        if (isset($filter['pegawai_id'])) {
+            $query->where('pegawai_id', $filter['pegawai_id']);
         }
         $page = $query->paginate(30);
 
@@ -336,7 +480,7 @@ class PosController extends Controller
 
     public function transactionDetail(PosTransaksi $transaksi): JsonResponse
     {
-        return $this->response($this->txJson($transaksi->load(['items', 'pegawai'])));
+        return $this->response($this->txJson($transaksi->load(['items', 'pegawai', 'pembatali'])));
     }
 
     public function report(Request $request): JsonResponse
@@ -353,6 +497,7 @@ class PosController extends Controller
         $from = $from->utc();
         $until = $lastDay->addDay()->utc();
         $query = PosTransaksi::query()
+            ->where('status_transaksi', 'completed')
             ->where('dibayar_pada', '>=', $from)
             ->where('dibayar_pada', '<', $until);
 
@@ -362,6 +507,94 @@ class PosController extends Controller
             'total_penjualan' => (int) (clone $query)->sum('total'),
             'per_metode' => (clone $query)->selectRaw('metode_bayar, COUNT(*) as jumlah, SUM(total) as total')
                 ->groupBy('metode_bayar')->get(),
+            'per_kasir' => DB::table('pos_transaksi')
+                ->join('pos_pegawai', 'pos_pegawai.id', '=', 'pos_transaksi.pegawai_id')
+                ->where('pos_transaksi.status_transaksi', 'completed')
+                ->whereBetween('pos_transaksi.dibayar_pada', [$from, $until])
+                ->select(
+                    'pos_pegawai.id as kasir_id',
+                    'pos_pegawai.nama as kasir',
+                    DB::raw('COUNT(*) as jumlah'),
+                    DB::raw('SUM(pos_transaksi.total) as total')
+                )
+                ->groupBy('pos_pegawai.id', 'pos_pegawai.nama')
+                ->orderByDesc('total')->get(),
+            'per_produk' => DB::table('pos_item_transaksi')
+                ->join('pos_transaksi', 'pos_transaksi.id', '=', 'pos_item_transaksi.transaksi_id')
+                ->where('pos_transaksi.status_transaksi', 'completed')
+                ->whereBetween('pos_transaksi.dibayar_pada', [$from, $until])
+                ->select(
+                    'pos_item_transaksi.produk_id',
+                    'pos_item_transaksi.nama_snapshot as nama',
+                    DB::raw('SUM(pos_item_transaksi.jumlah) as jumlah'),
+                    DB::raw('SUM(pos_item_transaksi.total) as total')
+                )
+                ->groupBy('pos_item_transaksi.produk_id', 'pos_item_transaksi.nama_snapshot')
+                ->orderByDesc('jumlah')->limit(20)->get(),
         ]);
+    }
+
+    public function batalkan(Request $request, string $transaksi): JsonResponse
+    {
+        $found = ctype_digit($transaksi)
+            ? PosTransaksi::findOrFail($transaksi)
+            : PosTransaksi::where('id_client', $transaksi)->firstOrFail();
+        if (! $this->isManager($request)) {
+            return response()->json(['message' => 'Hanya pegawai Admin/Owner yang dapat membatalkan transaksi.'], 403);
+        }
+        $input = $request->validate([
+            'jenis' => ['required', 'in:void,retur'],
+            'alasan' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+        if (($found->status_transaksi ?? 'completed') !== 'completed') {
+            return response()->json(['message' => 'Transaksi ini sudah dibatalkan.'], 409);
+        }
+        $actor = $this->staff($request);
+
+        return DB::transaction(function () use ($found, $input, $actor) {
+            $locked = PosTransaksi::whereKey($found->id)->lockForUpdate()->firstOrFail();
+            if (($locked->status_transaksi ?? 'completed') !== 'completed') {
+                return response()->json(['message' => 'Transaksi ini sudah dibatalkan.'], 409);
+            }
+            $updated = PosTransaksi::where('id', $locked->id)
+                ->where('status_transaksi', 'completed')
+                ->update([
+                    'status_transaksi' => $input['jenis'] === 'retur' ? 'retur' : 'void',
+                    'jenis_pembatalan' => $input['jenis'],
+                    'alasan_pembatalan' => $input['alasan'],
+                    'dibatalkan_oleh' => $actor->id,
+                    'dibatalkan_pada' => now(),
+                ]);
+            if (! $updated) {
+                return response()->json(['message' => 'Transaksi ini sudah dibatalkan.'], 409);
+            }
+            $items = PosItemTransaksi::where('transaksi_id', $locked->id)
+                ->lockForUpdate()->orderBy('produk_id')->get();
+            $products = produk::whereIn('id', $items->pluck('produk_id'))
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            foreach ($items as $item) {
+                $product = $products->get($item->produk_id);
+                if (! $product) {
+                    continue;
+                }
+                $before = (int) $product->stok;
+                $after = $before + (int) $item->jumlah;
+                $product->stok = $after;
+                $product->save();
+                MutasiStok::create([
+                    'produk_id' => $product->id,
+                    'pengguna_id' => null,
+                    'jenis' => $input['jenis'],
+                    'perubahan' => (int) $item->jumlah,
+                    'stok_sebelum' => $before,
+                    'stok_sesudah' => $after,
+                    'keterangan' => 'POS '.$locked->nomor.' | '.$input['jenis'].' | '.$actor->kode,
+                    'referensi_tipe' => 'pos_item_transaksi',
+                    'referensi_id' => $item->id,
+                ]);
+            }
+
+            return $this->response($this->txJson($locked->fresh()->load(['items', 'pegawai', 'pembatali'])));
+        }, 3);
     }
 }

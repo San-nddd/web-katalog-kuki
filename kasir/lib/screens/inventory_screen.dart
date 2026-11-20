@@ -27,7 +27,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       (!onlyLow || p.stock <= p.minimumStock) &&
       (query.isEmpty || p.name.toLowerCase().contains(query) ||
         p.sku.toLowerCase().contains(query) || p.barcode.contains(query))).toList();
-    return Padding(padding: const EdgeInsets.all(20), child: Column(
+    return Padding(padding: KukiSpace.all(context), child: Column(
       crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           const Expanded(child: SectionLabel('Stok Produk',
@@ -37,19 +37,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
             catch (e) {if (context.mounted) showError(context, e);}
           }, icon: const Icon(Icons.sync), label: const Text('Muat dari Laravel')),
         ]),
-        const SizedBox(height: 16),
+        SizedBox(height: KukiSpace.normal(context)),
         Wrap(spacing: 8, runSpacing: 8, children: [
           Chip(label: Text('${ctrl.products.length} produk mandiri')),
-          ChoiceChip(label: Text('$low stok menipis / habis'),
-            selected: onlyLow, onSelected: (value) => setState(() => onlyLow = value)),
+          ChoiceChip(
+            avatar: low > 0
+                ? const Icon(Icons.warning_amber_rounded,
+                    color: Colors.deepOrange, size: 16)
+                : null,
+            label: Text('$low stok menipis / habis'),
+            selected: onlyLow,
+            onSelected: (value) => setState(() => onlyLow = value),
+          ),
         ]),
-        const SizedBox(height: 12),
+        SizedBox(height: KukiSpace.normal(context)),
         SizedBox(height: 46, child: TextField(
           controller: search, onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(prefixIcon: Icon(Icons.search),
             hintText: 'Cari nama, SKU atau barcode'),
         )),
-        const SizedBox(height: 12),
+        SizedBox(height: KukiSpace.normal(context)),
         Expanded(child: Container(
           decoration: BoxDecoration(color: Colors.white,
             border: Border.all(color: KukiColors.line),
@@ -99,7 +106,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
           )),
         )),
-        const SizedBox(height: 10),
+        SizedBox(height: KukiSpace.tight(context)),
         const Text('Setiap rasa/ukuran adalah produk mandiri dalam kategori; '
           'tidak ada tabel produk varian.',
           style: TextStyle(fontSize: 11, color: KukiColors.muted)),

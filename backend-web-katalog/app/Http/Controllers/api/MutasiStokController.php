@@ -17,7 +17,7 @@ class MutasiStokController extends Controller
     {
         $filters = $request->validate([
             'produk_id' => ['nullable', 'integer', 'exists:katalog_produk,id'],
-            'jenis' => ['nullable', 'in:stok_awal,produksi,koreksi,opname,rusak,kedaluwarsa'],
+            'jenis' => ['nullable', 'in:stok_awal,produksi,koreksi,opname,rusak,kedaluwarsa,penjualan,void,retur'],
             'tanggal_mulai' => ['nullable', 'date_format:Y-m-d'],
             'tanggal_selesai' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:tanggal_mulai'],
             'page' => ['nullable', 'integer', 'min:1'],

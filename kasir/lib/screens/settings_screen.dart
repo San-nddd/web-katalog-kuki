@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../core/models.dart';
 import '../core/theme.dart';
+import '../services/kuki_thermal_printer.dart';
 import '../state/pos_controller.dart';
 import '../widgets/common.dart';
 
@@ -8,13 +13,13 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.controller});
   @override
   Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(20),
+    padding: KukiSpace.all(context),
     children: [
       const SectionLabel(
         'Pengaturan kasir',
         caption: 'Preferensi perangkat dan informasi sinkronisasi.',
       ),
-      const SizedBox(height: 18),
+      SizedBox(height: KukiSpace.loose(context)),
       Card(
         child: Column(
           children: [
@@ -47,14 +52,24 @@ class SettingsScreen extends StatelessWidget {
                   DropdownMenuItem(value: 80, child: Text('80 mm')),
                 ],
                 onChanged: (v) {
-                  if (v != null) controller.setReceiptWidth(v);
+                  if (v != null) unawaited(controller.setReceiptWidth(v));
                 },
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              title: const Text('Printer thermal'),
+              subtitle: Text(
+                KukiThermalPrinter.instance.printerName == null
+                    ? 'Belum dipilih. Gunakan ikon printer di kanan atas.'
+                    : '${KukiThermalPrinter.instance.printerName} · '
+                        '${KukiThermalPrinter.instance.transport == KukiPrinterTransport.usb ? 'USB' : 'Bluetooth'}',
               ),
             ),
           ],
         ),
       ),
-      const SizedBox(height: 14),
+      SizedBox(height: KukiSpace.loose(context)),
       Card(
         child: Column(
           children: [
@@ -95,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: 14),
+      SizedBox(height: KukiSpace.loose(context)),
       Card(
         child: ListTile(
           title: const Text('Sinkronisasi transaksi'),
@@ -107,7 +122,7 @@ class SettingsScreen extends StatelessWidget {
                               : controller.serverReachable!
                               ? 'dapat dijangkau'
                               : 'tidak dapat dijangkau'}.'} '
-                      'Tertunda ${controller.pending}. Transaksi disinkronkan otomatis saat server dapat dijangkau.',
+                       'Tertunda ${controller.pending}, belum selesai ${controller.unresolved}. Transaksi disinkronkan otomatis saat server dapat dijangkau.',
           ),
           trailing: FilledButton(
             onPressed: controller.demo || controller.syncing
@@ -122,47 +137,97 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-      const SizedBox(height: 14),
+      SizedBox(height: KukiSpace.loose(context)),
+      Card(
+        child: ExpansionTile(
+          title: const Text('Riwayat & rekonsiliasi shift'),
+          subtitle: Text('${controller.shiftSummaries.length} shift tercatat'),
+          children: controller.shiftSummaries.isEmpty
+              ? const [
+                  ListTile(title: Text('Belum ada shift yang tercatat.')),
+                ]
+              : controller.shiftSummaries.map(_shiftTile).toList(),
+        ),
+      ),
+      SizedBox(height: KukiSpace.loose(context)),
       Card(
         child: ListTile(
           title: const Text('Keluar akun'),
-          subtitle: const Text(
-            'Penjualan lokal yang belum sinkron tetap tersimpan di perangkat.',
+          subtitle: Text(
+            controller.shiftOpen
+                ? 'Shift masih terbuka. Tutup shift terlebih dahulu sebelum keluar. Data lokal tidak dihapus.'
+                : controller.syncing
+                    ? 'Sinkronisasi sedang berlangsung. Tunggu hingga selesai sebelum keluar. Data lokal tidak dihapus.'
+                    : 'Shift harus ditutup terlebih dahulu. Penjualan lokal yang belum sinkron tetap tersimpan di perangkat.',
           ),
           trailing: OutlinedButton(
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Keluar dari POS?'),
-                  content: const Text(
-                    'Pastikan transaksi tertunda ditangani. Data lokal tidak dihapus.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Batal'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Keluar'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true) await controller.logout();
-            },
+            onPressed: controller.shiftOpen || controller.syncing
+                ? null
+                : () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Keluar dari POS?'),
+                        content: const Text(
+                          'Pastikan shift sudah ditutup dan transaksi tertunda ditangani. Data lokal tidak dihapus.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Batal'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Keluar'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm != true) return;
+                    try {
+                      await controller.logout();
+                    } catch (e) {
+                      if (context.mounted) showError(context, e);
+                    }
+                  },
             child: const Text('Keluar'),
           ),
         ),
       ),
-      const SizedBox(height: 10),
+      SizedBox(height: KukiSpace.tight(context)),
       const Text(
-        'PENTING: printer Bluetooth ESC/POS langsung, payment gateway QRIS, dan sync shift ke backend belum diaktifkan. Cetak struk memakai dialog printer sistem.',
+        'PENTING: QRIS/transfer dicatat manual dan wajib diverifikasi kasir. Cetak struk memakai printer thermal Bluetooth/USB yang dipilih.',
         style: TextStyle(fontSize: 12, color: KukiColors.muted),
       ),
     ],
   );
+  Widget _shiftTile(ShiftSummary shift) {
+    String time(String value) {
+      final parsed = DateTime.tryParse(value);
+      return parsed == null
+          ? '-'
+          : DateFormat('dd/MM HH:mm').format(parsed.toLocal());
+    }
+
+    final variance = shift.variance;
+    return ListTile(
+      title: Text('Shift ${time(shift.openedAt)} — ${shift.cashier}'),
+      subtitle: Text(
+        '${shift.closedAt.isEmpty ? 'Masih terbuka' : 'Ditutup ${time(shift.closedAt)}'} · '
+        'Kas ${money(shift.expectedCash)} · Selisih '
+        '${variance == null ? '-' : money(variance)}',
+      ),
+      trailing: shift.conflicts
+          ? const Icon(Icons.warning_amber_rounded, color: Colors.orange)
+          : Icon(
+              shift.closedAt.isEmpty
+                  ? Icons.play_circle_outline
+                  : Icons.check_circle_outline,
+              color: shift.closedAt.isEmpty ? null : Colors.green,
+            ),
+    );
+  }
+
   Future<void> _setPin(BuildContext context) async {
     var typedPin = '';
     final pin = await showDialog<String>(

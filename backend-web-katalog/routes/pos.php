@@ -10,7 +10,10 @@ Route::prefix('pos')->group(function () {
     Route::prefix('admin')->middleware(['auth:sanctum', 'can:manage-admin'])->group(function () {
         Route::post('/pegawai', [PosController::class, 'buatPegawai']);
         Route::get('/pegawai', [PosController::class, 'daftarPegawai']);
+        Route::patch('/pegawai/{pegawai}', [PosController::class, 'perbaruiPegawai']);
+        Route::delete('/pegawai/{pegawai}', [PosController::class, 'hapusPegawai']);
         Route::patch('/pegawai/{pegawai}/pin', [PosController::class, 'ubahPin']);
+        Route::patch('/pegawai/{pegawai}/role', [PosController::class, 'ubahRole']);
     });
 
     // Gunakan middleware class agar kompatibel dengan Router Laravel dan bisa diuji.
@@ -24,6 +27,7 @@ Route::prefix('pos')->group(function () {
         Route::get('/transactions', [PosController::class, 'transactions']);
         Route::get('/transactions/{transaksi}', [PosController::class, 'transactionDetail']);
         Route::post('/transactions', [PosController::class, 'checkout'])->middleware('throttle:60,1');
+        Route::post('/transactions/{transaksi}/pembatalan', [PosController::class, 'batalkan']);
         Route::get('/report', [PosController::class, 'report']);
     });
 });

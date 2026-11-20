@@ -16,7 +16,6 @@ use App\Http\Controllers\Api\ProdukVarianController;
 use App\Http\Controllers\Api\ProduksiHarianController;
 use App\Http\Controllers\Api\LaporanInventarisController;
 use App\Http\Controllers\Api\LaporanPenjualanController;
-use App\Http\Controllers\Api\Pos\PosController;
 use App\Http\Controllers\Api\KukiLocationController;
 
 /*
@@ -186,15 +185,8 @@ Route::post('/admin/opname-stok/pengeluaran', [\App\Http\Controllers\Api\StockOp
 |--------------------------------------------------------------------------
 | POS KASIR
 |--------------------------------------------------------------------------
-*/ 
-Route::prefix('pos')
-    ->middleware(['auth:sanctum', 'can:manage-pos'])
-    ->group(function () {
-        Route::get('/transaksi', [PosController::class, 'index']);
-        Route::post('/transaksi', [PosController::class, 'store']);
-        Route::get('/transaksi/{transaksi}', [PosController::class, 'show']);
-        Route::put('/transaksi/{transaksi}', [PosController::class, 'update']);
-        Route::delete('/transaksi/{transaksi}', [PosController::class, 'destroy']);
-    });
-
+| Endpoint POS aktif seluruhnya berada di routes/pos.php dan memakai
+| middleware PosAuthenticate. Grup lama di bawah ini dihapus karena gate
+| manage-pos tidak pernah didefinisikan dan method controller tidak ada.
+ */
 require __DIR__ . '/pos.php';

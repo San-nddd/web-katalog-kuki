@@ -57,9 +57,9 @@ class _PosShellState extends State<PosShell> {
       builder: (context, constraints) {
         return Scaffold(
           drawer: Drawer(
-            width: 240,
+            width: KukiSpace.width(context, 19, min: 200, max: 300),
             backgroundColor: KukiColors.paper,
-            child: _sidebar(ctrl, inDrawer: true),
+            child: _sidebar(context, ctrl, inDrawer: true),
           ),
           body: SafeArea(
             child: Row(
@@ -68,8 +68,14 @@ class _PosShellState extends State<PosShell> {
                   child: Column(
                     children: [
                       Container(
-                        height: 66,
-                        padding: const EdgeInsets.symmetric(horizontal: 22),
+                        height: KukiSpace.height(context, 8, min: 56, max: 76),
+                        padding: KukiSpace.symmetric(
+                          context,
+                          horizontalPercent: 1.7,
+                          verticalPercent: 0,
+                          min: 10,
+                          max: 28,
+                        ),
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           border: Border(
@@ -85,7 +91,7 @@ class _PosShellState extends State<PosShell> {
                                 onPressed: () => Scaffold.of(ctx).openDrawer(),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: KukiSpace.tight(context)),
                             Expanded(
                               child: Text(
                                 titles[selected],
@@ -109,7 +115,7 @@ class _PosShellState extends State<PosShell> {
                                     ? KukiColors.cream
                                     : KukiColors.peach,
                               ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: KukiSpace.normal(context)),
                             if (constraints.maxWidth >= 760)
                               Text(
                                 DateFormat(
@@ -120,7 +126,7 @@ class _PosShellState extends State<PosShell> {
                                   color: KukiColors.muted,
                                 ),
                               ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: KukiSpace.tight(context)),
                             IconButton(
                               tooltip: 'Sinkronisasi transaksi',
                               onPressed: ctrl.demo || ctrl.syncing
@@ -137,7 +143,7 @@ class _PosShellState extends State<PosShell> {
                                   : const Icon(Icons.sync_rounded),
                             ),
                             Text(
-                              '${ctrl.pending} tertunda',
+                              '${ctrl.pending} tertunda · ${ctrl.unresolved} belum selesai',
                               style: const TextStyle(
                                 color: KukiColors.muted,
                                 fontSize: 12,
@@ -158,23 +164,30 @@ class _PosShellState extends State<PosShell> {
     );
   }
 
-  Widget _sidebar(PosController ctrl, {bool inDrawer = false}) => Container(
+  Widget _sidebar(BuildContext context, PosController ctrl,
+          {bool inDrawer = false}) =>
+      Container(
     color: KukiColors.paper,
-    padding: const EdgeInsets.fromLTRB(12, 22, 12, 14),
+    padding: EdgeInsets.fromLTRB(
+      KukiSpace.normal(context),
+      KukiSpace.loose(context),
+      KukiSpace.normal(context),
+      KukiSpace.normal(context),
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: EdgeInsets.symmetric(horizontal: KukiSpace.tight(context)),
           child: Row(
             children: [
               Image.asset(
                 'assets/branding/Mascot.png',
-                width: 40,
-                height: 40,
+                width: KukiSpace.width(context, 3.1, min: 36, max: 48),
+                height: KukiSpace.height(context, 5, min: 36, max: 52),
                 fit: BoxFit.contain,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: KukiSpace.tight(context)),
               const Expanded(
                 child: Text(
                   'KUKI',
@@ -189,9 +202,9 @@ class _PosShellState extends State<PosShell> {
             ],
           ),
         ),
-        const SizedBox(height: 26),
+        SizedBox(height: KukiSpace.loose(context)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: EdgeInsets.symmetric(horizontal: KukiSpace.tight(context)),
           child: Text(
             'KASIR AKTIF',
             style: TextStyle(
@@ -202,9 +215,12 @@ class _PosShellState extends State<PosShell> {
             ),
           ),
         ),
-        const SizedBox(height: 9),
+        SizedBox(height: KukiSpace.tight(context)),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+          padding: EdgeInsets.symmetric(
+            horizontal: KukiSpace.tight(context),
+            vertical: KukiSpace.height(context, 1.4, min: 8, max: 14),
+          ),
           decoration: BoxDecoration(
             color: KukiColors.paper,
             borderRadius: BorderRadius.circular(11),
@@ -225,7 +241,7 @@ class _PosShellState extends State<PosShell> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: KukiSpace.tight(context)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,10 +270,13 @@ class _PosShellState extends State<PosShell> {
             ],
           ),
         ),
-        const SizedBox(height: 23),
-        const Padding(
-          padding: EdgeInsets.only(left: 12, bottom: 10),
-          child: Text(
+        SizedBox(height: KukiSpace.loose(context)),
+        Padding(
+          padding: EdgeInsets.only(
+            left: KukiSpace.normal(context),
+            bottom: KukiSpace.tight(context),
+          ),
+          child: const Text(
             'MENU',
             style: TextStyle(
               color: KukiColors.muted,
@@ -281,9 +300,9 @@ class _PosShellState extends State<PosShell> {
                     borderRadius: BorderRadius.circular(10),
                     onTap: () => navigate(index, closeDrawer: inDrawer),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: KukiSpace.normal(context),
+                        vertical: KukiSpace.normal(context),
                       ),
                       child: Row(
                         children: [
@@ -292,7 +311,7 @@ class _PosShellState extends State<PosShell> {
                             size: 19,
                             color: active ? Colors.white : KukiColors.muted,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: KukiSpace.normal(context)),
                           Expanded(
                             child: Text(
                               titles[index],
@@ -316,7 +335,11 @@ class _PosShellState extends State<PosShell> {
         ),
         const Divider(color: KukiColors.line),
         Padding(
-          padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+          padding: EdgeInsets.only(
+            left: KukiSpace.tight(context),
+            top: KukiSpace.tight(context),
+            bottom: KukiSpace.tight(context),
+          ),
           child: Text(
             'Where Crumbs Become Art',
             style: TextStyle(
@@ -336,7 +359,10 @@ class _StatusTag extends StatelessWidget {
   const _StatusTag(this.text, this.color);
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+    padding: EdgeInsets.symmetric(
+      horizontal: KukiSpace.tight(context),
+      vertical: KukiSpace.height(context, 0.8, min: 5, max: 9),
+    ),
     decoration: BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(7),

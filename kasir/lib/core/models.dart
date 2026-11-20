@@ -127,14 +127,45 @@ class Sale {
   final int discount;
   final int total;
   final int paid;
+  final bool verified;
+  final String transactionStatus;
+  final String? voidedBy;
+  final DateTime? voidedAt;
+  final String? voidReason;
   final String note;
   final String? error;
   final List<Map<String, dynamic>> lines;
   const Sale({required this.uuid, required this.createdAt, required this.cashier,
     required this.shiftId, required this.method, required this.status,
     required this.subtotal, required this.discount, required this.total,
-    required this.paid, required this.note, required this.lines, this.error});
+    required this.paid, required this.note, required this.lines,
+    this.verified = false, this.error,
+    this.transactionStatus = 'completed', this.voidedBy, this.voidedAt,
+    this.voidReason});
   int get change => method == 'cash' ? paid - total : 0;
+  bool get isCancelled =>
+      transactionStatus == 'void' || transactionStatus == 'retur';
+}
+
+class ShiftSummary {
+  final String id;
+  final String openedAt;
+  final String closedAt;
+  final String cashier;
+  final int openingCash;
+  final int? closingCash;
+  final int expectedCash;
+  final String note;
+  final bool serverOpened;
+  final bool serverClosed;
+  const ShiftSummary({
+    required this.id, required this.openedAt, required this.closedAt,
+    required this.cashier, required this.openingCash, required this.closingCash,
+    required this.expectedCash, required this.note,
+    required this.serverOpened, required this.serverClosed,
+  });
+  int? get variance => closingCash == null ? null : closingCash! - expectedCash;
+  bool get conflicts => closedAt.isNotEmpty && serverOpened && !serverClosed;
 }
 
 const sampleProducts = <Product>[

@@ -65,7 +65,7 @@ Setelah `flutter create`, jalankan `./configure_platforms.ps1` agar izin kamera 
 
 - Login kasir dan checkout belum diuji end-to-end dengan akun serta data operasional. Sebelum dipakai untuk transaksi, validasi dengan prosedur uji yang disetujui dan data non-produksi.
 - Verifikasi otomatis QRIS/payment gateway belum ada; transfer & QRIS dicatat manual setelah konfirmasi kasir.
-- ESC/POS Bluetooth thermal **langsung tanpa dialog** belum ada; printer via sistem memerlukan driver/AirPrint/layanan printer yang kompatibel.
+- Halaman test printer mendukung test ESC/POS langsung via Bluetooth dan USB OTG Android. Cetak struk transaksi tetap memakai dialog cetak PDF sistem.
 - Sync shift ke server, refund/retur, approval pembayaran, dashboard multi-cabang, hardening offline multi-tablet, dan biometrik belum ada.
 - Tidak ada template Android/iOS native tercantum di ZIP, karena harus dibuat dari Flutter SDK dengan script yang disertakan.
 

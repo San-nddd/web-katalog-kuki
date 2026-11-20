@@ -43,7 +43,7 @@ class _ReportScreenState extends State<ReportScreen> {
     ).subtract(Duration(days: days - 1));
     if (kIsWeb) return _buildApiReport(now);
     final data = widget.controller.history
-        .where((s) => !s.createdAt.isBefore(from))
+        .where((s) => !s.createdAt.isBefore(from) && !s.isCancelled)
         .toList();
     final revenue = data.fold<int>(0, (sum, s) => sum + s.total);
     final cash = data
@@ -56,10 +56,15 @@ class _ReportScreenState extends State<ReportScreen> {
         byProduct[name] = (byProduct[name] ?? 0) + asInt(line['quantity']);
       }
     }
+    final byCashier = <String, int>{};
+    for (final sale in data) {
+      final name = sale.cashier.isEmpty ? 'Kasir' : sale.cashier;
+      byCashier[name] = (byCashier[name] ?? 0) + sale.total;
+    }
     final ranked = byProduct.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: KukiSpace.all(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -77,9 +82,9 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: KukiSpace.normal(context)),
           Wrap(
-            spacing: 8,
+            spacing: KukiSpace.tight(context),
             children: [
               for (final d in [1, 7, 30])
                 ChoiceChip(
@@ -89,30 +94,48 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 13),
+          SizedBox(height: KukiSpace.normal(context)),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: KukiSpace.normal(context),
+            runSpacing: KukiSpace.normal(context),
             children: [
-              _summary(
+              _summary(context,
                 'Total Penjualan',
                 money(revenue),
                 Icons.payments_outlined,
               ),
-              _summary(
+              _summary(context,
                 'Transaksi',
                 '${data.length}',
                 Icons.receipt_long_outlined,
               ),
-              _summary('Pembayaran Tunai', money(cash), Icons.wallet_outlined),
-              _summary(
+              _summary(context,'Pembayaran Tunai', money(cash), Icons.wallet_outlined),
+              _summary(context,
                 'Transfer + QRIS',
                 money(revenue - cash),
                 Icons.qr_code_2_outlined,
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: KukiSpace.normal(context)),
+          const Text(
+            'Penjualan per kasir',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: KukiColors.cocoa,
+            ),
+          ),
+          SizedBox(height: KukiSpace.tight(context)),
+          Wrap(
+            spacing: KukiSpace.tight(context),
+            runSpacing: KukiSpace.tight(context),
+            children: [
+              for (final entry in byCashier.entries)
+                Chip(label: Text('${entry.key}: ${money(entry.value)}')),
+            ],
+          ),
+          SizedBox(height: KukiSpace.loose(context)),
           const Text(
             'Produk Terlaris',
             style: TextStyle(
@@ -121,7 +144,7 @@ class _ReportScreenState extends State<ReportScreen> {
               color: KukiColors.cocoa,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: KukiSpace.tight(context)),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -202,7 +225,7 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: KukiSpace.tight(context)),
           Text(
             'Sinkronisasi tertunda: ${widget.controller.pending} · '
             'Data laporan hanya dari transaksi yang tersimpan di perangkat ini.',
@@ -237,9 +260,9 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: KukiSpace.normal(context)),
         Wrap(
-          spacing: 8,
+          spacing: KukiSpace.tight(context),
           children: [
             for (final d in [1, 7, 30])
               ChoiceChip(
@@ -252,7 +275,7 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 13),
+        SizedBox(height: KukiSpace.normal(context)),
         Expanded(
           child: FutureBuilder<Map<String, dynamic>>(
             future: _apiReport,
@@ -281,29 +304,29 @@ class _ReportScreenState extends State<ReportScreen> {
                     spacing: 12,
                     runSpacing: 12,
                     children: [
-                      _summary(
+                      _summary(context,
                         'Total Penjualan',
                         money(revenue),
                         Icons.payments_outlined,
                       ),
-                      _summary(
+                      _summary(context,
                         'Transaksi',
                         '$count',
                         Icons.receipt_long_outlined,
                       ),
-                      _summary(
+                      _summary(context,
                         'Pembayaran Tunai',
                         money(cash),
                         Icons.wallet_outlined,
                       ),
-                      _summary(
+                      _summary(context,
                         'Transfer + QRIS',
                         money(revenue - cash),
                         Icons.qr_code_2_outlined,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: KukiSpace.loose(context)),
                   const Text(
                     'Penjualan per Metode',
                     style: TextStyle(
@@ -312,8 +335,9 @@ class _ReportScreenState extends State<ReportScreen> {
                       color: KukiColors.cocoa,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Expanded(
+                  SizedBox(height: KukiSpace.tight(context)),
+                  SizedBox(
+                    height: KukiSpace.height(context, 22, min: 140, max: 220),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -350,10 +374,49 @@ class _ReportScreenState extends State<ReportScreen> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: KukiSpace.normal(context)),
                   const Text(
-                    'API laporan belum menyediakan rincian produk terlaris.',
-                    style: TextStyle(fontSize: 11, color: KukiColors.muted),
+                    'Penjualan per kasir',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: KukiColors.cocoa,
+                    ),
+                  ),
+                  SizedBox(height: KukiSpace.tight(context)),
+                  Wrap(
+                    spacing: KukiSpace.tight(context),
+                    runSpacing: KukiSpace.tight(context),
+                    children: [
+                      for (final item in unwrapList(report['per_kasir']).map(unwrapMap))
+                        Chip(
+                          label: Text(
+                            '${asText(item['kasir'])}: ${money(asInt(item['total']))}',
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: KukiSpace.normal(context)),
+                  const Text(
+                    'Produk terlaris',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: KukiColors.cocoa,
+                    ),
+                  ),
+                  SizedBox(height: KukiSpace.tight(context)),
+                  Wrap(
+                    spacing: KukiSpace.tight(context),
+                    runSpacing: KukiSpace.tight(context),
+                    children: [
+                      for (final item in unwrapList(report['per_produk']).map(unwrapMap))
+                        Chip(
+                          label: Text(
+                            '${asText(item['nama'])}: ${asInt(item['jumlah'])} terjual',
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               );
@@ -364,9 +427,14 @@ class _ReportScreenState extends State<ReportScreen> {
     ),
   );
 
-  Widget _summary(String label, String value, IconData icon) => SizedBox(
-    width: 210,
-    height: 110,
+  Widget _summary(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) => SizedBox(
+    width: KukiSpace.width(context, 16.4, min: 170, max: 250),
+    height: KukiSpace.height(context, 13.8, min: 96, max: 130),
     child: Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(

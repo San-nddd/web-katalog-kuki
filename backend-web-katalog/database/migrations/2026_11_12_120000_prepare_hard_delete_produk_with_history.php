@@ -15,7 +15,9 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::getDriverName() !== 'mysql') {
-            throw new RuntimeException('Migration ini hanya untuk MySQL.');
+            // DDL khusus MySQL (information_schema + ALTER FK) tidak berlaku
+            // pada SQLite in-memory yang dipakai test suite. Lewati dengan aman.
+            return;
         }
         if (! Schema::hasTable('katalog_produk') || ! Schema::hasTable('opname_stok') || ! Schema::hasTable('opname_stok_detail')) {
             throw new RuntimeException('Tabel katalog_produk/opname_stok_detail tidak ada.');

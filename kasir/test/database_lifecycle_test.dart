@@ -14,19 +14,14 @@ void main() {
     expect(controller.syncing, isFalse);
   });
 
-  testWidgets('Windows desktop tidak memulai database POS', (tester) async {
+  testWidgets('Windows desktop menampilkan layar login POS', (tester) async {
     final originalPlatform = debugDefaultTargetPlatformOverride;
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     try {
       await tester.pumpWidget(const KukiApp());
+      await tester.pumpAndSettle();
 
-      expect(
-        find.text(
-          'Kuki POS memerlukan database lokal dan hanya dapat dijalankan '
-          'di aplikasi Android atau iPadOS.',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Masuk ke Kasir'), findsOneWidget);
       expect(tester.takeException(), isNull);
     } finally {
       debugDefaultTargetPlatformOverride = originalPlatform;

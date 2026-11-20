@@ -42,6 +42,7 @@ class LaporanPenjualanController extends Controller
             ->utc();
 
         return PosTransaksi::query()
+            ->where('status_transaksi', 'completed')
             ->where('dibayar_pada', '>=', $awal)
             ->where('dibayar_pada', '<', $akhir);
     }

@@ -63,6 +63,7 @@ class LaporanPenjualanAccessTest extends TestCase
         $ownerToken = User::factory()->create(['role' => 'owner'])
             ->createToken('owner-laporan-penjualan')
             ->plainTextToken;
+        $this->app['auth']->forgetGuards();
         $this->withToken($ownerToken)
             ->getJson('/api/management/laporan-penjualan?dari=2026-11-01&sampai=2026-11-02')
             ->assertJsonPath('data.ringkasan.total_penjualan', 0);

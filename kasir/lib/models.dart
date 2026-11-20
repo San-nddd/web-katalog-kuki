@@ -1,20 +1,32 @@
 import 'package:intl/intl.dart';
 
-String rupiah(num n) => NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0).format(n);
+String rupiah(num n) => NumberFormat.currency(
+  locale: 'id_ID',
+  symbol: 'Rp',
+  decimalDigits: 0,
+).format(n);
 
-Map<String, dynamic> asMap(dynamic raw) => raw is Map ? Map<String, dynamic>.from(raw) : {};
+Map<String, dynamic> asMap(dynamic raw) =>
+    raw is Map ? Map<String, dynamic>.from(raw) : {};
 int asInt(dynamic n) => n is num ? n.toInt() : int.tryParse('$n') ?? 0;
 
-int _productInt(Map<String, dynamic> json, String key, {bool positive = false}) {
+int _productInt(
+  Map<String, dynamic> json,
+  String key, {
+  bool positive = false,
+}) {
   final value = json[key];
   final int? parsed = switch (value) {
     int number => number,
-    num number when number.isFinite && number == number.roundToDouble() => number.toInt(),
+    num number when number.isFinite && number == number.roundToDouble() =>
+      number.toInt(),
     String text => int.tryParse(text.trim()),
     _ => null,
   };
   if (parsed == null || parsed < 0 || (positive && parsed == 0)) {
-    throw FormatException('Data produk tidak valid: $key harus bilangan bulat yang valid.');
+    throw FormatException(
+      'Data produk tidak valid: $key harus bilangan bulat yang valid.',
+    );
   }
   return parsed;
 }
@@ -23,13 +35,22 @@ class PosProduct {
   final int id, price, stock;
   final String name, category, barcode;
   final String? image;
-  const PosProduct({required this.id, required this.price, required this.stock, required this.name,
-    required this.category, required this.barcode, this.image});
+  const PosProduct({
+    required this.id,
+    required this.price,
+    required this.stock,
+    required this.name,
+    required this.category,
+    required this.barcode,
+    this.image,
+  });
   factory PosProduct.fromJson(dynamic value) {
     final json = asMap(value);
     final name = json['nama'];
     if (name is! String || name.trim().isEmpty) {
-      throw const FormatException('Data produk tidak valid: nama produk tidak tersedia.');
+      throw const FormatException(
+        'Data produk tidak valid: nama produk tidak tersedia.',
+      );
     }
 
     return PosProduct(
@@ -37,7 +58,9 @@ class PosProduct {
       price: _productInt(json, 'harga'),
       stock: _productInt(json, 'stok'),
       name: name,
-      category: json['kategori'] is String && (json['kategori'] as String).trim().isNotEmpty
+      category:
+          json['kategori'] is String &&
+              (json['kategori'] as String).trim().isNotEmpty
           ? json['kategori'] as String
           : 'Lainnya',
       barcode: json['barcode']?.toString() ?? '',
@@ -70,19 +93,25 @@ class LocalOrder {
       item.qty++;
     }
   }
+
   void remove(PosProduct product) {
     final item = lines[product.id];
     if (item == null) return;
-    if (item.qty <= 1) { lines.remove(product.id); } else { item.qty--; }
+    if (item.qty <= 1) {
+      lines.remove(product.id);
+    } else {
+      item.qty--;
+    }
   }
-  List<Map<String, dynamic>> get payload => lines.values.map((e) => {
-    'produk_id': e.product.id, 'jumlah': e.qty,
-  }).toList();
+
+  List<Map<String, dynamic>> get payload => lines.values
+      .map((e) => {'produk_id': e.product.id, 'jumlah': e.qty})
+      .toList();
 }
 
 class PosReceipt {
   final Map<String, dynamic> value;
-  PosReceipt(dynamic raw): value = asMap(raw);
+  PosReceipt(dynamic raw) : value = asMap(raw);
   String get number => '${value['nomor'] ?? '-'}';
   String get cashier => '${value['kasir'] ?? '-'}';
   String get customer => '${value['nama_pelanggan'] ?? '-'}';
@@ -91,6 +120,6 @@ class PosReceipt {
   int get total => asInt(value['total']);
   int get paid => asInt(value['dibayar']);
   int get change => asInt(value['kembalian']);
-  List<Map<String, dynamic>> get items => (value['items'] as List? ?? [])
-      .map((v) => asMap(v)).toList();
+  List<Map<String, dynamic>> get items =>
+      (value['items'] as List? ?? []).map((v) => asMap(v)).toList();
 }

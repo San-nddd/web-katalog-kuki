@@ -71,19 +71,31 @@ class _LoginScreenState extends State<LoginScreen> {
     body: SafeArea(
       child: LayoutBuilder(
         builder: (ctx, size) {
-          final wide = size.maxWidth >= 800;
+          final compact = size.maxHeight < 500;
+          final wide = size.maxWidth >= 800 && !compact;
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1250, maxHeight: 760),
+              constraints: BoxConstraints(
+                maxWidth: KukiSpace.of(size.maxWidth, 98, min: 320, max: 1250),
+                maxHeight: KukiSpace.of(size.maxHeight, 96, min: 400, max: 760),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(22),
+                padding: KukiSpace.all(
+                  ctx,
+                  percent: compact ? 1 : 1.7,
+                  min: compact ? 8 : 12,
+                  max: compact ? 14 : 28,
+                ),
                 child: Row(
                   children: [
                     if (wide) ...[
-                      Expanded(flex: 11, child: _brandPanel()),
-                      const SizedBox(width: 24),
+                      Expanded(flex: 11, child: _brandPanel(ctx)),
+                      SizedBox(width: KukiSpace.loose(ctx)),
                     ],
-                    Expanded(flex: 10, child: _loginPanel()),
+                    Expanded(
+                      flex: 10,
+                      child: _loginPanel(ctx, compact: compact),
+                    ),
                   ],
                 ),
               ),
@@ -94,8 +106,8 @@ class _LoginScreenState extends State<LoginScreen> {
     ),
   );
 
-  Widget _brandPanel() => Container(
-    padding: const EdgeInsets.all(36),
+  Widget _brandPanel(BuildContext context) => Container(
+    padding: KukiSpace.all(context, percent: 2.8, min: 18, max: 44),
     decoration: BoxDecoration(
       color: KukiColors.cocoa,
       borderRadius: BorderRadius.circular(22),
@@ -117,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: KukiColors.cocoa,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: KukiSpace.normal(context)),
             const Text(
               'KUKI BAKEHOUSE',
               style: TextStyle(
@@ -139,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 1.12,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: KukiSpace.normal(context)),
         const Text(
           'POS untuk pelayanan yang lebih cepat, rapi, dan menyenangkan.',
           style: TextStyle(color: KukiColors.peach, fontSize: 15, height: 1.6),
@@ -168,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: KukiSpace.loose(context)),
         Text(
           kIsWeb
               ? 'Mode pengembangan Chrome'
@@ -179,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ),
   );
 
-  Widget _loginPanel() {
+  Widget _loginPanel(BuildContext context, {required bool compact}) {
     final ctrl = widget.controller;
     return Container(
       decoration: BoxDecoration(
@@ -189,9 +201,17 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 30),
+          padding: KukiSpace.symmetric(
+            context,
+            horizontalPercent: compact ? 1.6 : 2.7,
+            verticalPercent: compact ? 2 : 3.8,
+            min: compact ? 10 : 14,
+            max: compact ? 20 : 40,
+          ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
+            constraints: BoxConstraints(
+              maxWidth: KukiSpace.width(context, 33, min: 300, max: 440),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -207,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     size: 26,
                   ),
                 ),
-                const SizedBox(height: 23),
+                SizedBox(height: KukiSpace.loose(context)),
                 Text(
                   ctrl.locked ? 'Buka kunci kasir' : 'Masuk ke Kasir',
                   style: const TextStyle(
@@ -216,14 +236,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: KukiColors.cocoa,
                   ),
                 ),
-                const SizedBox(height: 7),
+                SizedBox(height: KukiSpace.tight(context)),
                 Text(
                   ctrl.locked
                       ? 'Gunakan PIN yang tersimpan di tablet ini.'
                       : 'Masukkan akun kasir Kuki Bakehouse.',
                   style: const TextStyle(fontSize: 13, color: KukiColors.muted),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: KukiSpace.loose(context)),
                 if (ctrl.locked) ...[
                   TextField(
                     controller: pin,
@@ -234,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'PIN perangkat',
                     ),
                   ),
-                  const SizedBox(height: 17),
+                  SizedBox(height: KukiSpace.normal(context)),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
@@ -242,10 +262,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text('Buka POS'),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: KukiSpace.tight(context)),
                   Center(
                     child: TextButton(
-                      onPressed: ctrl.logout,
+                      onPressed: () async {
+                        try {
+                          await ctrl.logout();
+                        } catch (e) {
+                          if (!mounted) return;
+                          showError(this.context, e);
+                        }
+                      },
                       child: const Text('Masuk dengan akun lain'),
                     ),
                   ),
@@ -254,10 +281,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: server,
                     decoration: const InputDecoration(
                       labelText: 'Alamat server POS',
-                      hintText: 'https://kukibakehouse.smkn1sumedang.sch.id',
+                      hintText: 'http://192.168.0.103:8000',
                     ),
                   ),
-                  const SizedBox(height: 13),
+                  SizedBox(height: KukiSpace.normal(context)),
                   TextField(
                     controller: kode,
                     textCapitalization: TextCapitalization.characters,
@@ -265,10 +292,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Kode pegawai',
-                      helperText: 'Contoh: KASIR01',
+                      hintText: 'Contoh: KASIR01',
                     ),
                   ),
-                  const SizedBox(height: 13),
+                  SizedBox(height: KukiSpace.normal(context)),
                   TextField(
                     controller: pin,
                     obscureText: true,
@@ -277,11 +304,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: const InputDecoration(
                       labelText: 'PIN',
+                      hintText: 'Contoh: 12345678',
                       counterText: '',
                     ),
                     onSubmitted: (_) => login(),
                   ),
-                  const SizedBox(height: 22),
+                  SizedBox(height: KukiSpace.loose(context)),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
@@ -292,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   if (!kIsWeb) ...[
-                    const SizedBox(height: 12),
+                    SizedBox(height: KukiSpace.normal(context)),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
@@ -301,7 +329,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         label: const Text('Coba mode DEMO'),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: KukiSpace.normal(context)),
                     const Text(
                       'DEMO menggunakan database terpisah. Transaksi simulasi tidak dikirim ke Laravel.',
                       style: TextStyle(

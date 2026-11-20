@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
-import '../services/receipt_service.dart';
+import '../services/kuki_thermal_printer.dart';
+import '../services/kuki_thermal_receipt.dart';
 import '../state/pos_controller.dart';
 import '../widgets/common.dart';
 
@@ -41,7 +42,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         )
         .toList();
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: KukiSpace.all(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -209,6 +210,63 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  Future<void> _cancel(
+    BuildContext context,
+    Sale sale,
+    String jenis,
+  ) async {
+    final reasonController = TextEditingController();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (cancelCtx) => AlertDialog(
+        title: Text(jenis == 'retur' ? 'Catat retur' : 'Void transaksi'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              jenis == 'retur'
+                  ? 'Stok produk akan dikembalikan dan transaksi tidak dihitung dalam laporan.'
+                  : 'Transaksi dibatalkan, stok dikembalikan, dan riwayat tetap disimpan.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Alasan (minimal 5 karakter)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(cancelCtx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(cancelCtx, true),
+            child: Text(jenis == 'retur' ? 'Catat Retur' : 'Void'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final reason = reasonController.text.trim();
+    if (reason.length < 5) {
+      if (context.mounted) showError(context, 'Alasan minimal 5 karakter.');
+      return;
+    }
+    try {
+      await widget.controller.cancelSale(sale, jenis: jenis, alasan: reason);
+      if (context.mounted) Navigator.pop(context);
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
+
   Widget _rowHeader() => Container(
     height: 46,
     color: KukiColors.cream,
@@ -232,11 +290,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         : sale.method == 'transfer'
         ? 'Transfer'
         : 'QRIS manual';
-    final status = sale.status == 'synced'
+    final syncStatus = sale.status == 'synced'
         ? 'Sinkron'
         : sale.status == 'conflict'
         ? 'Konflik'
         : 'Tertunda';
+    final status = sale.isCancelled
+        ? '$syncStatus · ${sale.transactionStatus.toUpperCase()}'
+        : syncStatus;
     return SizedBox(
       height: 55,
       child: Padding(
@@ -279,7 +340,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 status,
                 style: TextStyle(
                   fontSize: 12,
-                  color: sale.status == 'conflict'
+                  color: sale.status == 'conflict' || sale.isCancelled
                       ? Colors.red.shade800
                       : KukiColors.mocha,
                   fontWeight: FontWeight.w600,
@@ -322,7 +383,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Kasir: ${sale.cashier}'),
-                Text('Status: ${sale.status}'),
+                Text('Status sinkron: ${sale.status}'),
+                Text('Status transaksi: ${sale.transactionStatus}'),
+                if (sale.isCancelled) ...[
+                  if (sale.voidedBy != null)
+                    Text('Dibatalkan oleh: ${sale.voidedBy}'),
+                  if (sale.voidedAt != null)
+                    Text(
+                      'Waktu: ${DateFormat('dd/MM/yyyy HH:mm').format(sale.voidedAt!)}',
+                    ),
+                  if (sale.voidReason != null)
+                    Text('Alasan: ${sale.voidReason}'),
+                ],
                 Text(
                   'UUID: ${sale.uuid}',
                   style: const TextStyle(fontSize: 11),
@@ -357,8 +429,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 if (sale.status == 'conflict')
                   const Text(
-                    'Hubungi Admin untuk rekonsiliasi. '
-                    'Jangan mengulang transaksi sebelum memeriksa server.',
+                    'Periksa server, lalu gunakan tombol Coba lagi. '
+                    'Jangan membuat transaksi baru dengan detail yang sama.',
                   ),
               ],
             ),
@@ -369,19 +441,77 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Tutup'),
           ),
+          if (sale.status == 'conflict' && !widget.controller.demo)
+            TextButton.icon(
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: ctx,
+                  builder: (retryCtx) => AlertDialog(
+                    title: const Text('Kirim ulang transaksi?'),
+                    content: const Text(
+                      'Transaksi dengan ID yang sama akan dikirim ulang ke server. '
+                      'Data lokal tetap disimpan bila gagal.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(retryCtx, false),
+                        child: const Text('Batal'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(retryCtx, true),
+                        child: const Text('Kirim ulang'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm != true) return;
+                try {
+                  await widget.controller.retryConflict(sale.uuid);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                } catch (e) {
+                  if (ctx.mounted) showError(ctx, e);
+                }
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Coba lagi'),
+            ),
+          if (widget.controller.canCancel &&
+              sale.transactionStatus == 'completed' &&
+              sale.status == 'synced' &&
+              !widget.controller.demo) ...[
+            TextButton.icon(
+              onPressed: () => _cancel(ctx, sale, 'void'),
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('Void'),
+            ),
+            TextButton.icon(
+              onPressed: () => _cancel(ctx, sale, 'retur'),
+              icon: const Icon(Icons.assignment_return_outlined),
+              label: const Text('Retur'),
+            ),
+          ],
           FilledButton.icon(
             onPressed: () async {
               try {
-                await ReceiptService.printSale(
+                await KukiThermalReceipt.printSale(
                   sale,
                   paperWidthMm: widget.controller.receiptWidth,
                 );
-              } catch (e) {
-                if (ctx.mounted) showError(ctx, e);
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Data struk dikirim ulang. Periksa hasil cetakan.'),
+                    ),
+                  );
+                }
+              } catch (error) {
+                if (ctx.mounted) {
+                  showError(ctx, KukiPrinterErrors.messageFor(error));
+                }
               }
             },
             icon: const Icon(Icons.print_outlined),
-            label: const Text('Cetak Struk'),
+            label: const Text('Cetak Ulang Struk'),
           ),
         ],
       ),

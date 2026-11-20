@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
-import '../services/receipt_service.dart';
+import '../services/kuki_thermal_printer.dart';
+import '../services/kuki_thermal_receipt.dart';
 import '../services/camera_scanner.dart';
 import '../state/pos_controller.dart';
 import '../widgets/common.dart';
@@ -116,15 +117,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (context, size) {
         final wide = size.maxWidth >= 740;
         return Padding(
-          padding: const EdgeInsets.all(18),
+          padding: KukiSpace.all(context, percent: 1.4, min: 10, max: 26),
           child: wide
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(child: _catalog(ctrl, categories, filtered)),
-                    const SizedBox(width: 16),
+                    SizedBox(width: KukiSpace.loose(context)),
                     SizedBox(
-                      width: size.maxWidth >= 1000 ? 348 : 306,
+                      width: KukiSpace.of(size.maxWidth, 25, min: 250, max: 340),
                       child: _cart(ctrl),
                     ),
                   ],
@@ -174,10 +175,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             '${ctrl.drafts.length} pesanan aktif',
             style: const TextStyle(color: KukiColors.muted, fontSize: 11),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: KukiSpace.tight(context)),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: EdgeInsets.symmetric(horizontal: KukiSpace.tight(context)),
             ),
             onPressed: () async {
               try {
@@ -191,18 +192,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ],
       ),
-      const SizedBox(height: 9),
+      SizedBox(height: KukiSpace.tight(context)),
       SizedBox(
-        height: 88,
+        height: KukiSpace.height(context, 11, min: 64, max: 96),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: ctrl.drafts.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 9),
+          separatorBuilder: (_, _) =>
+              SizedBox(width: KukiSpace.tight(context)),
           itemBuilder: (_, i) {
             final order = ctrl.drafts[i];
             final active = order.id == ctrl.activeDraftId;
             return SizedBox(
-              width: 175,
+              width: KukiSpace.width(context, 14, min: 140, max: 200),
               child: Material(
                 color: active ? KukiColors.cream : Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -210,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onTap: () => ctrl.selectDraft(order.id),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(KukiSpace.normal(context)),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
@@ -296,7 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Text(
                           active
                               ? 'Sedang dikerjakan'
-                              : 'Disimpan sebagai draft',
+                              : 'Ditahan · ketuk untuk melanjutkan',
                           style: const TextStyle(
                             fontSize: 10,
                             color: KukiColors.muted,
@@ -413,18 +415,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ],
                   )
-                : GridView.builder(
+                    : GridView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.all(KukiSpace.normal(context)),
                     itemCount: filtered.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: (box.maxWidth / 174)
+                      crossAxisCount: (box.maxWidth /
+                              KukiSpace.of(box.maxWidth, 14, min: 150, max: 190))
                           .floor()
                           .clamp(2, 5)
                           .toInt(),
                       childAspectRatio: .90,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
+                      crossAxisSpacing: KukiSpace.of(box.maxWidth, 1.1, min: 8, max: 18),
+                      mainAxisSpacing: KukiSpace.of(box.maxWidth, 1.1, min: 8, max: 18),
                     ),
                     itemBuilder: (_, i) => _productCard(filtered[i]),
                   ),
@@ -551,257 +554,264 @@ class _RegisterScreenState extends State<RegisterScreen> {
         border: Border.all(color: KukiColors.line),
         borderRadius: BorderRadius.circular(13),
       ),
-      child: Padding(
+      child: ListView(
         padding: const EdgeInsets.all(13),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Detail Pesanan',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Edit nama pesanan',
-                  onPressed: () => editText(
-                    title: 'Nama pelanggan / pesanan',
-                    initial: order.name,
-                    save: ctrl.renameDraft,
-                  ),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                ),
-              ],
-            ),
-            Text(
-              order.name,
-              style: const TextStyle(color: KukiColors.muted, fontSize: 12),
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              key: ValueKey('${order.id}-${order.orderType}'),
-              initialValue: order.orderType,
-              decoration: const InputDecoration(
-                labelText: 'Jenis pesanan',
-                isDense: true,
-              ),
-              items: const [
-                DropdownMenuItem(value: 'takeaway', child: Text('Bawa pulang')),
-                DropdownMenuItem(
-                  value: 'dine_in',
-                  child: Text('Makan di tempat'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) ctrl.setOrderType(value);
-              },
-            ),
-            if (order.orderType == 'dine_in')
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.table_restaurant_outlined, size: 16),
-                  onPressed: () => editText(
-                    title: 'Nomor / nama meja',
-                    initial: order.tableNumber,
-                    save: ctrl.setTableNumber,
-                  ),
-                  label: Text(
-                    order.tableNumber.isEmpty
-                        ? 'Isi nomor meja (opsional)'
-                        : 'Meja: ${order.tableNumber}',
-                  ),
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Detail Pesanan',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
               ),
-            const SizedBox(height: 13),
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Keranjang',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                  ),
+              IconButton(
+                tooltip: 'Edit nama pesanan',
+                onPressed: () => editText(
+                  title: 'Nama pelanggan / pesanan',
+                  initial: order.name,
+                  save: ctrl.renameDraft,
                 ),
-                Text(
-                  '${order.itemCount} item',
-                  style: const TextStyle(color: KukiColors.muted, fontSize: 11),
-                ),
-              ],
+                icon: const Icon(Icons.edit_outlined, size: 18),
+              ),
+            ],
+          ),
+          Text(
+            order.name,
+            style: const TextStyle(color: KukiColors.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            key: ValueKey('${order.id}-${order.orderType}'),
+            initialValue: order.orderType,
+            decoration: const InputDecoration(
+              labelText: 'Jenis pesanan',
+              isDense: true,
             ),
-            const Divider(height: 15),
-            Expanded(
-              child: order.lines.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Pilih produk untuk memulai pesanan.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: KukiColors.muted),
-                      ),
-                    )
-                  : ListView.separated(
-                      itemCount: order.lines.length,
-                      separatorBuilder: (_, _) =>
-                          const Divider(height: 15, color: KukiColors.line),
-                      itemBuilder: (_, i) {
-                        final line = order.lines[i];
-                        final imageUrl = line.product.imageUrl?.trim();
-                        return Row(
-                          children: [
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: KukiColors.cream,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: imageUrl == null || imageUrl.isEmpty
-                                    ? const Icon(
-                                        Icons.bakery_dining_outlined,
-                                        size: 24,
-                                        color: KukiColors.mocha,
-                                      )
-                                    : Image.network(
-                                        imageUrl,
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, _, _) => const Icon(
-                                          Icons.bakery_dining_outlined,
-                                          size: 24,
-                                          color: KukiColors.mocha,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    line.product.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
+            items: const [
+              DropdownMenuItem(value: 'takeaway', child: Text('Bawa pulang')),
+              DropdownMenuItem(
+                value: 'dine_in',
+                child: Text('Makan di tempat'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) ctrl.setOrderType(value);
+            },
+          ),
+          if (order.orderType == 'dine_in')
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.table_restaurant_outlined, size: 16),
+                onPressed: () => editText(
+                  title: 'Nomor / nama meja',
+                  initial: order.tableNumber,
+                  save: ctrl.setTableNumber,
+                ),
+                label: Text(
+                  order.tableNumber.isEmpty
+                      ? 'Isi nomor meja (opsional)'
+                      : 'Meja: ${order.tableNumber}',
+                ),
+              ),
+            ),
+          const SizedBox(height: 13),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Keranjang',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+              ),
+              Text(
+                '${order.itemCount} item',
+                style: const TextStyle(color: KukiColors.muted, fontSize: 11),
+              ),
+            ],
+          ),
+          const Divider(height: 15),
+          order.lines.isEmpty
+              ? const SizedBox(
+                  height: 75,
+                  child: Center(
+                    child: Text(
+                      'Pilih produk untuk memulai pesanan.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: KukiColors.muted),
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: order.lines.length,
+                  separatorBuilder: (_, _) =>
+                      const Divider(height: 15, color: KukiColors.line),
+                  itemBuilder: (_, i) {
+                    final line = order.lines[i];
+                    final imageUrl = line.product.imageUrl?.trim();
+                    return Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: KukiColors.cream,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: imageUrl == null || imageUrl.isEmpty
+                                ? const Icon(
+                                    Icons.bakery_dining_outlined,
+                                    size: 24,
+                                    color: KukiColors.mocha,
+                                  )
+                                : Image.network(
+                                    imageUrl,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => const Icon(
+                                      Icons.bakery_dining_outlined,
+                                      size: 24,
+                                      color: KukiColors.mocha,
                                     ),
                                   ),
-                                  Text(
-                                    money(line.total),
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: KukiColors.muted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _qtyButton(Icons.remove, () async {
-                              try {
-                                await ctrl.changeQuantity(line.product.id, -1);
-                              } catch (e) {
-                                if (mounted) showError(context, e);
-                              }
-                            }),
-                            SizedBox(
-                              width: 22,
-                              child: Center(
-                                child: Text(
-                                  '${line.quantity}',
-                                  style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                line.product.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
+                              Text(
+                                money(line.total),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: KukiColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _qtyButton(Icons.remove, () async {
+                          try {
+                            await ctrl.changeQuantity(line.product.id, -1);
+                          } catch (e) {
+                            if (mounted) showError(context, e);
+                          }
+                        }),
+                        SizedBox(
+                          width: 22,
+                          child: Center(
+                            child: Text(
+                              '${line.quantity}',
+                              style: const TextStyle(fontSize: 12),
                             ),
-                            _qtyButton(Icons.add, () async {
-                              try {
-                                await ctrl.changeQuantity(line.product.id, 1);
-                              } catch (e) {
-                                if (mounted) showError(context, e);
-                              }
-                            }),
-                          ],
-                        );
-                      },
-                    ),
+                          ),
+                        ),
+                        _qtyButton(Icons.add, () async {
+                          try {
+                            await ctrl.changeQuantity(line.product.id, 1);
+                          } catch (e) {
+                            if (mounted) showError(context, e);
+                          }
+                        }),
+                        _qtyButton(Icons.delete_outline, () async {
+                          try {
+                            await ctrl.removeLine(line.product.id);
+                          } catch (e) {
+                            if (mounted) showError(context, e);
+                          }
+                        }),
+                      ],
+                    );
+                  },
+                ),
+          const SizedBox(height: 7),
+          OutlinedButton.icon(
+            onPressed: () => editText(
+              title: 'Catatan pelanggan',
+              initial: order.note,
+              save: ctrl.setNote,
             ),
-            const SizedBox(height: 7),
-            OutlinedButton.icon(
-              onPressed: () => editText(
-                title: 'Catatan pelanggan',
-                initial: order.note,
-                save: ctrl.setNote,
-              ),
-              icon: const Icon(Icons.notes_outlined, size: 16),
-              label: Text(
-                order.note.isEmpty ? 'Tambahkan catatan' : 'Edit catatan',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            icon: const Icon(Icons.notes_outlined, size: 16),
+            label: Text(
+              order.note.isEmpty ? 'Tambahkan catatan' : 'Edit catatan',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const Divider(height: 17),
-            _totalRow('Subtotal', money(order.subtotal)),
-            if (kIsWeb)
-              _totalRow('Diskon', 'Tidak tersedia di API')
-            else
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Diskon',
-                      style: TextStyle(color: KukiColors.muted, fontSize: 12),
-                    ),
+          ),
+          const Divider(height: 17),
+          _totalRow('Subtotal', money(order.subtotal)),
+          if (kIsWeb)
+            _totalRow('Diskon', 'Tidak tersedia di API')
+          else
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Diskon',
+                    style: TextStyle(color: KukiColors.muted, fontSize: 12),
                   ),
-                  TextButton(
-                    onPressed: order.lines.isEmpty
-                        ? null
-                        : () async {
-                            final value = await askAmount(
-                              context,
-                              title: 'Diskon (Rp)',
-                              initial: '${order.discount}',
-                            );
-                            if (value != null) {
-                              try {
-                                await ctrl.setDiscount(value);
-                              } catch (e) {
-                                if (mounted) showError(context, e);
-                              }
+                ),
+                TextButton(
+                  onPressed: order.lines.isEmpty
+                      ? null
+                      : () async {
+                          final value = await askAmount(
+                            context,
+                            title: 'Diskon (Rp)',
+                            initial: '${order.discount}',
+                          );
+                          if (value != null) {
+                            try {
+                              await ctrl.setDiscount(value);
+                            } catch (e) {
+                              if (mounted) showError(context, e);
                             }
-                          },
-                    child: Text('-${money(order.discount)}'),
-                  ),
-                ],
-              ),
-            const Divider(height: 14),
-            _totalRow('TOTAL', money(order.total), strong: true),
-            const SizedBox(height: 13),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.arrow_forward_rounded, size: 19),
-                onPressed: !ctrl.shiftOpen || order.lines.isEmpty || ctrl.busy
-                    ? null
-                    : () => _checkout(ctrl),
-                label: Text(
-                  ctrl.shiftOpen ? 'Lanjut Pembayaran' : 'Buka shift dahulu',
+                          }
+                        },
+                  child: Text('-${money(order.discount)}'),
                 ),
+              ],
+            ),
+          const Divider(height: 14),
+          _totalRow('TOTAL', money(order.total), strong: true),
+          const SizedBox(height: 13),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              icon: const Icon(Icons.arrow_forward_rounded, size: 19),
+              onPressed: !ctrl.shiftOpen || order.lines.isEmpty || ctrl.busy
+                  ? null
+                  : () => _checkout(ctrl),
+              label: Text(
+                ctrl.shiftOpen ? 'Lanjut Pembayaran' : 'Buka shift dahulu',
               ),
             ),
-            if (!ctrl.shiftOpen)
-              const Padding(
-                padding: EdgeInsets.only(top: 5),
-                child: Text(
-                  'Shift harus dibuka sebelum bertransaksi.',
-                  style: TextStyle(fontSize: 10, color: KukiColors.muted),
-                ),
+          ),
+          if (!ctrl.shiftOpen)
+            const Padding(
+              padding: EdgeInsets.only(top: 5),
+              child: Text(
+                'Shift harus dibuka sebelum bertransaksi.',
+                style: TextStyle(fontSize: 10, color: KukiColors.muted),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -854,46 +864,76 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (_) => CheckoutDialog(controller: ctrl),
     );
     if (!mounted || result == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    var printing = false;
     await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Pembayaran berhasil disimpan'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Transaksi: ${result.uuid.substring(0, 8)}'),
-            Text('Total: ${money(result.total)}'),
-            if (result.method == 'cash')
-              Text('Kembalian: ${money(result.change)}'),
-            const SizedBox(height: 9),
-            const Text(
-              'Struk dicetak melalui dialog cetak sistem. Status sinkronisasi '
-              'tersedia pada menu Riwayat.',
-              style: TextStyle(fontSize: 12),
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Pembayaran berhasil disimpan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Transaksi: ${result.uuid.substring(0, 8)}'),
+              Text('Total: ${money(result.total)}'),
+              if (result.method == 'cash')
+                Text('Kembalian: ${money(result.change)}'),
+              const SizedBox(height: 9),
+              const Text(
+                'Struk dikirim ke printer Bluetooth/USB yang dipilih. '
+                'Status sinkronisasi tersedia pada menu Riwayat.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: printing ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Selesai'),
+            ),
+            FilledButton.icon(
+              onPressed: printing
+                  ? null
+                  : () async {
+                      setDialogState(() => printing = true);
+                      try {
+                        await KukiThermalReceipt.printSale(
+                          result,
+                          paperWidthMm: ctrl.receiptWidth,
+                        );
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext);
+                        }
+                        if (dialogContext.mounted) {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Data struk dikirim. Periksa hasil cetakan.'),
+                            ),
+                          );
+                        }
+                      } catch (error) {
+                        if (dialogContext.mounted) {
+                          showError(dialogContext, KukiPrinterErrors.messageFor(error));
+                        }
+                      } finally {
+                        if (dialogContext.mounted) {
+                          setDialogState(() => printing = false);
+                        }
+                      }
+                    },
+              icon: printing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.print_outlined),
+              label: Text(printing ? 'Mencetak...' : 'Cetak struk thermal'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Selesai'),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              try {
-                await ReceiptService.printSale(
-                  result,
-                  paperWidthMm: ctrl.receiptWidth,
-                );
-              } catch (e) {
-                if (ctx.mounted) showError(ctx, e);
-              }
-            },
-            icon: const Icon(Icons.print_outlined),
-            label: const Text('Cetak struk'),
-          ),
-        ],
       ),
     );
   }
@@ -928,9 +968,10 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
     final total = widget.controller.draft.total;
     final paid = int.tryParse(cash.text) ?? 0;
     return AlertDialog(
+      scrollable: true,
       title: const Text('Pembayaran'),
       content: SizedBox(
-        width: 430,
+        width: KukiSpace.width(context, 34, min: 320, max: 460),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1030,7 +1071,7 @@ class _HidBarcodeDialogState extends State<_HidBarcodeDialog> {
   Widget build(BuildContext context) => AlertDialog(
     title: const Text('Scan barcode / SKU'),
     content: SizedBox(
-      width: 390,
+      width: KukiSpace.width(context, 31, min: 300, max: 430),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
