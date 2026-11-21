@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -199,7 +200,7 @@ class PosController extends Controller
 
     public function catalog(): JsonResponse
     {
-        return $this->response(produk::query()->with('kategori')->orderBy('nama_produk')->get()
+        return $this->response(produk::active()->with('kategori')->orderBy('nama_produk')->get()
             ->map(fn ($p) => [
                 'id' => $p->id,
                 'nama' => $p->nama_produk,
@@ -209,6 +210,7 @@ class PosController extends Controller
                 'barcode' => $p->barcode,
                 'kategori' => $p->kategori?->nama_kategori ?? $p->kategori?->nama ?? 'Lainnya',
                 'gambar' => $p->gambar_produk ? asset('storage/'.ltrim($p->gambar_produk, '/')) : null,
+                'aktif' => true,
             ])->values());
     }
 
@@ -321,7 +323,7 @@ class PosController extends Controller
         $input = $request->validate([
             'id_client' => ['required', 'uuid'],
             'items' => ['required', 'array', 'min:1', 'max:60'],
-            'items.*.produk_id' => ['required', 'integer', 'distinct', 'exists:katalog_produk,id'],
+            'items.*.produk_id' => ['required', 'integer', 'distinct', Rule::exists('katalog_produk', 'id')->where(fn ($query) => $query->where('aktif', true))],
             'items.*.jumlah' => ['required', 'integer', 'min:1', 'max:1000'],
             'metode_bayar' => ['required', 'in:tunai,qris,transfer'],
             'dibayar' => ['required', 'integer', 'min:0', 'max:999999999999'],
@@ -330,6 +332,8 @@ class PosController extends Controller
             'nomor_meja' => ['nullable', 'string', 'max:30'],
             'nama_pelanggan' => ['nullable', 'string', 'max:120'],
             'catatan' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'items.*.produk_id.exists' => 'Produk yang dipilih tidak tersedia atau sudah diarsipkan.',
         ]);
         $staff = $this->staff($request);
         // Idempotensi: request dengan UUID sama tidak membuat transaksi/mutasi ganda.
@@ -359,10 +363,10 @@ class PosController extends Controller
                 }
 
                 $quantities = collect($input['items'])->keyBy('produk_id');
-                $products = produk::whereIn('id', $quantities->keys())
+                $products = produk::active()->whereIn('id', $quantities->keys())
                     ->orderBy('id')->lockForUpdate()->get();
                 if ($products->count() !== $quantities->count()) {
-                    throw ValidationException::withMessages(['items' => 'Ada produk yang tidak tersedia.']);
+                    throw ValidationException::withMessages(['items' => 'Ada produk yang tidak tersedia atau sudah diarsipkan.']);
                 }
                 $total = 0;
                 foreach ($products as $p) {
@@ -439,6 +443,7 @@ class PosController extends Controller
                 if (! $this->replayMatches($input, $found)) {
                     return response()->json(['message' => 'ID transaksi sudah digunakan dengan detail yang berbeda.'], 409);
                 }
+
                 return $this->response($this->txJson($found));
             }
             throw $e;

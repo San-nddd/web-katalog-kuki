@@ -9,6 +9,7 @@ use App\Models\ProduksiHarian;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ProduksiHarianController extends Controller
@@ -70,7 +71,7 @@ class ProduksiHarianController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'produk_id' => ['required', 'integer', 'exists:katalog_produk,id'],
+            'produk_id' => ['required', 'integer', Rule::exists('katalog_produk', 'id')->where(fn ($query) => $query->where('aktif', true))],
             'jumlah' => ['required', 'integer', 'min:1', 'max:'.self::MAX_JUMLAH_BATCH],
         ]);
 
@@ -80,7 +81,10 @@ class ProduksiHarianController extends Controller
 
         $batch = DB::transaction(function () use ($tanggal, $produkId, $jumlah, $request) {
             // Kunci produk lebih dahulu agar penambahan untuk SKU yang sama terserialisasi.
-            $item = produk::query()->lockForUpdate()->findOrFail($produkId);
+            $item = produk::active()->lockForUpdate()->find($produkId);
+            if (! $item) {
+                throw ValidationException::withMessages(['produk_id' => 'Produk tidak tersedia atau sudah diarsipkan.']);
+            }
             $stokSaatIni = (int) ($item->stok ?? 0);
             if ($stokSaatIni < 0 || $stokSaatIni > self::MAX_STOK - $jumlah) {
                 throw ValidationException::withMessages([

@@ -102,7 +102,7 @@ class KukiAssistantService
             $productId ?: $obrolan->product_id;
 
         $product = $effectiveProductId
-            ? produk::with('kategori')->find($effectiveProductId)
+            ? produk::active()->with('kategori')->find($effectiveProductId)
             : null;
 
         /*
@@ -732,7 +732,7 @@ PROMPT;
             self::CATALOG_CACHE_KEY,
             now()->addSeconds(self::CATALOG_CACHE_TTL),
             function () {
-                $produk = produk::with([
+                $produk = produk::active()->with([
                     'kategori',
                     'varian' => fn ($query) => $query
                         ->where('aktif', true)

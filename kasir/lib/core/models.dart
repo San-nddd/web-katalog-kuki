@@ -12,6 +12,13 @@ int asInt(dynamic value) {
   return int.tryParse(value?.toString().replaceAll('.00', '') ?? '') ?? 0;
 }
 
+bool asBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  final text = value?.toString().toLowerCase().trim() ?? '';
+  return text == 'true' || text == '1' || text == 'yes';
+}
+
 String asText(dynamic value) => value?.toString() ?? '';
 
 Map<String, dynamic> unwrapMap(dynamic value) => value is Map ? Map<String, dynamic>.from(value) : {};
@@ -38,12 +45,14 @@ class Product {
   final int price;
   final int stock;
   final int minimumStock;
+  final bool aktif;
   const Product({required this.id, required this.name, required this.categoryId,
     required this.categoryName, required this.sku, required this.barcode,
-    this.imageUrl, required this.price, required this.stock, this.minimumStock = 0});
+    this.imageUrl, required this.price, required this.stock, this.minimumStock = 0,
+    this.aktif = true});
   Product withStock(int stock) => Product(id: id, name: name, categoryId: categoryId,
     categoryName: categoryName, sku: sku, barcode: barcode, imageUrl: imageUrl,
-    price: price, stock: stock, minimumStock: minimumStock);
+    price: price, stock: stock, minimumStock: minimumStock, aktif: aktif);
   factory Product.fromApi(Map<String, dynamic> json) {
     final rawCategory = json['kategori'];
     final category = unwrapMap(rawCategory);
@@ -58,12 +67,14 @@ class Product {
       price: asInt(json['harga_produk'] ?? json['harga'] ?? json['price']),
       stock: asInt(json['stok'] ?? json['stock']),
       minimumStock: asInt(json['stok_minimum'] ?? json['minimum_stock']),
+      aktif: json.containsKey('aktif') ? asBool(json['aktif']) : true,
     );
   }
   Map<String, Object?> toDb() => {
     'id': id, 'name': name, 'category_id': categoryId, 'category_name': categoryName,
     'sku': sku, 'barcode': barcode, 'image_url': imageUrl,
     'price': price, 'stock': stock, 'minimum_stock': minimumStock,
+    'aktif': aktif ? 1 : 0,
   };
   factory Product.fromDb(Map<String, Object?> r) => Product(
     id: asText(r['id']), name: asText(r['name']),
@@ -71,6 +82,7 @@ class Product {
     sku: asText(r['sku']), barcode: asText(r['barcode']),
     imageUrl: r['image_url']?.toString(), price: asInt(r['price']),
     stock: asInt(r['stock']), minimumStock: asInt(r['minimum_stock']),
+    aktif: r.containsKey('aktif') ? asBool(r['aktif']) : true,
   );
 }
 

@@ -79,9 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('can:manage-admin')->group(function () {
 
         // Manajemen Produk
+        Route::get('/admin/produk', [produkController::class, 'adminIndex']);
         Route::post('/produk', [produkController::class, 'store']);
         Route::put('/produk/{id}', [produkController::class, 'update']);
         Route::delete('/produk/{id}', [produkController::class, 'destroy']);
+        Route::patch('/produk/{id}/pulihkan', [produkController::class, 'restore']);
         Route::post('/produk/{id}/gambar', [produkController::class, 'uploadGambar']);
 
         // Manajemen Kategori

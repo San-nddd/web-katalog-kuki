@@ -10,6 +10,7 @@ use App\Models\produk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /** Stock opname per sesi; GET dapat dibaca Owner, semua mutasi hanya Admin. */
@@ -62,14 +63,14 @@ class StockOpnameController extends Controller
     {
         $data = $request->validate([
             'produk_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'produk_ids.*' => ['required', 'integer', 'distinct', 'exists:katalog_produk,id'],
+            'produk_ids.*' => ['required', 'integer', 'distinct', Rule::exists('katalog_produk', 'id')->where(fn ($query) => $query->where('aktif', true))],
             'catatan' => ['nullable', 'string', 'max:1000'],
         ]);
         $ids = collect($data['produk_ids'])->map(fn ($id) => (int) $id)->sort()->values()->all();
         $opname = DB::transaction(function () use ($request, $ids, $data) {
-            $items = produk::query()->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get(['id', 'stok']);
+            $items = produk::active()->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get(['id', 'stok']);
             if ($items->count() !== count($ids)) {
-                throw ValidationException::withMessages(['produk_ids' => ['Ada produk yang tidak ditemukan.']]);
+                throw ValidationException::withMessages(['produk_ids' => ['Ada produk yang tidak ditemukan atau sudah diarsipkan.']]);
             }
             $opname = OpnameStok::create([
                 'status' => 'draft',

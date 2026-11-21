@@ -34,5 +34,13 @@ void main() {
     });
     expect(result.categoryName, 'Saltbread');
     expect(result.imageUrl, 'https://example.test/saltbread.jpg');
+    expect(result.aktif, isTrue);
+  });
+  test('Produk arsip terbaca dari API dan database lokal', () {
+    final fromApi = Product.fromApi({'id': 9, 'nama': 'Arsip', 'harga': 10000, 'stok': 2, 'aktif': false});
+    final fromDb = Product.fromDb({'id': '9', 'name': 'Arsip', 'price': 10000, 'stock': 2, 'aktif': 0});
+    expect(fromApi.aktif, isFalse);
+    expect(fromDb.aktif, isFalse);
+    expect(fromApi.toDb()['aktif'], 0);
   });
 }

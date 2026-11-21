@@ -66,7 +66,7 @@ class ProdukApiTest extends TestCase
         $this->postJson('/api/produk', $this->payload())->assertUnauthorized();
     }
 
-    public function test_produk_dapat_diubah_dan_dilihat_tetapi_produk_berledger_tidak_dihapus(): void
+    public function test_produk_dapat_diubah_lalu_diarsipkan_tanpa_menghapus_riwayat(): void
     {
         $token = $this->token();
         $produk = produk::create($this->payload());
@@ -87,17 +87,22 @@ class ProdukApiTest extends TestCase
 
         $this->withToken($token)
             ->deleteJson("/api/produk/{$produk->id}")
-            ->assertConflict();
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Produk berhasil diarsipkan.');
 
-        $this->assertDatabaseHas('katalog_produk', ['id' => $produk->id]);
+        $this->assertDatabaseHas('katalog_produk', ['id' => $produk->id, 'aktif' => false]);
         $this->assertDatabaseHas('mutasi_stok', [
             'produk_id' => $produk->id,
             'jenis' => 'koreksi',
             'perubahan' => -10,
         ]);
-        $this->getJson("/api/produk/{$produk->id}")
+        $this->getJson("/api/produk/{$produk->id}")->assertNotFound();
+
+        $this->withToken($token)
+            ->getJson('/api/admin/produk?status=arsip')
             ->assertOk()
-            ->assertJsonPath('nama_produk', 'Almond Croissant');
+            ->assertJsonPath('0.id', $produk->id);
     }
 
     public function test_validasi_produk(): void

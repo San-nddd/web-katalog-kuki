@@ -18,11 +18,17 @@ export function mapProduk(item) {
     stokMinimum: Number(item.stok_minimum ?? 0),
     metadataAi: item.metadata_ai || null,
     tersedia: stok > 0,
+    aktif: item.aktif !== false,
   }
 }
 
 export async function getProduk() {
   const data = await api.get('/produk')
+  return (Array.isArray(data) ? data : []).map(mapProduk)
+}
+
+export async function getProdukAdmin(status = 'aktif') {
+  const data = await api.get(`/admin/produk?status=${encodeURIComponent(status)}`)
   return (Array.isArray(data) ? data : []).map(mapProduk)
 }
 
@@ -61,8 +67,16 @@ export async function simpanProduk(payload) {
   return response.data
 }
 
-export async function hapusProduk(id) {
+export async function arsipkanProduk(id) {
   return api.delete(`/produk/${id}`)
+}
+
+export async function hapusProduk(id) {
+  return arsipkanProduk(id)
+}
+
+export async function pulihkanProduk(id) {
+  return api.patch(`/produk/${id}/pulihkan`, {})
 }
 
 export async function uploadGambarProduk(id, file) {

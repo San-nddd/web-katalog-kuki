@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
-import { getProduk, hapusProduk, uploadGambarProduk } from '../../services/produkService'
+import { arsipkanProduk, getProdukAdmin, pulihkanProduk, uploadGambarProduk } from '../../services/produkService'
 import { formatRupiah } from '../../utils/mockData'
 import { assetUrl } from '../../services/api'
 import ImageUploadButton from '../../components/ImageUploadButton'
@@ -18,6 +18,9 @@ function ProdukAdminPage() {
   const [previewAlt, setPreviewAlt] = useState('')
   const [filterKategori, setFilterKategori] = useState('semua')
   const [filterStok, setFilterStok] = useState('semua')
+  const [filterStatus, setFilterStatus] = useState('aktif')
+  const [confirmArsip, setConfirmArsip] = useState(null)
+  const [saving, setSaving] = useState(false)
 
   const pilihanKategori = useMemo(() => {
     const items = new Map()
@@ -30,38 +33,60 @@ function ProdukAdminPage() {
   }, [produk])
 
   const produkTerfilter = useMemo(() => produk.filter((item) => {
+    if (filterStatus === 'aktif' && !item.aktif) return false
+    if (filterStatus === 'arsip' && item.aktif) return false
     if (filterKategori !== 'semua' && String(item.kategoriId ?? 'tanpa') !== filterKategori) return false
     if (filterStok === 'habis') return item.stok <= 0
     if (filterStok === 'menipis') return item.stok > 0 && item.stok <= item.stokMinimum
     if (filterStok === 'tersedia') return item.stok > 0
     return true
-  }), [produk, filterKategori, filterStok])
+  }), [produk, filterKategori, filterStok, filterStatus])
 
   const muat = useCallback(() => {
-    getProduk()
+    return getProdukAdmin(filterStatus)
       .then((data) => {
         setProduk(data)
         setError('')
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [filterStatus])
 
   useEffect(() => {
     muat()
   }, [muat])
 
-  const handleHapus = async (item) => {
-    const ok = window.confirm(("Hapus produk \"" + item.nama + "\"? Tindakan ini tidak bisa dibatalkan."))
-    if (!ok) return
+  const handleArsipkan = async () => {
+    const item = confirmArsip
+    if (!item) return
 
+    setSaving(true)
+    setMessage('')
+    setError('')
     try {
-      await hapusProduk(item.id)
-      setMessage(("Produk \"" + item.nama + "\" berhasil dihapus."))
-      setError('')
-      muat()
+      await arsipkanProduk(item.id)
+      setMessage(("Produk \"" + item.nama + "\" berhasil diarsipkan."))
+      await muat()
     } catch (err) {
       setError(err.message)
+    } finally {
+      setSaving(false)
+      setConfirmArsip(null)
+    }
+  }
+
+  const handlePulihkan = async (item) => {
+    setSaving(true)
+    setMessage('')
+    setError('')
+    try {
+      await pulihkanProduk(item.id)
+      setMessage(("Produk \"" + item.nama + "\" berhasil dipulihkan."))
+      await muat()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -96,6 +121,13 @@ function ProdukAdminPage() {
             </select>
           </label>
           <label className="kuki-inventory-filter">
+            <span>{"Status produk"}</span>
+            <select value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)}>
+              <option value="aktif">{"Produk aktif"}</option>
+              <option value="arsip">{"Produk diarsipkan"}</option>
+            </select>
+          </label>
+          <label className="kuki-inventory-filter">
             <span>{"Kondisi stok"}</span>
             <select value={filterStok} onChange={(event) => setFilterStok(event.target.value)}>
               <option value="semua">{"Semua stok"}</option>
@@ -110,7 +142,11 @@ function ProdukAdminPage() {
         {loading ? (
           <p className="admin-empty">{"Memuat produk..."}</p>
         ) : produk.length === 0 ? (
-          <p className="admin-empty">{"Belum ada produk. Tambahkan produk pertama Anda."}</p>
+          <p className="admin-empty">
+            {filterStatus === 'arsip'
+              ? 'Belum ada produk yang diarsipkan.'
+              : 'Belum ada produk. Tambahkan produk pertama Anda.'}
+          </p>
         ) : produkTerfilter.length === 0 ? (
           <p className="admin-empty">{"Tidak ada produk untuk filter yang dipilih."}</p>
         ) : (
@@ -123,6 +159,7 @@ function ProdukAdminPage() {
                   <th>{"Kategori"}</th>
                   <th>{"Harga"}</th>
                   <th>{"Stok"}</th>
+                  <th>{"Status"}</th>
                   <th>{"Aksi"}</th>
                 </tr>
               </thead>
@@ -160,24 +197,43 @@ function ProdukAdminPage() {
                       </span>
                     </td>
                     <td>
+                      <span className={`admin-badge ${item.aktif ? '' : 'warn'}`}>
+                        {item.aktif ? 'Aktif' : 'Diarsipkan'}
+                      </span>
+                    </td>
+                    <td>
                       <div className="admin-row-actions kuki-inventory-row-actions">
-                        <Link to={`/admin/produk/${item.id}/edit`} className="admin-btn admin-btn-ghost">
-                          {"Ubah"}
-                        </Link>
-                        <ImageUploadButton
-                          currentImage={item.gambar ? assetUrl(item.gambar) : null}
-                          onUpload={(file) => uploadGambarProduk(item.id, file).then(() => muat())}
-                          disabled={loading}
-                          title={`Klik untuk ${item.gambar ? 'mengganti' : 'mengunggah'} gambar ${item.nama}`}
-                        />
-                        <BarcodePrintButton produkId={item.id} stok={item.stok} value={item.barcode} productName={item.nama} />
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn-danger"
-                          onClick={() => handleHapus(item)}
-                        >
-                          {"Hapus"}
-                        </button>
+                        {item.aktif ? (
+                          <>
+                            <Link to={`/admin/produk/${item.id}/edit`} className="admin-btn admin-btn-ghost">
+                              {"Ubah"}
+                            </Link>
+                            <ImageUploadButton
+                              currentImage={item.gambar ? assetUrl(item.gambar) : null}
+                              onUpload={(file) => uploadGambarProduk(item.id, file).then(() => muat())}
+                              disabled={loading || saving}
+                              title={`Klik untuk ${item.gambar ? 'mengganti' : 'mengunggah'} gambar ${item.nama}`}
+                            />
+                            <BarcodePrintButton produkId={item.id} stok={item.stok} value={item.barcode} productName={item.nama} />
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-danger"
+                              disabled={saving}
+                              onClick={() => setConfirmArsip(item)}
+                            >
+                              {"Hapus"}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn-ghost"
+                            disabled={saving}
+                            onClick={() => handlePulihkan(item)}
+                          >
+                            {saving ? 'Memulihkan...' : 'Pulihkan'}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -193,6 +249,35 @@ function ProdukAdminPage() {
         alt={previewAlt}
         onClose={() => setPreviewSrc(null)}
       />
+
+      {confirmArsip && (
+        <div
+          className="admin-confirm-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !saving) setConfirmArsip(null)
+          }}
+        >
+          <div className="admin-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="produk-arsip-title">
+            <h2 id="produk-arsip-title" className="display-font">Hapus produk?</h2>
+            <p>
+              {`${confirmArsip.nama} akan diarsipkan dan hilang dari katalog serta POS. Riwayat transaksi, produksi, stok opname, dan mutasi stok tetap tersimpan.`}
+            </p>
+            <div className="admin-confirm-actions">
+              <button type="button" className="admin-btn admin-btn-ghost" disabled={saving} onClick={() => setConfirmArsip(null)}>
+                Batal
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn-danger"
+                disabled={saving}
+                onClick={handleArsipkan}
+              >
+                {saving ? 'Mengarsipkan...' : 'Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   )
 }

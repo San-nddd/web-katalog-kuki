@@ -920,6 +920,7 @@ class PosController extends ChangeNotifier {
             .fold(0, (s, e) => s + e.quantity),
   );
   Future<void> addProduct(Product p) async {
+    if (!p.aktif) throw StateError('Produk ${p.name} sudah diarsipkan');
     if (p.stock <= _inDrafts(p.id)) {
       throw StateError('Stok ${p.name} tidak mencukupi');
     }
@@ -941,6 +942,7 @@ class PosController extends ChangeNotifier {
       (p) => p.id == productId,
       orElse: () => line.product,
     );
+    if (!latest.aktif) throw StateError('Produk ${latest.name} sudah diarsipkan');
     if (difference > 0 && latest.stock <= _inDrafts(productId)) {
       throw StateError('Stok tidak mencukupi');
     }

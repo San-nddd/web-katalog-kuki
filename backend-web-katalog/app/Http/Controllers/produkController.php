@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\MutasiStok;
 use App\Models\produk;
-use App\Models\ProduksiHarian;
 use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,23 @@ class produkController extends Controller
      */
     public function index()
     {
-        return response()->json(produk::with('kategori')->get());
+        return response()->json(produk::active()->with('kategori')->orderBy('nama_produk')->get());
+    }
+
+    public function adminIndex(Request $request)
+    {
+        $status = $request->query('status', 'aktif');
+
+        $query = produk::query()->with('kategori');
+        if ($status === 'arsip') {
+            $query->archived();
+        } elseif ($status === 'semua') {
+            $query->whereIn('aktif', [true, false]);
+        } else {
+            $query->active();
+        }
+
+        return response()->json($query->orderBy('nama_produk')->get());
     }
 
     /**
@@ -90,7 +105,7 @@ class produkController extends Controller
      */
     public function show(string $id)
     {
-        $produk = produk::with('kategori')->find($id);
+        $produk = produk::active()->with('kategori')->find($id);
 
         if (! $produk) {
             return response()->json(['message' => 'Produk tidak ditemukan'], 404);
@@ -172,7 +187,7 @@ class produkController extends Controller
     }
 
     /**
-     * Remove the specified resource in storage.
+     * Archive the specified product without touching historical data.
      */
     public function destroy(string $id): JsonResponse
     {
@@ -186,25 +201,52 @@ class produkController extends Controller
             ], 404);
         }
 
-        // KUKI STOCK LEDGER: PRODUCT (riwayat audit tidak boleh terhapus)
-        if (MutasiStok::where('produk_id', $produk->id)->exists() || ProduksiHarian::where('produk_id', $produk->id)->exists()) {
+        if (! $produk->aktif) {
             return response()->json([
-                'success' => false,
-                'message' => 'Produk memiliki riwayat stok/produksi dan tidak bisa dihapus. Arsipkan produk jika sudah tidak dijual.',
-            ], 409);
+                'success' => true,
+                'message' => 'Produk sudah berada di arsip.',
+                'data' => null,
+            ]);
         }
 
-        if ($produk->gambar_produk) {
-            Storage::disk('public')->delete($produk->gambar_produk);
-        }
-
-        $produk->delete();
+        $produk->update(['aktif' => false]);
 
         KukiAssistantService::forgetCatalogContext();
 
         return response()->json([
             'success' => true,
-            'message' => 'Produk berhasil dihapus.',
+            'message' => 'Produk berhasil diarsipkan.',
+            'data' => null,
+        ]);
+    }
+
+    public function restore(string $id): JsonResponse
+    {
+        $produk = produk::find($id);
+
+        if (! $produk) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk tidak ditemukan.',
+                'data' => null,
+            ], 404);
+        }
+
+        if ($produk->aktif) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk sudah aktif.',
+                'data' => null,
+            ]);
+        }
+
+        $produk->update(['aktif' => true]);
+
+        KukiAssistantService::forgetCatalogContext();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produk berhasil dipulihkan.',
             'data' => null,
         ]);
     }

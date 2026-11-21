@@ -8,6 +8,7 @@ use App\Models\produk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class MutasiStokController extends Controller
@@ -69,14 +70,17 @@ class MutasiStokController extends Controller
     public function koreksi(Request $request): JsonResponse
     {
         $input = $request->validate([
-            'produk_id' => ['required', 'integer', 'exists:katalog_produk,id'],
+            'produk_id' => ['required', 'integer', Rule::exists('katalog_produk', 'id')->where(fn ($query) => $query->where('aktif', true))],
             'stok_sebelum' => ['required', 'integer', 'min:0', 'max:4294967295'],
             'stok_baru' => ['required', 'integer', 'min:0', 'max:4294967295'],
             'keterangan' => ['required', 'string', 'min:8', 'max:500'],
         ]);
 
         $row = DB::transaction(function () use ($request, $input) {
-            $item = produk::query()->lockForUpdate()->findOrFail($input['produk_id']);
+            $item = produk::active()->lockForUpdate()->find($input['produk_id']);
+            if (! $item) {
+                throw ValidationException::withMessages(['produk_id' => 'Produk tidak tersedia atau sudah diarsipkan.']);
+            }
             $sebelum = (int) ($item->stok ?? 0);
             $sesudah = (int) $input['stok_baru'];
 

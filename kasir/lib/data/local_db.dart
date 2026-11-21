@@ -14,9 +14,9 @@ class LocalDb {
     final dir = await getDatabasesPath();
     _db = await openDatabase(
       p.join(dir, fileName),
-      version: 4,
+      version: 5,
       onCreate: (db, _) async {
-        await db.execute('CREATE TABLE products (id TEXT PRIMARY KEY, name TEXT NOT NULL, category_id TEXT, category_name TEXT, sku TEXT, barcode TEXT, image_url TEXT, price INTEGER NOT NULL, stock INTEGER NOT NULL, minimum_stock INTEGER NOT NULL DEFAULT 0)');
+        await db.execute('CREATE TABLE products (id TEXT PRIMARY KEY, name TEXT NOT NULL, category_id TEXT, category_name TEXT, sku TEXT, barcode TEXT, image_url TEXT, price INTEGER NOT NULL, stock INTEGER NOT NULL, minimum_stock INTEGER NOT NULL DEFAULT 0, aktif INTEGER NOT NULL DEFAULT 1)');
         await db.execute('CREATE TABLE drafts (id TEXT PRIMARY KEY, data TEXT NOT NULL)');
         await db.execute('CREATE TABLE shifts (id TEXT PRIMARY KEY, cashier TEXT NOT NULL, cashier_id TEXT, opened_at TEXT NOT NULL, opening_cash INTEGER NOT NULL, closed_at TEXT, closing_cash INTEGER, note TEXT, server_shift_id TEXT, server_closed_at TEXT)');
         await db.execute("CREATE TABLE sales (uuid TEXT PRIMARY KEY, created_at TEXT NOT NULL, cashier TEXT NOT NULL, cashier_id TEXT, shift_id TEXT NOT NULL, method TEXT NOT NULL, status TEXT NOT NULL, subtotal INTEGER NOT NULL, discount INTEGER NOT NULL, total INTEGER NOT NULL, paid INTEGER NOT NULL, verified INTEGER NOT NULL DEFAULT 0, transaction_status TEXT NOT NULL DEFAULT 'completed', jenis_pembatalan TEXT, alasan_pembatalan TEXT, dibatalkan_oleh TEXT, dibatalkan_pada TEXT, note TEXT NOT NULL, error TEXT)");
@@ -42,6 +42,10 @@ class LocalDb {
           await _addColumnIfMissing(db, 'sales', 'dibatalkan_oleh', 'TEXT');
           await _addColumnIfMissing(db, 'sales', 'dibatalkan_pada', 'TEXT');
         }
+        if (oldVersion < 5) {
+          await _addColumnIfMissing(db, 'products', 'aktif', 'INTEGER NOT NULL DEFAULT 1');
+          await db.execute('UPDATE products SET aktif = 1 WHERE aktif IS NULL');
+        }
       },
       onOpen: _verifySchema,
     );
@@ -63,7 +67,7 @@ class LocalDb {
   /// Periksa struktur saja. Jangan ubah/hapus database kasir lama secara otomatis.
   Future<void> _verifySchema(Database db) async {
     const required = <String, List<String>>{
-      'products': ['id', 'name', 'price', 'stock', 'minimum_stock', 'category_id', 'category_name', 'sku', 'barcode', 'image_url'],
+      'products': ['id', 'name', 'price', 'stock', 'minimum_stock', 'category_id', 'category_name', 'sku', 'barcode', 'image_url', 'aktif'],
       'drafts': ['id', 'data'],
       'shifts': ['id', 'cashier', 'cashier_id', 'opened_at', 'opening_cash', 'closed_at', 'closing_cash', 'note', 'server_shift_id', 'server_closed_at'],
       'sales': ['uuid', 'created_at', 'cashier', 'cashier_id', 'shift_id', 'method', 'status', 'subtotal', 'discount', 'total', 'paid', 'verified', 'transaction_status', 'jenis_pembatalan', 'alasan_pembatalan', 'dibatalkan_oleh', 'dibatalkan_pada', 'note', 'error'],
@@ -87,10 +91,10 @@ class LocalDb {
     return value;
   }
   Future<void> close() async { await _db?.close(); _db = null; }
-  Future<List<Product>> products() async => (await db.query('products', orderBy: 'name COLLATE NOCASE')).map(Product.fromDb).toList();
+  Future<List<Product>> products() async => (await db.query('products', where: 'aktif = 1', orderBy: 'name COLLATE NOCASE')).map(Product.fromDb).toList();
   Future<Product?> byBarcode(String value) async {
     final key = value.trim();
-    final rows = await db.query('products', where: 'barcode = ? OR sku = ?', whereArgs: [key, key], limit: 1);
+    final rows = await db.query('products', where: '(barcode = ? OR sku = ?) AND aktif = 1', whereArgs: [key, key], limit: 1);
     return rows.isEmpty ? null : Product.fromDb(rows.first);
   }
   Future<void> replaceCatalog(List<Product> catalog) async {
@@ -98,6 +102,14 @@ class LocalDb {
     final pending = await db.rawQuery("SELECT l.product_id, SUM(l.quantity) AS reserved FROM sale_lines l JOIN sales s ON s.uuid = l.sale_uuid WHERE s.status != 'synced' GROUP BY l.product_id");
     final reserved = {for (final row in pending) asText(row['product_id']): asInt(row['reserved'])};
     await db.transaction((txn) async {
+      final ids = catalog.map((item) => item.id).toList();
+      if (ids.isEmpty) {
+        await txn.update('products', {'aktif': 0}, where: 'aktif != 0');
+      } else {
+        final placeholders = List.filled(ids.length, '?').join(', ');
+        await txn.update('products', {'aktif': 0},
+          where: 'id NOT IN ($placeholders) AND aktif != 0', whereArgs: ids);
+      }
       final batch = txn.batch();
       for (final item in catalog) {
         final remaining = (item.stock - (reserved[item.id] ?? 0)).clamp(0, item.stock).toInt();
@@ -243,8 +255,9 @@ class LocalDb {
       );
       if (shiftRows.isEmpty) throw StateError('Shift sudah ditutup. Buka shift baru.');
       for (final line in draft.lines) {
-        final stockRows = await txn.query('products', columns: ['stock'], where: 'id = ?', whereArgs: [line.product.id], limit: 1);
+        final stockRows = await txn.query('products', columns: ['stock', 'aktif'], where: 'id = ?', whereArgs: [line.product.id], limit: 1);
         if (stockRows.isEmpty) throw StateError('Produk ${line.product.name} tidak ditemukan');
+        if (!asBool(stockRows.first['aktif'] ?? 1)) throw StateError('Produk ${line.product.name} sudah diarsipkan');
         if (asInt(stockRows.first['stock']) < line.quantity) throw StateError('Stok ${line.product.name} tidak cukup');
       }
       await txn.insert('sales', {
