@@ -254,12 +254,22 @@ class PosController extends Controller
             PosPegawai::whereKey($pegawai->id)->lockForUpdate()->firstOrFail();
             $shift = PosAbsensi::where('pegawai_id', $pegawai->id)
                 ->whereNull('pulang_pada')->lockForUpdate()->first();
-            if (! $shift) {
-                throw ValidationException::withMessages(['shift' => 'Tidak ada shift aktif.']);
-            }
-            $shift->update(['pulang_pada' => now()]);
+            if ($shift) {
+                $shift->update(['pulang_pada' => now()]);
 
-            return $this->response($shift);
+                return $this->response($shift);
+            }
+
+            $closed = PosAbsensi::where('pegawai_id', $pegawai->id)
+                ->whereNotNull('pulang_pada')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+            if ($closed) {
+                return $this->response($closed);
+            }
+
+            throw ValidationException::withMessages(['shift' => 'Tidak ada shift aktif.']);
         });
     }
 

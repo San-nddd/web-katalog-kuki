@@ -33,7 +33,7 @@
         android:required="false" />
 
     <application
-        android:label="kasir"
+        android:label="POS Kasir Kuki"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

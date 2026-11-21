@@ -124,29 +124,17 @@ function AdminLayout({ title, children }) {
         }, 6000)
       }
 
-      const shouldSound =
+      if (
+        notificationType === 'HANDOVER_REQUESTED' &&
         preferences.soundEnabled &&
-        (
-          (notificationType === 'HANDOVER_REQUESTED' &&
-            preferences.soundOnHandover) ||
-          (notificationType === 'CUSTOMER_NEW_MESSAGE' &&
-            preferences.soundOnCustomerMessage)
-        )
-
-      if (shouldSound && document.visibilityState === 'visible') {
-        const preset =
-          notificationType === 'HANDOVER_REQUESTED'
-            ? preferences.handoverSoundPreset
-            : preferences.customerMessageSoundPreset
-
+        preferences.soundOnHandover &&
+        document.visibilityState === 'visible'
+      ) {
         playAdminNotificationSound({
-          preset,
+          preset: preferences.handoverSoundPreset,
           volume: preferences.soundVolume,
-          key: `notification:${notificationType}:${obrolanId}`,
-          customAudioKey:
-            notificationType === 'HANDOVER_REQUESTED'
-              ? 'handover'
-              : 'customer-message',
+          key: `notification:HANDOVER_REQUESTED:${obrolanId}`,
+          customAudioKey: 'handover',
         })
       }
     }
@@ -158,10 +146,8 @@ function AdminLayout({ title, children }) {
     }
   }, [
     preferences.soundEnabled,
-    preferences.soundOnCustomerMessage,
     preferences.soundOnHandover,
     preferences.handoverSoundPreset,
-    preferences.customerMessageSoundPreset,
     preferences.soundVolume,
     preferences.toastEnabled,
   ])
@@ -255,20 +241,29 @@ function AdminLayout({ title, children }) {
   ])
 
   useEffect(() => {
-    loadNotifications()
+    let cancelled = false
+
+    const refresh = () => {
+      if (!cancelled) {
+        loadNotifications()
+      }
+    }
+
+    queueMicrotask(refresh)
 
     const interval = setInterval(
-      loadNotifications,
+      refresh,
       preferences.notificationRefreshMs,
     )
 
     const handleFocus = () => {
-      loadNotifications()
+      refresh()
     }
 
     window.addEventListener('focus', handleFocus)
 
     return () => {
+      cancelled = true
       clearInterval(interval)
       window.removeEventListener('focus', handleFocus)
 
@@ -338,9 +333,6 @@ function AdminLayout({ title, children }) {
       className={[
         'admin-layout',
         `admin-theme-${effectiveTheme}`,
-        `admin-density-${preferences.density}`,
-        preferences.fontScale === 'large' ? 'admin-font-large' : '',
-        preferences.reduceMotion ? 'admin-reduce-motion' : '',
       ].filter(Boolean).join(' ')}
     >
       <aside className="admin-sidebar">

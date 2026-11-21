@@ -7,6 +7,7 @@ class ApiProblem implements Exception {
   final int status;
   final String message;
   const ApiProblem(this.status, this.message);
+  bool get isUnauthorized => status == 401;
   @override
   String toString() => message;
 }
@@ -137,7 +138,7 @@ class ApiClient {
       await request('GET', '/api/pos/me');
       return true;
     } on ApiProblem catch (problem) {
-      return problem.status != 0;
+      return problem.status != 0 && !problem.isUnauthorized;
     }
   }
 

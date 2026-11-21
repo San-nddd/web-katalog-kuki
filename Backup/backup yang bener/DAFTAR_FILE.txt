@@ -1,0 +1,62 @@
+BACKUP YANG BENER — FILE FINAL UNTUK DEPLOY
+Dibuat: 2026-11-21
+Root sumber: E:\Ekosistem-kuki
+Folder: E:\Ekosistem-kuki\Backup\backup yang bener
+
+INI FOLDER YANG DIPAKAI. Jangan pakai backup SafetyReportDetector lama.
+
+WAJIB DI-UPLOAD KE SERVER (4 file):
+1. backend-web-katalog\app\Services\KukiAssistantService.php
+   - Constructor HANYA: private readonly OpenRouterService $llm
+   - TIDAK ADA HandoverService
+   - Method handover: startHandover(), lifecycleStatus(), applyHandoverTimeoutIfNeeded(), handoverExpiresAt(), notifyCustomerMessage()
+2. backend-web-katalog\app\Http\Controllers\AssistantController.php
+   - Constructor HANYA: private readonly KukiAssistantService $assistant
+   - TIDAK ADA HandoverService
+3. backend-web-katalog\app\Http\Controllers\AdminChatController.php
+   - Constructor HANYA: private readonly KukiAssistantService $assistant
+   - TIDAK ADA HandoverService
+4. backend-web-katalog\database\migrations\2026_11_21_135000_ensure_handover_columns_on_obrolan_table.php
+   - Menambahkan prioritas, handover_started_at, handover_notified_at, dan index obrolan_prioritas_index
+   - Idempotent: aman walau migrasi lama 2026_11_20_232937 sudah ran
+
+FILE BONUS, TIDAK USAH DI-UPLOAD:
+5. backend-web-katalog\tests\Feature\KukiAssistantSafetyHandoverTest.php
+
+HAPUS DI SERVER:
+- backend-web-katalog/app/Services/HandoverService.php
+
+CARA CEK DI SERVER SETELAH UPLOAD:
+cd /www/wwwroot/kukibakehouse.smkn1sumedang.sch.id/web-katalog-kuki/backend-web-katalog
+grep -R "HandoverService" app/
+-> harus KOSONG. Kalau masih keluar, file yang ter-upload masih lama.
+
+LALU JALANKAN:
+php artisan migrate --force
+php artisan optimize:clear
+composer dump-autoload -o
+php artisan optimize:clear
+-> Kalau masih error, restart PHP-FPM/Apache supaya opcache ikut bersih.
+
+UNTUK ERROR SQLSTATE[42S22] Unknown column 'prioritas':
+- Jalankan php artisan migrate --force
+- Cek: php artisan tinker --execute 'dump(Schema::hasColumn("obrolan", "prioritas"));'
+-> harus true.
+
+CIRI FILE KUKI YANG BENAR:
+- grep -n "HandoverService" app/Services/KukiAssistantService.php -> kosong
+- grep -n "function startHandover" app/Services/KukiAssistantService.php -> ada
+- grep -n "OpenRouterService" app/Services/KukiAssistantService.php -> ada
+
+VERIFIKASI LOKAL:
+- referensi HandoverService di app/ + tests/: 0
+- Pint: passed
+- KukiAssistantSafetyHandoverTest: 9/9 passed, 79 assertions
+- Full backend test: 92/92 passed, 597 assertions
+- SHA256 source vs backup: 5/5 cocok
+- SQLite migration + full test suite: passed
+- ZIP: 0
+
+Catatan:
+- Error "Target class [App\Services\HandoverService] does not exist" di hosting berarti file lama masih terbaca. Pastikan meng-upload dari folder ini, lalu cek grep di atas sebelum reload browser.
+- Error SQLSTATE[42S22] Unknown column 'prioritas' berarti database hosting belum punya kolom handover. Upload migrasi baru di atas lalu jalankan php artisan migrate --force.

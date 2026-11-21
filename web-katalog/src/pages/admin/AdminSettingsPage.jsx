@@ -57,7 +57,6 @@ function AdminSettingsPage() {
   const [savedHint, setSavedHint] = useState('')
   const [customAudioMeta, setCustomAudioMeta] = useState({
     handover: null,
-    customerMessage: null,
   })
   const [audioImportError, setAudioImportError] = useState('')
 
@@ -89,17 +88,11 @@ function AdminSettingsPage() {
   useEffect(() => {
     let mounted = true
 
-    Promise.all([
-      metadataAudioCustom('handover'),
-      metadataAudioCustom('customer-message'),
-    ])
-      .then(([handover, customerMessage]) => {
+    metadataAudioCustom('handover')
+      .then((handover) => {
         if (!mounted) return
 
-        setCustomAudioMeta({
-          handover,
-          customerMessage,
-        })
+        setCustomAudioMeta({ handover })
       })
       .catch(() => {
         // Metadata audio custom tidak boleh mengganggu halaman Settings.
@@ -110,34 +103,19 @@ function AdminSettingsPage() {
     }
   }, [])
 
-  const handleImportAudio = async (slot, file) => {
+  const handleImportHandoverAudio = async (file) => {
     if (!file) return
 
     setAudioImportError('')
 
     try {
-      const storageKey =
-        slot === 'handover'
-          ? 'handover'
-          : 'customer-message'
-
       const metadata = await simpanAudioCustom(
-        storageKey,
+        'handover',
         file,
       )
 
-      setCustomAudioMeta((prev) => ({
-        ...prev,
-        [slot === 'handover'
-          ? 'handover'
-          : 'customerMessage']: metadata,
-      }))
-
-      if (slot === 'handover') {
-        update({ handoverSoundPreset: 'custom' })
-      } else {
-        update({ customerMessageSoundPreset: 'custom' })
-      }
+      setCustomAudioMeta({ handover: metadata })
+      update({ handoverSoundPreset: 'custom' })
     } catch (error) {
       setAudioImportError(
         error?.message ||
@@ -146,26 +124,11 @@ function AdminSettingsPage() {
     }
   }
 
-  const handleRemoveAudio = async (slot) => {
-    const storageKey =
-      slot === 'handover'
-        ? 'handover'
-        : 'customer-message'
+  const handleRemoveHandoverAudio = async () => {
+    await hapusAudioCustom('handover')
 
-    await hapusAudioCustom(storageKey)
-
-    setCustomAudioMeta((prev) => ({
-      ...prev,
-      [slot === 'handover'
-        ? 'handover'
-        : 'customerMessage']: null,
-    }))
-
-    if (slot === 'handover') {
-      update({ handoverSoundPreset: 'alert' })
-    } else {
-      update({ customerMessageSoundPreset: 'chime' })
-    }
+    setCustomAudioMeta({ handover: null })
+    update({ handoverSoundPreset: 'alert' })
   }
 
   const update = (patch) => {
@@ -332,7 +295,7 @@ function AdminSettingsPage() {
                   accept="audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/aac,.mp3,.wav,.ogg,.m4a,.aac"
                   onChange={(event) => {
                     const file = event.target.files?.[0]
-                    handleImportAudio('handover', file)
+                    handleImportHandoverAudio(file)
                     event.target.value = ''
                   }}
                   hidden
@@ -343,7 +306,7 @@ function AdminSettingsPage() {
                 <button
                   type="button"
                   className="admin-btn admin-btn-ghost"
-                  onClick={() => handleRemoveAudio('handover')}
+                  onClick={handleRemoveHandoverAudio}
                 >
                   {"Hapus"}
                 </button>
@@ -368,86 +331,6 @@ function AdminSettingsPage() {
               }
             >
               {"Uji Suara Alih Percakapan"}
-            </button>
-          </div>
-
-          <div className="admin-setting-row">
-            <span className="admin-setting-copy">
-              <strong>{"Suara saat pelanggan mengirim pesan"}</strong>
-              <small>{"Pilih suara untuk pesan baru dari pelanggan."}</small>
-            </span>
-
-            <select
-              value={preferences.customerMessageSoundPreset}
-              onChange={(event) => update({
-                customerMessageSoundPreset: event.target.value,
-              })}
-              disabled={
-                !preferences.soundEnabled ||
-                !preferences.soundOnCustomerMessage
-              }
-            >
-              <option value="soft">{"Lembut"}</option>
-              <option value="chime">{"Lonceng"}</option>
-              <option value="alert">{"Peringatan"}</option>
-              <option value="custom">{"Audio Khusus"}</option>
-              <option value="silent">{"Tanpa suara"}</option>
-            </select>
-          </div>
-
-          <div className="admin-custom-audio-box">
-            <div className="admin-custom-audio-info">
-              <strong>{"Audio khusus pesan pelanggan"}</strong>
-              <small>
-                {customAudioMeta.customerMessage?.name ||
-                  "Belum ada file custom. MP3/WAV/OGG/M4A/AAC, maksimal 5 MB."}
-              </small>
-            </div>
-
-            <div className="admin-custom-audio-actions">
-              <label className="admin-btn admin-btn-file">
-                {"Impor Audio"}
-                <input
-                  type="file"
-                  accept="audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/aac,.mp3,.wav,.ogg,.m4a,.aac"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    handleImportAudio('customerMessage', file)
-                    event.target.value = ''
-                  }}
-                  hidden
-                />
-              </label>
-
-              {customAudioMeta.customerMessage && (
-                <button
-                  type="button"
-                  className="admin-btn admin-btn-ghost"
-                  onClick={() => handleRemoveAudio('customerMessage')}
-                >
-                  {"Hapus"}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="admin-settings-inline-actions">
-            <button
-              type="button"
-              className="admin-btn"
-              onClick={() => playAdminNotificationSound({
-                preset: preferences.customerMessageSoundPreset,
-                volume: preferences.soundVolume,
-                key: `settings-message-${Date.now()}`,
-                customAudioKey: 'customer-message',
-              })}
-              disabled={
-                !preferences.soundEnabled ||
-                !preferences.soundOnCustomerMessage ||
-                preferences.customerMessageSoundPreset === 'silent'
-              }
-            >
-              {"Uji Suara Pesan"}
             </button>
           </div>
 
@@ -483,15 +366,6 @@ function AdminSettingsPage() {
             disabled={!preferences.soundEnabled}
           />
 
-          <Toggle
-            checked={preferences.soundOnCustomerMessage}
-            onChange={(value) => update({
-              soundOnCustomerMessage: value,
-            })}
-            label={"Bunyi saat pelanggan mengirim pesan baru"}
-            description="Untuk CUSTOMER_NEW_MESSAGE setelah chat dialihkan."
-            disabled={!preferences.soundEnabled}
-          />
         </section>
 
         <section className="admin-settings-card">
@@ -523,48 +397,6 @@ function AdminSettingsPage() {
             </select>
           </div>
 
-          <div className="admin-setting-row">
-            <span className="admin-setting-copy">
-              <strong>{"Kepadatan tampilan"}</strong>
-              <small>{"Tampilan ringkas cocok untuk layar laptop atau tablet."}</small>
-            </span>
-
-            <select
-              value={preferences.density}
-              onChange={(event) => update({
-                density: event.target.value,
-              })}
-            >
-              <option value="comfortable">{"Nyaman"}</option>
-              <option value="compact">{"Ringkas"}</option>
-            </select>
-          </div>
-
-          <div className="admin-setting-row">
-            <span className="admin-setting-copy">
-              <strong>{"Ukuran teks"}</strong>
-              <small>{"Memengaruhi area Admin saja."}</small>
-            </span>
-
-            <select
-              value={preferences.fontScale}
-              onChange={(event) => update({
-                fontScale: event.target.value,
-              })}
-            >
-              <option value="normal">{"Normal"}</option>
-              <option value="large">{"Besar"}</option>
-            </select>
-          </div>
-
-          <Toggle
-            checked={preferences.reduceMotion}
-            onChange={(value) => update({
-              reduceMotion: value,
-            })}
-            label={"Kurangi animasi"}
-            description="Mengurangi transisi dan animasi pada Dashboard Admin."
-          />
         </section>
 
         <section className="admin-settings-card">

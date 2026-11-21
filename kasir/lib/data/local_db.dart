@@ -191,15 +191,13 @@ class LocalDb {
     required String id,
     required String cashierId,
     required String cashierName,
-    required int closingCash,
-    required String note,
   }) async {
     final changed = await db.update(
       'shifts',
       {
         'closed_at': DateTime.now().toIso8601String(),
-        'closing_cash': closingCash,
-        'note': note,
+        'closing_cash': null,
+        'note': null,
       },
       where: 'id = ? AND closed_at IS NULL AND ${_cashierClause(cashierId)}',
       whereArgs: [id, ..._cashierArgs(cashierId, cashierName)],

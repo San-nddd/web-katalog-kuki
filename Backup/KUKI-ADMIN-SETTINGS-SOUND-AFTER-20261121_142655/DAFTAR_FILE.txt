@@ -1,0 +1,37 @@
+BACKUP FILE YANG DIUBAH — TANPA ZIP
+Dibuat: 2026-11-21 14:26:55
+Root sumber: E:\Ekosistem-kuki
+Folder: E:\Ekosistem-kuki\Backup\KUKI-ADMIN-SETTINGS-SOUND-AFTER-20261121_142655
+
+Ringkasan: menghapus pengaturan tampilan yang tidak fungsional dan menyisakan suara hanya untuk handover request.
+
+PERUBAHAN:
+1. web-katalog\src\pages\admin\AdminSettingsPage.jsx
+   - Menghapus UI "Kepadatan tampilan", "Ukuran teks", dan "Kurangi animasi".
+   - Kartu "Tampilan" sekarang hanya berisi "Tema".
+   - Menghapus UI suara pesan pelanggan: preset, audio khusus, tombol uji, dan toggle "Bunyi saat pelanggan mengirim pesan baru".
+   - Audio khusus sekarang hanya untuk handover.
+2. web-katalog\src\services\adminPreferencesService.js
+   - Menghapus default/validasi density, fontScale, reduceMotion, soundPreset, customerMessageSoundPreset, soundOnCustomerMessage.
+   - sanitizePreferences() menghapus kunci lama tersebut dari localStorage saat preferensi dibaca/disimpan.
+3. web-katalog\src\pages\admin\AdminLayout.jsx
+   - className layout hanya memakai tema; tidak ada lagi admin-density-*, admin-font-large, admin-reduce-motion.
+   - Suara Web Push hanya diputar untuk HANDOVER_REQUESTED; CUSTOMER_NEW_MESSAGE tetap menampilkan toast/Notifikasi visual tetapi tidak bersuara.
+   - Polling handover tetap bersuara seperti sebelumnya.
+   - Perbaikan lint lama: refresh notifikasi di-effect dipanggil via queueMicrotask + guard cancelled.
+4. web-katalog\src\pages\admin\admin-settings.css
+   - Menghapus blok CSS density, font scale, dan reduce motion.
+   - CSS dark mode Admin dipertahankan.
+
+VERIFIKASI:
+- npx eslint pada 3 file JSX/JS: passed
+- npm run build: passed
+- grep density|fontScale|reduceMotion|customerMessageSoundPreset|soundOnCustomerMessage|soundPreset|customer-message di src: hanya kunci cleanup di adminPreferencesService.js
+- SHA256 source vs backup: 4/4 cocok
+- ZIP: 0
+
+Catatan:
+- Backup sebelum: E:\Ekosistem-kuki\Backup\KUKI-ADMIN-SETTINGS-SOUND-BEFORE-20261121_142358
+- Tidak ada perubahan backend; notifikasi CUSTOMER_NEW_MESSAGE dari backend tetap dikirim untuk notifikasi visual.
+- Tidak ada commit yang dibuat.
+- Deploy: upload 4 file web di atas, lalu jalankan npm run build di server bila server menyajikan dist.

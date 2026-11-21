@@ -262,4 +262,36 @@ class PosOperationalFlowTest extends TestCase
         $this->withToken($token)->postJson('/api/pos/transactions', $payload)->assertConflict();
         $this->assertSame(1, PosTransaksi::count());
     }
+
+    public function test_end_shift_tanpa_body_menutup_shift_dan_idempoten(): void
+    {
+        [$staff, $token] = $this->staffWithToken();
+        $start = $this->withToken($token)->postJson('/api/pos/shift/start')->assertCreated();
+        $id = $start->json('data.id');
+
+        $first = $this->withToken($token)->postJson('/api/pos/shift/end')
+            ->assertOk()
+            ->assertJsonPath('data.id', $id);
+        $this->assertNotNull($first->json('data.pulang_pada'));
+
+        $second = $this->withToken($token)->postJson('/api/pos/shift/end')
+            ->assertOk()
+            ->assertJsonPath('data.id', $id);
+        $this->assertSame($first->json('data.pulang_pada'), $second->json('data.pulang_pada'));
+        $this->assertSame(1, PosAbsensi::where('pegawai_id', $staff->id)->count());
+        $this->assertSame(0, PosAbsensi::where('pegawai_id', $staff->id)->whereNull('pulang_pada')->count());
+    }
+
+    public function test_checkout_setelah_shift_ditutup_ditolak(): void
+    {
+        [, $token] = $this->staffWithToken();
+        $product = $this->product();
+        $this->withToken($token)->postJson('/api/pos/shift/start')->assertCreated();
+        $this->withToken($token)->postJson('/api/pos/shift/end')->assertOk();
+
+        $this->withToken($token)->postJson('/api/pos/transactions', $this->payload($product))
+            ->assertUnprocessable();
+        $this->assertSame(0, PosTransaksi::count());
+        $this->assertSame(10, $product->fresh()->stok);
+    }
 }

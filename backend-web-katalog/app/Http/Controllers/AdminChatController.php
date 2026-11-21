@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Obrolan;
 use App\Models\PesanObrolan;
-use App\Services\HandoverService;
+use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AdminChatController extends Controller
 {
-    public function __construct(private readonly HandoverService $handover) {}
+    public function __construct(private readonly KukiAssistantService $assistant) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -40,13 +40,13 @@ class AdminChatController extends Controller
         $all = $query->get();
 
         foreach ($all as $obrolan) {
-            $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+            $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
             $obrolan->refresh();
         }
 
         if ($status !== 'ALL') {
             $all = $all
-                ->filter(fn (Obrolan $obrolan) => $this->handover->lifecycleStatus($obrolan) === $status)
+                ->filter(fn (Obrolan $obrolan) => $this->assistant->lifecycleStatus($obrolan) === $status)
                 ->values();
         }
 
@@ -80,7 +80,7 @@ class AdminChatController extends Controller
             ], 404);
         }
 
-        $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+        $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
         $obrolan->refresh();
 
         return response()->json([
@@ -113,10 +113,10 @@ class AdminChatController extends Controller
                 ];
             }
 
-            $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+            $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
             $obrolan->refresh();
 
-            $status = $this->handover->lifecycleStatus($obrolan);
+            $status = $this->assistant->lifecycleStatus($obrolan);
 
             if ($status === 'ADMIN_ACTIVE') {
                 return [
@@ -145,7 +145,7 @@ class AdminChatController extends Controller
 
             $obrolan->pesan()->create([
                 'tipe_pengirim' => 'system',
-                'pesan' => HandoverService::ADMIN_JOINED_MESSAGE,
+                'pesan' => KukiAssistantService::ADMIN_JOINED_MESSAGE,
             ]);
 
             $obrolan->refresh();
@@ -186,7 +186,7 @@ class AdminChatController extends Controller
             ], 404);
         }
 
-        if ($this->handover->lifecycleStatus($obrolan) !== 'ADMIN_ACTIVE') {
+        if ($this->assistant->lifecycleStatus($obrolan) !== 'ADMIN_ACTIVE') {
             return response()->json([
                 'success' => false,
                 'message' => 'Ambil percakapan terlebih dahulu sebelum membalas.',
@@ -224,7 +224,7 @@ class AdminChatController extends Controller
             ], 404);
         }
 
-        if ($this->handover->lifecycleStatus($obrolan) !== 'ADMIN_ACTIVE') {
+        if ($this->assistant->lifecycleStatus($obrolan) !== 'ADMIN_ACTIVE') {
             return response()->json([
                 'success' => false,
                 'message' => 'Hanya percakapan yang sedang ditangani yang dapat diselesaikan.',
@@ -238,7 +238,7 @@ class AdminChatController extends Controller
 
         $obrolan->pesan()->create([
             'tipe_pengirim' => 'system',
-            'pesan' => HandoverService::CLOSED_MESSAGE,
+            'pesan' => KukiAssistantService::CLOSED_MESSAGE,
         ]);
 
         return response()->json([
@@ -263,7 +263,7 @@ class AdminChatController extends Controller
             ], 404);
         }
 
-        $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+        $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
         $obrolan->refresh();
 
         $sinceId = (int) $request->query('since', 0);
@@ -281,8 +281,8 @@ class AdminChatController extends Controller
             'message' => 'Pesan baru berhasil diambil.',
             'data' => $messages,
             'meta' => [
-                'status' => $this->handover->lifecycleStatus($obrolan),
-                'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
+                'status' => $this->assistant->lifecycleStatus($obrolan),
+                'handover_expires_at' => $this->assistant->handoverExpiresAt($obrolan),
             ],
         ]);
     }
@@ -316,11 +316,11 @@ class AdminChatController extends Controller
         })->get();
 
         foreach ($obrolan as $item) {
-            $this->handover->applyHandoverTimeoutIfNeeded($item);
+            $this->assistant->applyHandoverTimeoutIfNeeded($item);
             $item->refresh();
         }
 
-        $statuses = $obrolan->map(fn (Obrolan $item) => $this->handover->lifecycleStatus($item));
+        $statuses = $obrolan->map(fn (Obrolan $item) => $this->assistant->lifecycleStatus($item));
 
         $stats = [
             'total_handover_pending' => $statuses->filter(fn ($status) => $status === 'HANDOVER_PENDING')->count(),
@@ -331,7 +331,7 @@ class AdminChatController extends Controller
         ];
 
         $stats['total_prioritas_tinggi'] = $obrolan
-            ->filter(fn (Obrolan $item) => $item->prioritas === HandoverService::PRIORITY_HIGH)
+            ->filter(fn (Obrolan $item) => $item->prioritas === KukiAssistantService::PRIORITY_HIGH)
             ->count();
 
         $stats['total_pending'] = $stats['total_handover_pending'] + $stats['total_waiting'];
@@ -358,7 +358,7 @@ class AdminChatController extends Controller
         $all = $query->get();
 
         foreach ($all as $obrolan) {
-            $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+            $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
             $obrolan->refresh();
         }
 
@@ -371,10 +371,10 @@ class AdminChatController extends Controller
             return [
                 'id' => $obrolan->id,
                 'session_id' => $obrolan->session_id,
-                'status' => $this->handover->lifecycleStatus($obrolan),
+                'status' => $this->assistant->lifecycleStatus($obrolan),
                 'status_handover' => $obrolan->status_handover,
                 'prioritas' => $obrolan->prioritas,
-                'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
+                'handover_expires_at' => $this->assistant->handoverExpiresAt($obrolan),
                 'pertanyaan_terakhir' => $lastUserMessage ? [
                     'id' => $lastUserMessage->id,
                     'isi' => $lastUserMessage->pesan,
@@ -407,10 +407,10 @@ class AdminChatController extends Controller
         return [
             'id' => $obrolan->id,
             'session_id' => $obrolan->session_id,
-            'status' => $this->handover->lifecycleStatus($obrolan),
+            'status' => $this->assistant->lifecycleStatus($obrolan),
             'status_handover' => $obrolan->status_handover,
             'prioritas' => $obrolan->prioritas,
-            'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
+            'handover_expires_at' => $this->assistant->handoverExpiresAt($obrolan),
             'product_id' => $obrolan->product_id,
             'pertanyaan_awal' => $obrolan->pertanyaan_awal,
             'pengunjung' => [

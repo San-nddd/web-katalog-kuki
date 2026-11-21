@@ -1,0 +1,40 @@
+BACKUP FILE YANG DIUBAH — TANPA ZIP
+Dibuat: 2026-11-21 10:07:48
+Root sumber: E:\Ekosistem-kuki
+Folder tujuan: E:\Ekosistem-kuki\Backup\KUKI-CLOSE-SHIFT-NO-CASH-CHANGED-FILES-20261121_100748
+
+Ringkasan: penghapusan fitur Kas Akhir Kasir, penyesuaian Tutup Shift tanpa body kas, dan perbaikan sinkronisasi shift/Laravel.
+
+DAFTAR FILE (10):
+1. backend-web-katalog/app/Http/Controllers/api/Pos/PosController.php
+   - endShift menjadi idempoten, menerima POST tanpa body, tidak menambah/menghapus kolom kas.
+2. backend-web-katalog/tests/Feature/PosOperationalFlowTest.php
+   - test endShift tanpa body, idempoten, dan checkout setelah shift ditutup ditolak.
+3. kasir/docs/CHECKLIST.md
+   - checklist Tutup Shift diperbarui tanpa pencocokan uang tunai/kas akhir.
+4. kasir/docs/FEATURE_STATUS.md
+   - status shift diperbarui sebagai lokal + Laravel API tanpa input kas akhir.
+5. kasir/lib/core/models.dart
+   - ShiftSummary tidak lagi menyimpan closingCash, expectedCash, note, dan variance.
+6. kasir/lib/data/local_db.dart
+   - closeShift tidak lagi menerima/menulis nominal kas akhir dan catatan; skema lama tetap dipertahankan.
+7. kasir/lib/screens/settings_screen.dart
+   - riwayat shift tidak lagi menampilkan Kas/Selisih.
+8. kasir/lib/screens/shift_screen.dart
+   - input kas akhir, catatan, estimasi kas, dan dialog uang fisik dihapus; Tutup Shift memakai konfirmasi.
+9. kasir/lib/state/pos_controller.dart
+   - endShift tanpa argumen; sinkronisasi tidak menandai shift server tertutup saat masih ada transaksi pending/conflict; guard open shift disesuaikan.
+10. kasir/test/logout_flow_test.dart
+    - test penutupan shift tanpa uang akhir dan regresi shift tertutup dengan transaksi pending.
+
+Verifikasi yang sudah dijalankan sebelum backup ini:
+- flutter analyze: No issues found
+- flutter test: 43/43 passed
+- vendor/bin/pint --dirty --format agent: passed
+- php artisan test --compact: 92/92 passed, 597 assertions
+- git diff --check: bersih
+
+Catatan:
+- Tidak ada file .zip yang dibuat di folder ini.
+- Tidak ada commit yang dibuat.
+- Backup ini hanya berisi file yang diubah, bukan source project lengkap.

@@ -48,7 +48,8 @@ class _KukiAppState extends State<KukiApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed &&
         controller.authenticated &&
-        !controller.locked) {
+        !controller.locked &&
+        !controller.sessionExpired) {
       controller.syncPending(automatic: true);
     }
   }
@@ -90,7 +91,9 @@ class _KukiAppState extends State<KukiApp> with WidgetsBindingObserver {
           }
 
           // Autentikasi kasir.
-          if (!controller.authenticated || controller.locked) {
+          if (!controller.authenticated ||
+              controller.locked ||
+              controller.sessionExpired) {
             return LoginScreen(controller: controller);
           }
 
@@ -192,7 +195,9 @@ class _PosDataRecovery extends StatelessWidget {
                               if (context.mounted) showError(context, e);
                             }
                           },
-                    child: const Text('Kembali ke login (data tetap tersimpan)'),
+                    child: const Text(
+                      'Kembali ke login (data tetap tersimpan)',
+                    ),
                   ),
 
                   const SizedBox(height: 8),

@@ -285,6 +285,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     : 'Masukkan akun kasir Kuki Bakehouse.',
                 style: const TextStyle(fontSize: 13, color: KukiColors.muted),
               ),
+              if (ctrl.sessionExpired) ...[
+                SizedBox(height: KukiSpace.normal(context)),
+                Container(
+                  padding: KukiSpace.all(context, percent: 1, min: 10, max: 14),
+                  decoration: BoxDecoration(
+                    color: KukiColors.peach,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.timer_off_outlined, size: 20),
+                      SizedBox(width: KukiSpace.tight(context)),
+                      const Expanded(
+                        child: Text(
+                          'Sesi kasir habis. Masuk ulang untuk melanjutkan sinkronisasi; data transaksi lokal tetap tersimpan.',
+                          style: TextStyle(fontSize: 12, height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(height: KukiSpace.loose(context)),
               if (ctrl.locked) ...[
                 TextField(

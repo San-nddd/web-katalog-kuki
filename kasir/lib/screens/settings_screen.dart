@@ -63,7 +63,7 @@ class SettingsScreen extends StatelessWidget {
                 KukiThermalPrinter.instance.printerName == null
                     ? 'Belum dipilih. Gunakan ikon printer di kanan atas.'
                     : '${KukiThermalPrinter.instance.printerName} · '
-                        '${KukiThermalPrinter.instance.transport == KukiPrinterTransport.usb ? 'USB' : 'Bluetooth'}',
+                          '${KukiThermalPrinter.instance.transport == KukiPrinterTransport.usb ? 'USB' : 'Bluetooth'}',
               ),
             ),
           ],
@@ -115,17 +115,22 @@ class SettingsScreen extends StatelessWidget {
         child: ListTile(
           title: const Text('Sinkronisasi transaksi'),
           subtitle: Text(
-            controller.demo
+            controller.sessionExpired
+                ? 'Sesi kasir habis. Masuk ulang untuk melanjutkan sinkronisasi; data lokal tetap tersimpan.'
+                : controller.demo
                 ? 'Mode DEMO tidak pernah mengirim transaksi.'
                 : '${controller.networkStatusError ?? 'Server ${controller.serverReachable == null
                               ? 'sedang diperiksa'
                               : controller.serverReachable!
                               ? 'dapat dijangkau'
                               : 'tidak dapat dijangkau'}.'} '
-                       'Tertunda ${controller.pending}, belum selesai ${controller.unresolved}. Transaksi disinkronkan otomatis saat server dapat dijangkau.',
+                      'Tertunda ${controller.pending}, belum selesai ${controller.unresolved}. Transaksi disinkronkan otomatis saat server dapat dijangkau.',
           ),
           trailing: FilledButton(
-            onPressed: controller.demo || controller.syncing
+            onPressed:
+                controller.demo ||
+                    controller.syncing ||
+                    controller.sessionExpired
                 ? null
                 : () async {
                     await controller.syncPending();
@@ -143,9 +148,7 @@ class SettingsScreen extends StatelessWidget {
           title: const Text('Riwayat & rekonsiliasi shift'),
           subtitle: Text('${controller.shiftSummaries.length} shift tercatat'),
           children: controller.shiftSummaries.isEmpty
-              ? const [
-                  ListTile(title: Text('Belum ada shift yang tercatat.')),
-                ]
+              ? const [ListTile(title: Text('Belum ada shift yang tercatat.'))]
               : controller.shiftSummaries.map(_shiftTile).toList(),
         ),
       ),
@@ -157,8 +160,8 @@ class SettingsScreen extends StatelessWidget {
             controller.shiftOpen
                 ? 'Shift masih terbuka. Tutup shift terlebih dahulu sebelum keluar. Data lokal tidak dihapus.'
                 : controller.syncing
-                    ? 'Sinkronisasi sedang berlangsung. Tunggu hingga selesai sebelum keluar. Data lokal tidak dihapus.'
-                    : 'Shift harus ditutup terlebih dahulu. Penjualan lokal yang belum sinkron tetap tersimpan di perangkat.',
+                ? 'Sinkronisasi sedang berlangsung. Tunggu hingga selesai sebelum keluar. Data lokal tidak dihapus.'
+                : 'Shift harus ditutup terlebih dahulu. Penjualan lokal yang belum sinkron tetap tersimpan di perangkat.',
           ),
           trailing: OutlinedButton(
             onPressed: controller.shiftOpen || controller.syncing
@@ -209,13 +212,12 @@ class SettingsScreen extends StatelessWidget {
           : DateFormat('dd/MM HH:mm').format(parsed.toLocal());
     }
 
-    final variance = shift.variance;
     return ListTile(
       title: Text('Shift ${time(shift.openedAt)} — ${shift.cashier}'),
       subtitle: Text(
-        '${shift.closedAt.isEmpty ? 'Masih terbuka' : 'Ditutup ${time(shift.closedAt)}'} · '
-        'Kas ${money(shift.expectedCash)} · Selisih '
-        '${variance == null ? '-' : money(variance)}',
+        shift.closedAt.isEmpty
+            ? 'Masih terbuka'
+            : 'Ditutup ${time(shift.closedAt)}',
       ),
       trailing: shift.conflicts
           ? const Icon(Icons.warning_amber_rounded, color: Colors.orange)

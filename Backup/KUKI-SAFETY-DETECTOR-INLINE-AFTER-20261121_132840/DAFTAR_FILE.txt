@@ -1,0 +1,28 @@
+BACKUP FILE YANG DIUBAH — TANPA ZIP
+Dibuat: 2026-11-21 13:28:40
+Root sumber: E:\Ekosistem-kuki
+Folder tujuan: E:\Ekosistem-kuki\Backup\KUKI-SAFETY-DETECTOR-INLINE-AFTER-20261121_132840
+
+Ringkasan: menghapus kebutuhan akan App\Services\SafetyReportDetector di produksi dengan memindahkan logika deteksi laporan safety ke dalam KukiAssistantService.
+
+PERUBAHAN:
+1. backend-web-katalog/app/Services/KukiAssistantService.php
+   - Constructor tidak lagi menerima SafetyReportDetector.
+   - Deteksi safety inline via detectSafetyReport(), normalizeSafetyMessage(), hasSafetyMatch().
+   - Konstanta SAFETY_* ditambahkan; perilaku handover/balasan tetap sama.
+   - File final disalin ke folder backup ini.
+2. backend-web-katalog/app/Services/SafetyReportDetector.php
+   - DIHAPUS dari source; tidak ada referensi lagi di codebase backend-web-katalog.
+
+Verifikasi yang sudah dijalankan sebelum backup ini:
+- vendor\bin\pint.bat --dirty --format agent: passed
+- php artisan test --compact tests/Feature/KukiAssistantSafetyHandoverTest.php: 9/9 passed, 79 assertions
+- php artisan test --compact: 92/92 passed, 597 assertions
+- git diff --check: bersih (hanya warning CRLF pada file lama)
+- SHA256 source vs backup: 1/1 cocok
+- jumlah file .zip di folder ini: 0
+
+Catatan:
+- Backup sebelum perubahan: E:\Ekosistem-kuki\Backup\KUKI-SAFETY-DETECTOR-INLINE-BEFORE-20261121_132727
+- Tidak ada commit yang dibuat.
+- Setelah deploy, jalankan composer dump-autoload -o dan php artisan optimize:clear di server.

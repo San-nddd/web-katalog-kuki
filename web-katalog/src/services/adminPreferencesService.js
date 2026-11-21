@@ -3,18 +3,12 @@ const EVENT_NAME = 'kuki:admin-preferences-changed'
 
 export const DEFAULT_ADMIN_PREFERENCES = {
   theme: 'system',
-  density: 'comfortable',
-  fontScale: 'normal',
-  reduceMotion: false,
 
   toastEnabled: true,
   soundEnabled: true,
-  soundPreset: 'chime',
   handoverSoundPreset: 'alert',
-  customerMessageSoundPreset: 'chime',
   soundVolume: 0.65,
   soundOnHandover: true,
-  soundOnCustomerMessage: true,
 
   notificationRefreshMs: 5000,
 }
@@ -26,29 +20,19 @@ function sanitizePreferences(value = {}) {
   }
 
   delete next.language
+  delete next.density
+  delete next.fontScale
+  delete next.reduceMotion
+  delete next.soundPreset
+  delete next.customerMessageSoundPreset
+  delete next.soundOnCustomerMessage
 
   if (!['system', 'light', 'dark'].includes(next.theme)) {
     next.theme = DEFAULT_ADMIN_PREFERENCES.theme
   }
 
-  if (!['comfortable', 'compact'].includes(next.density)) {
-    next.density = DEFAULT_ADMIN_PREFERENCES.density
-  }
-
-  if (!['normal', 'large'].includes(next.fontScale)) {
-    next.fontScale = DEFAULT_ADMIN_PREFERENCES.fontScale
-  }
-
-  if (!['soft', 'chime', 'alert', 'custom', 'silent'].includes(next.soundPreset)) {
-    next.soundPreset = DEFAULT_ADMIN_PREFERENCES.soundPreset
-  }
-
   if (!['soft', 'chime', 'alert', 'custom', 'silent'].includes(next.handoverSoundPreset)) {
     next.handoverSoundPreset = DEFAULT_ADMIN_PREFERENCES.handoverSoundPreset
-  }
-
-  if (!['soft', 'chime', 'alert', 'custom', 'silent'].includes(next.customerMessageSoundPreset)) {
-    next.customerMessageSoundPreset = DEFAULT_ADMIN_PREFERENCES.customerMessageSoundPreset
   }
 
   const volume = Number(next.soundVolume)
@@ -61,11 +45,9 @@ function sanitizePreferences(value = {}) {
     ? refresh
     : DEFAULT_ADMIN_PREFERENCES.notificationRefreshMs
 
-  next.reduceMotion = Boolean(next.reduceMotion)
   next.toastEnabled = Boolean(next.toastEnabled)
   next.soundEnabled = Boolean(next.soundEnabled)
   next.soundOnHandover = Boolean(next.soundOnHandover)
-  next.soundOnCustomerMessage = Boolean(next.soundOnCustomerMessage)
 
   return next
 }

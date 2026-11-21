@@ -244,32 +244,6 @@
   grid-column: 1 / -1;
 }
 
-/* Density */
-.admin-layout.admin-density-compact .admin-sidebar {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  gap: 1.15rem;
-}
-
-.admin-layout.admin-density-compact .admin-content {
-  gap: 0.8rem;
-}
-
-.admin-layout.admin-density-compact .admin-card {
-  padding: 1rem;
-}
-
-.admin-layout.admin-density-compact .admin-table th,
-.admin-layout.admin-density-compact .admin-table td {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-/* Font scale */
-.admin-layout.admin-font-large {
-  font-size: 1.06rem;
-}
-
 /* Dark mode khusus Admin, tidak menyentuh Public Web */
 .admin-layout.admin-theme-dark {
   background: #15100d;
@@ -334,16 +308,6 @@
 
 .admin-layout.admin-theme-dark .admin-notification-item:hover {
   background: #30221a;
-}
-
-/* Reduced motion */
-.admin-layout.admin-reduce-motion *,
-.admin-layout.admin-reduce-motion *::before,
-.admin-layout.admin-reduce-motion *::after {
-  animation-duration: 0.001ms !important;
-  animation-iteration-count: 1 !important;
-  scroll-behavior: auto !important;
-  transition-duration: 0.001ms !important;
 }
 
 @media (max-width: 900px) {

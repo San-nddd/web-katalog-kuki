@@ -10,7 +10,7 @@
 8. Nyalakan internet dan backend idempotent → sync hanya sekali; retry UUID yang sama tidak double stock decrement.
 9. Coba konflik stok di server → sale ditandai `conflict` tanpa hilang, admin bisa memeriksa UUID.
 10. Bayar tunai vs QRIS/transfer manual, cetak struk via printer dialog sistem, ukur 58mm/80mm.
-11. Tutup shift dan cocokkan modal + uang tunai dari riwayat tablet.
+11. Tutup shift cukup dengan konfirmasi; riwayat menampilkan waktu buka/tutup dan status sinkron.
 12. Uji iPadOS pada Mac/Xcode: kamera, landscape, jaringan LAN/HTTPS, UI dan printer.
 
 **Jangan buka pilot real sales sebelum 1–10, auth backend, dan penanganan konflik terpenuhi.**

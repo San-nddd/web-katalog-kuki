@@ -165,18 +165,13 @@ class ShiftSummary {
   final String closedAt;
   final String cashier;
   final int openingCash;
-  final int? closingCash;
-  final int expectedCash;
-  final String note;
   final bool serverOpened;
   final bool serverClosed;
   const ShiftSummary({
     required this.id, required this.openedAt, required this.closedAt,
-    required this.cashier, required this.openingCash, required this.closingCash,
-    required this.expectedCash, required this.note,
+    required this.cashier, required this.openingCash,
     required this.serverOpened, required this.serverClosed,
   });
-  int? get variance => closingCash == null ? null : closingCash! - expectedCash;
   bool get conflicts => closedAt.isNotEmpty && serverOpened && !serverClosed;
 }
 

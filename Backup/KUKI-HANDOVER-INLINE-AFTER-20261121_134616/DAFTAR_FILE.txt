@@ -1,0 +1,37 @@
+BACKUP FILE YANG DIUBAH — TANPA ZIP
+Dibuat: 2026-11-21 13:46:16
+Root sumber: E:\Ekosistem-kuki
+Folder tujuan: E:\Ekosistem-kuki\Backup\KUKI-HANDOVER-INLINE-AFTER-20261121_134616
+
+Ringkasan: menghapus kebutuhan akan App\Services\HandoverService di produksi dengan memindahkan seluruh logika handover ke KukiAssistantService, lalu mengarahkan controller ke KukiAssistantService.
+
+PERUBAHAN:
+1. backend-web-katalog/app/Services/KukiAssistantService.php
+   - Constructor hanya menerima OpenRouterService.
+   - Konstanta handover ditambahkan: PRIORITY_HIGH, HANDOVER_MENUNGGU, HANDOVER_DITANGANI, CONNECTING_MESSAGE, TIMEOUT_MESSAGE, ADMIN_JOINED_MESSAGE, CLOSED_MESSAGE.
+   - Method publik ditambahkan: startHandover(), notifyCustomerMessage(), lifecycleStatus(), applyHandoverTimeoutIfNeeded(), handoverExpiresAt().
+   - Method privat ditambahkan: notifyAdmins(), konteksObrolan(), tambahPesanSistem(), handoverStartedAt().
+2. backend-web-katalog/app/Http/Controllers/AssistantController.php
+   - Dependency HandoverService dihapus; semua pemanggilan diarahkan ke KukiAssistantService.
+3. backend-web-katalog/app/Http/Controllers/AdminChatController.php
+   - Dependency HandoverService diganti KukiAssistantService; konstanta diarahkan ke KukiAssistantService.
+4. backend-web-katalog/tests/Feature/KukiAssistantSafetyHandoverTest.php
+   - Referensi konstanta HandoverService diganti KukiAssistantService.
+5. backend-web-katalog/app/Services/HandoverService.php
+   - DIHAPUS dari source; tidak ada referensi lagi di app/ dan tests/.
+
+Verifikasi yang sudah dijalankan sebelum backup ini:
+- vendor\bin\pint.bat --dirty --format agent: passed, KukiAssistantService.php diformat
+- php artisan test --compact tests/Feature/KukiAssistantSafetyHandoverTest.php: 9/9 passed, 79 assertions
+- php artisan test --compact: 92/92 passed, 597 assertions
+- git diff --check: bersih (hanya warning CRLF pada file lama)
+- grep HandoverService di app/ + tests/: 0 referensi
+- SHA256 source vs backup: 4/4 cocok
+- jumlah file .zip di folder ini: 0
+
+Catatan:
+- Backup sebelum perubahan: E:\Ekosistem-kuki\Backup\KUKI-HANDOVER-INLINE-BEFORE-20261121_133947
+- Backup SafetyReportDetector sebelumnya: E:\Ekosistem-kuki\Backup\KUKI-SAFETY-DETECTOR-INLINE-AFTER-20261121_132840
+- Tidak ada commit yang dibuat.
+- Deploy produksi: upload 3 file (KukiAssistantService.php, AssistantController.php, AdminChatController.php); hapus app/Services/HandoverService.php; jalankan composer dump-autoload -o dan php artisan optimize:clear.
+- File notifikasi (HandoverRequestedNotification, CustomerNewMessageNotification) sudah ada sejak commit lama, jadi tidak perlu di-upload ulang.

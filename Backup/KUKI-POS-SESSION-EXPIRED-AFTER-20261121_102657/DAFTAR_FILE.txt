@@ -1,0 +1,40 @@
+BACKUP FILE YANG DIUBAH — TANPA ZIP
+Dibuat: 2026-11-21 10:26:57
+Root sumber: E:\Ekosistem-kuki
+Folder tujuan: E:\Ekosistem-kuki\Backup\KUKI-POS-SESSION-EXPIRED-AFTER-20261121_102657
+
+Ringkasan: perbaikan deadlock saat sesi kasir habis (401): login ulang otomatis, data SQLite tetap utuh, sinkronisasi prioritas dilanjutkan setelah login.
+
+DAFTAR FILE (8):
+1. kasir/lib/data/api_client.dart
+   - ApiProblem.isUnauthorized; 401 tidak dianggap server reachable.
+2. kasir/lib/main.dart
+   - SessionExpired memaksa layar login; lifecycle auto-sync dijeda.
+3. kasir/lib/screens/login_screen.dart
+   - Banner sesi habis: data lokal tetap tersimpan.
+4. kasir/lib/screens/settings_screen.dart
+   - Status sinkronisasi dan tombol Sinkronkan mengikuti sessionExpired.
+5. kasir/lib/screens/shift_screen.dart
+   - Catatan tutup shift menyebut login ulang saat sesi habis.
+6. kasir/lib/state/pos_controller.dart
+   - sessionExpired, _expireSession, 401 handling di sync/init/openShift/logout, auto sync dijeda, login ulang memicu syncPending.
+7. kasir/test/api_reachability_test.dart
+   - Test 401 tidak reachable dan respons 200 tetap reachable.
+8. kasir/test/logout_flow_test.dart
+   - Regresi 401, logout saat sesi habis, dan buka shift setelah login ulang.
+
+Verifikasi yang sudah dijalankan sebelum backup ini:
+- dart format pada 8 file yang disentuh: passed
+- flutter analyze: No issues found
+- flutter test: 47/47 passed
+- vendor\bin\pint.bat --dirty --format agent: passed
+- php artisan test --compact: 92/92 passed, 597 assertions
+- git diff --check: bersih
+- SHA256 source vs backup: 8/8 cocok
+- jumlah file .zip di folder ini: 0
+
+Catatan:
+- Tidak ada file .zip yang dibuat di folder ini.
+- Tidak ada commit yang dibuat.
+- Backup ini hanya berisi file yang diubah, bukan source project lengkap.
+- Tidak menyertakan .env, token, database produksi, vendor, atau node_modules.

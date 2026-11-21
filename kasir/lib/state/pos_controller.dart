@@ -37,6 +37,7 @@ class PosController extends ChangeNotifier {
   bool? networkConnected;
   bool? serverReachable;
   String? networkStatusError;
+  bool sessionExpired = false;
   Timer? _syncTimer;
   StreamSubscription<bool>? _connectivitySubscription;
   bool _disposed = false;
@@ -112,8 +113,11 @@ class PosController extends ChangeNotifier {
               if (cashierId.isNotEmpty) {
                 await _secure.write(key: 'cashier_id', value: cashierId);
               }
-            } on ApiProblem {
-              // Versi lama tetap dapat membuka database memakai nama kasir sebagai fallback.
+            } on ApiProblem catch (ex) {
+              if (ex.isUnauthorized) {
+                await _expireSession(ex.message);
+                return;
+              }
             }
           }
           await loadData();
@@ -146,6 +150,7 @@ class PosController extends ChangeNotifier {
       }
       api.baseUrl = baseUrl.trim();
       final session = await api.login(kode.trim(), pin);
+      sessionExpired = false;
       cashierName = session.name;
       cashierId = session.cashierId;
       role = session.role;
@@ -168,6 +173,7 @@ class PosController extends ChangeNotifier {
         }
       }
       _startAutoSync();
+      unawaited(syncPending());
     } catch (ex) {
       error = ex.toString();
       // Jangan meninggalkan token tanpa login sukses.
@@ -191,6 +197,7 @@ class PosController extends ChangeNotifier {
       _stopAutoSync();
       _sessionRevision++;
       demo = true;
+      sessionExpired = false;
       cashierName = 'Kasir Demo';
       cashierId = 'demo';
       role = 'kasir';
@@ -245,8 +252,7 @@ class PosController extends ChangeNotifier {
       cashierName: cashierName,
     );
     final unresolvedSales = sales
-        .where((sale) =>
-            sale.status == 'pending' || sale.status == 'conflict')
+        .where((sale) => sale.status == 'pending' || sale.status == 'conflict')
         .length;
     if (unresolvedSales > 0) {
       throw StateError(
@@ -288,6 +294,39 @@ class PosController extends ChangeNotifier {
     }
   }
 
+  Future<void> _clearLocalIdentity({
+    required bool expired,
+    String? message,
+  }) async {
+    _stopAutoSync();
+    _sessionRevision++;
+    api.token = null;
+    await _secure.delete(key: 'token');
+    await _secure.delete(key: 'cashier');
+    await _secure.delete(key: 'cashier_id');
+    await _secure.delete(key: 'role');
+    locked = false;
+    cashierName = '';
+    cashierId = '';
+    role = '';
+    activeShift = null;
+    sessionExpired = expired;
+    error = message;
+    networkStatusError = null;
+    serverReachable = false;
+    notifyListeners();
+  }
+
+  Future<void> _expireSession(String message) async {
+    if (sessionExpired) return;
+    await _clearLocalIdentity(
+      expired: true,
+      message: message.contains('Login ulang')
+          ? message
+          : 'Sesi kasir habis. Masuk ulang untuk melanjutkan sinkronisasi; data lokal tetap tersimpan.',
+    );
+  }
+
   void _clearDemoSession() {
     _stopAutoSync();
     _sessionRevision++;
@@ -314,6 +353,10 @@ class PosController extends ChangeNotifier {
     if (demo) {
       // DEMO tidak memakai Laravel. Database demo sengaja dibiarkan utuh.
       _clearDemoSession();
+      return;
+    }
+    if (sessionExpired) {
+      await _clearLocalIdentity(expired: false);
       return;
     }
 
@@ -429,7 +472,7 @@ class PosController extends ChangeNotifier {
 
   void _startAutoSync() {
     _stopAutoSync();
-    if (demo || kIsWeb || !authenticated) return;
+    if (demo || kIsWeb || !authenticated || sessionExpired) return;
 
     final connectivity = NetworkConnectivity();
     _connectivitySubscription = connectivity.changes.listen(
@@ -548,9 +591,6 @@ class PosController extends ChangeNotifier {
           closedAt: asText(row['pulang_pada']),
           cashier: cashierName,
           openingCash: 0,
-          closingCash: null,
-          expectedCash: 0,
-          note: '',
           serverOpened: true,
           serverClosed: asText(row['pulang_pada']).isNotEmpty,
         );
@@ -565,28 +605,17 @@ class PosController extends ChangeNotifier {
     );
     final summaries = <ShiftSummary>[];
     for (final shift in shifts) {
-      final shiftId = asText(shift['id']);
-      final rows = await local.sales(
-        limit: 5000,
-        shiftId: shiftId,
-        cashierId: cashierId,
-        cashierName: cashierName,
+      summaries.add(
+        ShiftSummary(
+          id: asText(shift['id']),
+          openedAt: asText(shift['opened_at']),
+          closedAt: asText(shift['closed_at']),
+          cashier: asText(shift['cashier']),
+          openingCash: asInt(shift['opening_cash']),
+          serverOpened: asText(shift['server_shift_id']).isNotEmpty,
+          serverClosed: asText(shift['server_closed_at']).isNotEmpty,
+        ),
       );
-      final cash = rows
-          .where((sale) => sale.method == 'cash')
-          .fold<int>(0, (sum, sale) => sum + sale.total);
-      summaries.add(ShiftSummary(
-        id: shiftId,
-        openedAt: asText(shift['opened_at']),
-        closedAt: asText(shift['closed_at']),
-        cashier: asText(shift['cashier']),
-        openingCash: asInt(shift['opening_cash']),
-        closingCash: shift['closing_cash'] == null ? null : asInt(shift['closing_cash']),
-        expectedCash: asInt(shift['opening_cash']) + cash,
-        note: asText(shift['note']),
-        serverOpened: asText(shift['server_shift_id']).isNotEmpty,
-        serverClosed: asText(shift['server_closed_at']).isNotEmpty,
-      ));
     }
     shiftSummaries = summaries;
     notifyListeners();
@@ -605,7 +634,9 @@ class PosController extends ChangeNotifier {
     required String alasan,
   }) async {
     if (!canCancel) {
-      throw StateError('Hanya pegawai Admin/Owner yang dapat membatalkan transaksi.');
+      throw StateError(
+        'Hanya pegawai Admin/Owner yang dapat membatalkan transaksi.',
+      );
     }
     if (!['void', 'retur'].contains(jenis)) {
       throw StateError('Jenis pembatalan tidak dikenal.');
@@ -699,16 +730,17 @@ class PosController extends ChangeNotifier {
     );
   }
 
-  Future<String> _ensureServerShift(Map<String, Object?> localShift, {
-    required bool hasPendingTransactions,
+  Future<String> _ensureServerShift(
+    Map<String, Object?> localShift, {
+    required bool hasUnresolvedTransactions,
   }) async {
     final localShiftId = asText(localShift['id']);
     final savedServerId = asText(localShift['server_shift_id']);
     final localIsClosed = asText(localShift['closed_at']).isNotEmpty;
     final serverWasClosed = asText(localShift['server_closed_at']).isNotEmpty;
 
-    if (serverWasClosed) return '';
-    if (localIsClosed && savedServerId.isEmpty && !hasPendingTransactions) {
+    if (serverWasClosed && !hasUnresolvedTransactions) return '';
+    if (localIsClosed && savedServerId.isEmpty && !hasUnresolvedTransactions) {
       return '';
     }
 
@@ -717,9 +749,22 @@ class PosController extends ChangeNotifier {
 
     if (savedServerId.isNotEmpty) {
       if (remoteActiveId == savedServerId) return savedServerId;
-      if (remoteActiveId.isEmpty && localIsClosed) {
+      if (remoteActiveId.isEmpty &&
+          localIsClosed &&
+          !hasUnresolvedTransactions) {
         await local.markServerShiftClosed(localShiftId);
         return '';
+      }
+      if (remoteActiveId.isEmpty &&
+          localIsClosed &&
+          hasUnresolvedTransactions) {
+        final created = await api.startShift();
+        final newServerId = asText(created['id']);
+        if (newServerId.isEmpty) {
+          throw const ApiProblem(500, 'Laravel tidak mengembalikan ID shift.');
+        }
+        await local.setServerShiftId(localShiftId, newServerId);
+        return newServerId;
       }
       throw const ApiProblem(
         409,
@@ -738,7 +783,7 @@ class PosController extends ChangeNotifier {
       return remoteActiveId;
     }
 
-    if (localIsClosed && !hasPendingTransactions) return '';
+    if (localIsClosed && !hasUnresolvedTransactions) return '';
 
     final created = await api.startShift();
     final newServerId = asText(created['id']);
@@ -753,6 +798,7 @@ class PosController extends ChangeNotifier {
     if (kIsWeb ||
         _disposed ||
         demo ||
+        sessionExpired ||
         syncing ||
         !authenticated ||
         locked ||
@@ -791,7 +837,11 @@ class PosController extends ChangeNotifier {
       var stopAfterCurrentShift = false;
 
       for (final localShift in shifts) {
-        if (_disposed || revision != _sessionRevision || stopAfterCurrentShift) break;
+        if (_disposed ||
+            revision != _sessionRevision ||
+            stopAfterCurrentShift) {
+          break;
+        }
         final localShiftId = asText(localShift['id']);
         final shiftSales = await currentDb.sales(
           limit: 1000,
@@ -799,21 +849,35 @@ class PosController extends ChangeNotifier {
           cashierId: cashierId,
           cashierName: cashierName,
         );
-        final queue = shiftSales.where((sale) => sale.status == 'pending').toList().reversed.toList();
+        final queue = shiftSales
+            .where((sale) => sale.status == 'pending')
+            .toList()
+            .reversed
+            .toList();
+        final hasUnresolvedSales = shiftSales.any(
+          (sale) => sale.status != 'synced',
+        );
         final localIsClosed = asText(localShift['closed_at']).isNotEmpty;
         final savedServerId = asText(localShift['server_shift_id']);
-        final serverWasClosed = asText(localShift['server_closed_at']).isNotEmpty;
+        final serverWasClosed = asText(
+          localShift['server_closed_at'],
+        ).isNotEmpty;
 
         // Shift lama yang sudah selesai disinkronkan tidak perlu disentuh lagi.
-        if (localIsClosed && serverWasClosed && queue.isEmpty) continue;
-        if (localIsClosed && savedServerId.isEmpty && queue.isEmpty) continue;
+        if (localIsClosed && serverWasClosed && !hasUnresolvedSales) continue;
+        if (localIsClosed && savedServerId.isEmpty && !hasUnresolvedSales) {
+          continue;
+        }
 
         final serverShiftId = await _ensureServerShift(
           localShift,
-          hasPendingTransactions: queue.isNotEmpty,
+          hasUnresolvedTransactions: hasUnresolvedSales,
         );
-        if (queue.isNotEmpty && serverShiftId.isEmpty) {
-          throw const ApiProblem(409, 'Shift server tidak tersedia untuk transaksi tertunda.');
+        if (hasUnresolvedSales && serverShiftId.isEmpty) {
+          throw const ApiProblem(
+            409,
+            'Shift server tidak tersedia untuk transaksi tertunda.',
+          );
         }
 
         var shiftSyncFailed = false;
@@ -825,6 +889,10 @@ class PosController extends ChangeNotifier {
             await currentDb.markSynced(sale.uuid);
           } on ApiProblem catch (ex) {
             if (_disposed || revision != _sessionRevision) break;
+            if (ex.isUnauthorized) {
+              await _expireSession(ex.message);
+              return;
+            }
             if (ex.status == 400 || ex.status == 409 || ex.status == 422) {
               await currentDb.markConflict(sale.uuid, ex.message);
               continue;
@@ -838,7 +906,9 @@ class PosController extends ChangeNotifier {
           }
         }
 
-        if (shiftSyncFailed || _disposed || revision != _sessionRevision) continue;
+        if (shiftSyncFailed || _disposed || revision != _sessionRevision) {
+          continue;
+        }
 
         final latestShiftSales = await currentDb.sales(
           limit: 1000,
@@ -846,14 +916,16 @@ class PosController extends ChangeNotifier {
           cashierId: cashierId,
           cashierName: cashierName,
         );
-        final hasUnresolvedSales = latestShiftSales.any((sale) => sale.status != 'synced');
-        if (localIsClosed && hasUnresolvedSales) {
+        final stillUnresolved = latestShiftSales.any(
+          (sale) => sale.status != 'synced',
+        );
+        if (localIsClosed && stillUnresolved) {
           // Jangan mengaitkan shift lokal berikutnya ke shift server lama yang
           // masih terbuka akibat transaksi konflik.
           stopAfterCurrentShift = true;
           continue;
         }
-        if (localIsClosed && !hasUnresolvedSales && serverShiftId.isNotEmpty) {
+        if (localIsClosed && !stillUnresolved && serverShiftId.isNotEmpty) {
           await api.endShift();
           await currentDb.markServerShiftClosed(localShiftId);
         }
@@ -875,8 +947,17 @@ class PosController extends ChangeNotifier {
         );
         await refreshShiftHistory();
       }
+    } on ApiProblem catch (ex) {
+      if (ex.isUnauthorized) {
+        if (!_disposed && revision == _sessionRevision) {
+          await _expireSession(ex.message);
+        }
+        return;
+      }
+      if (!_disposed && revision == _sessionRevision) {
+        error = 'Sinkronisasi tertunda (data lokal tetap disimpan): $ex';
+      }
     } catch (ex) {
-      // Data SQLite tetap utuh; sinkronisasi dapat diulang setelah koneksi pulih.
       if (!_disposed && revision == _sessionRevision) {
         error = 'Sinkronisasi tertunda (data lokal tetap disimpan): $ex';
       }
@@ -942,7 +1023,9 @@ class PosController extends ChangeNotifier {
       (p) => p.id == productId,
       orElse: () => line.product,
     );
-    if (!latest.aktif) throw StateError('Produk ${latest.name} sudah diarsipkan');
+    if (!latest.aktif) {
+      throw StateError('Produk ${latest.name} sudah diarsipkan');
+    }
     if (difference > 0 && latest.stock <= _inDrafts(productId)) {
       throw StateError('Stok tidak mencukupi');
     }
@@ -1114,32 +1197,74 @@ class PosController extends ChangeNotifier {
     }
 
     String? serverShiftId;
+    Map<String, dynamic>? remote;
     if (!demo && authenticated) {
-      // Selesaikan penutupan shift sebelumnya terlebih dahulu agar satu kasir
-      // tidak memakai satu shift server untuk dua sesi lokal yang berbeda.
       if (networkConnected != false) await syncPending();
+      if (sessionExpired) {
+        throw StateError(
+          'Sesi kasir habis. Masuk ulang untuk melanjutkan sinkronisasi.',
+        );
+      }
       final priorShifts = await local.shiftsForCashier(
         cashierId: cashierId,
         cashierName: cashierName,
       );
-      final unresolvedClose = priorShifts.any((shift) =>
-          asText(shift['closed_at']).isNotEmpty &&
-          asText(shift['server_shift_id']).isNotEmpty &&
-          asText(shift['server_closed_at']).isEmpty);
-      if (unresolvedClose) {
-        throw StateError(
-          'Shift sebelumnya belum selesai disinkronkan ke server. Periksa koneksi lalu coba lagi.',
-        );
+      final unresolvedShifts = priorShifts
+          .where(
+            (shift) =>
+                asText(shift['closed_at']).isNotEmpty &&
+                asText(shift['server_shift_id']).isNotEmpty &&
+                asText(shift['server_closed_at']).isEmpty,
+          )
+          .toList();
+      if (networkConnected != false && unresolvedShifts.isNotEmpty) {
+        try {
+          remote = await api.shift();
+          final activeId = asText(unwrapMap(remote['active'])['id']);
+          if (activeId.isNotEmpty &&
+              unresolvedShifts.any(
+                (shift) => asText(shift['server_shift_id']) == activeId,
+              )) {
+            throw StateError(
+              'Server masih mencatat shift lama ($activeId) sebagai aktif. Selesaikan sinkronisasi sebelum membuka shift baru.',
+            );
+          }
+          final pendingSales = await local.pendingCount(
+            cashierId: cashierId,
+            cashierName: cashierName,
+          );
+          final conflictSales = await local.unresolvedCount(
+            cashierId: cashierId,
+            cashierName: cashierName,
+          );
+          if (pendingSales + conflictSales > 0) {
+            throw StateError(
+              'Masih ada transaksi yang belum tersinkron. Selesaikan sinkronisasi atau retry konflik sebelum membuka shift baru.',
+            );
+          }
+          for (final shift in unresolvedShifts) {
+            await local.markServerShiftClosed(asText(shift['id']));
+          }
+        } on ApiProblem catch (ex) {
+          if (ex.isUnauthorized) {
+            await _expireSession(ex.message);
+            return;
+          }
+          rethrow;
+        }
       }
       try {
-        final remote = await api.shift();
+        remote ??= await api.shift();
         serverShiftId = asText(unwrapMap(remote['active'])['id']);
         if (serverShiftId.isEmpty) {
           final created = await api.startShift();
           serverShiftId = asText(created['id']);
         }
       } on ApiProblem catch (ex) {
-        // Shift lokal tetap bisa dibuka saat internet terputus; akan dibuat di server saat sync.
+        if (ex.isUnauthorized) {
+          await _expireSession(ex.message);
+          return;
+        }
         if (ex.status != 0) rethrow;
       }
     }
@@ -1157,11 +1282,15 @@ class PosController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> endShift(int closingCash, String note) async {
+  Future<void> endShift() async {
     if (activeShift == null) return;
-    if (closingCash < 0) throw StateError('Uang akhir tidak valid');
     if (kIsWeb) {
-      await api.endShift();
+      try {
+        await api.endShift();
+      } on ApiProblem catch (ex) {
+        if (ex.isUnauthorized) await _expireSession(ex.message);
+        rethrow;
+      }
       activeShift = null;
       await refreshShiftHistory();
       notifyListeners();
@@ -1169,45 +1298,34 @@ class PosController extends ChangeNotifier {
     }
 
     final closingShiftId = activeShift!;
-    // Coba kirim transaksi dulu. Jika offline, data tetap lokal dan penutupan server
-    // akan dicoba kembali oleh syncPending setelah koneksi tersedia.
-    if (!demo && authenticated && networkConnected != false) {
+    final canSync = !demo && authenticated && networkConnected != false;
+    if (canSync) {
       await syncPending();
+      final pendingSales = await local.pendingCount(
+        cashierId: cashierId,
+        cashierName: cashierName,
+      );
+      final conflictSales = await local.unresolvedCount(
+        cashierId: cashierId,
+        cashierName: cashierName,
+      );
+      if (pendingSales + conflictSales > 0) {
+        throw StateError(
+          'Masih ada transaksi yang belum tersinkron. Selesaikan sinkronisasi atau retry konflik sebelum menutup shift.',
+        );
+      }
     }
 
     await local.closeShift(
       id: closingShiftId,
       cashierId: cashierId,
       cashierName: cashierName,
-      closingCash: closingCash,
-      note: note,
     );
     activeShift = null;
     await refreshShiftHistory();
     notifyListeners();
 
-    if (!demo && authenticated && networkConnected != false) {
-      await syncPending();
-    }
-  }
-
-  Future<int> expectedCash() async {
-    if (kIsWeb) return 0;
-    final current = await local.openShift(
-      cashierId: cashierId,
-      cashierName: cashierName,
-    );
-    if (current == null) return 0;
-    final sales = await local.sales(
-      limit: 5000,
-      shiftId: activeShift,
-      cashierId: cashierId,
-      cashierName: cashierName,
-    );
-    final cash = sales
-        .where((sale) => sale.method == 'cash')
-        .fold<int>(0, (sum, sale) => sum + sale.total);
-    return asInt(current['opening_cash']) + cash;
+    if (canSync) await syncPending();
   }
 
   Future<void> setReceiptWidth(int value) async {

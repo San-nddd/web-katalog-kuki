@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Obrolan;
 use App\Models\PesanObrolan;
-use App\Services\HandoverService;
 use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,8 +12,7 @@ use Illuminate\Support\Facades\Log;
 class AssistantController extends Controller
 {
     public function __construct(
-        private readonly KukiAssistantService $assistant,
-        private readonly HandoverService $handover
+        private readonly KukiAssistantService $assistant
     ) {}
 
     public function chat(Request $request): JsonResponse
@@ -31,10 +29,10 @@ class AssistantController extends Controller
             $obrolan = $sessionId ? $this->latestOpenConversation($sessionId) : null;
 
             if ($obrolan) {
-                $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+                $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
                 $obrolan->refresh();
 
-                $lifecycle = $this->handover->lifecycleStatus($obrolan);
+                $lifecycle = $this->assistant->lifecycleStatus($obrolan);
 
                 if (in_array($lifecycle, [
                     'HANDOVER_PENDING',
@@ -46,7 +44,7 @@ class AssistantController extends Controller
                         'pesan' => $validated['message'],
                     ]);
 
-                    $this->handover->notifyCustomerMessage($obrolan, $pesan);
+                    $this->assistant->notifyCustomerMessage($obrolan, $pesan);
 
                     return response()->json([
                         'success' => true,
@@ -56,7 +54,7 @@ class AssistantController extends Controller
                             'status' => $lifecycle,
                             'prioritas' => $obrolan->prioritas,
                             'ai_locked' => true,
-                            'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
+                            'handover_expires_at' => $this->assistant->handoverExpiresAt($obrolan),
                             'message' => [
                                 'id' => $pesan->id,
                                 'sender' => 'user',
@@ -82,11 +80,11 @@ class AssistantController extends Controller
                 $latest = $this->latestOpenConversation($sessionId);
 
                 if ($latest) {
-                    $this->handover->applyHandoverTimeoutIfNeeded($latest);
+                    $this->assistant->applyHandoverTimeoutIfNeeded($latest);
                     $latest->refresh();
 
-                    $result['status'] = $this->handover->lifecycleStatus($latest);
-                    $result['handover_expires_at'] = $this->handover->handoverExpiresAt($latest);
+                    $result['status'] = $this->assistant->lifecycleStatus($latest);
+                    $result['handover_expires_at'] = $this->assistant->handoverExpiresAt($latest);
                     $result['prioritas'] = $latest->prioritas;
                 }
             }
@@ -117,7 +115,7 @@ class AssistantController extends Controller
             ], 404);
         }
 
-        $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
+        $this->assistant->applyHandoverTimeoutIfNeeded($obrolan);
         $obrolan->refresh();
 
         $messages = $obrolan->pesan()
@@ -139,9 +137,9 @@ class AssistantController extends Controller
             'data' => [
                 'id' => $obrolan->id,
                 'session_id' => $obrolan->session_id,
-                'status' => $this->handover->lifecycleStatus($obrolan),
+                'status' => $this->assistant->lifecycleStatus($obrolan),
                 'prioritas' => $obrolan->prioritas,
-                'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
+                'handover_expires_at' => $this->assistant->handoverExpiresAt($obrolan),
                 'messages' => $messages,
                 'pesan' => $messages,
             ],
@@ -175,7 +173,7 @@ class AssistantController extends Controller
             ], 404);
         }
 
-        $this->handover->start(
+        $this->assistant->startHandover(
             $obrolan,
             $validated['reason'] ?? 'Pengguna meminta bantuan admin manusia'
         );
@@ -187,10 +185,10 @@ class AssistantController extends Controller
             'message' => 'Permintaan handover ke admin berhasil dicatat.',
             'data' => [
                 'session_id' => $sessionId,
-                'status' => $this->handover->lifecycleStatus($obrolan),
+                'status' => $this->assistant->lifecycleStatus($obrolan),
                 'status_handover' => $obrolan->status_handover,
                 'prioritas' => $obrolan->prioritas,
-                'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
+                'handover_expires_at' => $this->assistant->handoverExpiresAt($obrolan),
             ],
         ]);
     }

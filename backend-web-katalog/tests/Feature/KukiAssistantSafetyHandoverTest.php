@@ -7,7 +7,6 @@ use App\Models\Obrolan;
 use App\Models\produk;
 use App\Models\User;
 use App\Notifications\HandoverRequestedNotification;
-use App\Services\HandoverService;
 use App\Services\KukiAssistantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -184,7 +183,7 @@ class KukiAssistantSafetyHandoverTest extends TestCase
 
         $this->assertSame(1, $obrolan->pesan()
             ->where('tipe_pengirim', 'system')
-            ->where('pesan', HandoverService::CONNECTING_MESSAGE)
+            ->where('pesan', KukiAssistantService::CONNECTING_MESSAGE)
             ->count());
 
         Notification::assertSentToTimes($admin, HandoverRequestedNotification::class, 1);
@@ -250,7 +249,7 @@ class KukiAssistantSafetyHandoverTest extends TestCase
         $this->assertDatabaseHas('pesan_obrolan', [
             'obrolan_id' => $obrolan->id,
             'tipe_pengirim' => 'system',
-            'pesan' => HandoverService::TIMEOUT_MESSAGE,
+            'pesan' => KukiAssistantService::TIMEOUT_MESSAGE,
         ]);
 
         $admin = User::factory()->create();

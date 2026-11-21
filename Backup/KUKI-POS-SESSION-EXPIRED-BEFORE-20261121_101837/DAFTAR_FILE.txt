@@ -1,0 +1,29 @@
+BACKUP SEBELUM PERBAIKAN SESI KASIR HABIS — TANPA ZIP
+Dibuat: 2026-11-21 10:18:37
+Root sumber: E:\Ekosistem-kuki
+Folder tujuan: E:\Ekosistem-kuki\Backup\KUKI-POS-SESSION-EXPIRED-BEFORE-20261121_101837
+
+Tujuan: backup file yang akan diubah untuk perbaikan deadlock saat sesi kasir habis (401) pada alur sinkronisasi dan buka shift.
+
+DAFTAR FILE (8):
+1. kasir/lib/data/api_client.dart
+   - ApiProblem generic; isServerReachable masih menganggap 401 sebagai online.
+2. kasir/lib/main.dart
+   - Routing login hanya memakai authenticated/locked.
+3. kasir/lib/screens/login_screen.dart
+   - Belum ada banner sesi habis.
+4. kasir/lib/screens/settings_screen.dart
+   - Tombol sinkronisasi belum memberi konteks sesi habis.
+5. kasir/lib/screens/shift_screen.dart
+   - Tombol Buka shift belum memberi konteks sesi habis.
+6. kasir/lib/state/pos_controller.dart
+   - 401 ditelan syncPending; guard open shift dan logout memakai status lokal.
+7. kasir/test/api_reachability_test.dart
+   - Test lama mengharapkan 401 dianggap reachable.
+8. kasir/test/logout_flow_test.dart
+   - Belum ada regresi 401/session expired/re-login.
+
+Catatan:
+- Tidak ada file .zip di folder ini.
+- Tidak ada commit yang dibuat.
+- Backup ini hanya berisi file yang akan diubah, bukan source project lengkap.

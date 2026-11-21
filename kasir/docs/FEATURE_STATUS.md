@@ -11,7 +11,7 @@
 | Offline SQLite | Ada | Hanya cache dan transaksi perangkat ini |
 | Sync 45 detik | Ada, saat app aktif | Endpoint backend dan idempotensi wajib ada |
 | Konflik stok server | Ditandai `conflict` | Rekonsiliasi oleh Admin, tidak auto rollback |
-| Shift kasir | Lokal | Bukan absensi, belum sync ke server |
+| Shift kasir | Lokal + Laravel API | Tanpa input kas akhir; waktu buka/tutup tersinkron ke server |
 | Riwayat/laporan lokal | Ada | Tidak merangkum seluruh perangkat |
 | Struk 58/80mm | PDF dialog sistem | Bukan ESC/POS langsung |
 | Login Sanctum | Adapter tersedia | Endpoint/login response Laravel harus cocok |
