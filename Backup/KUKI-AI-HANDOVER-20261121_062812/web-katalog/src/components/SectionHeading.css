@@ -1,0 +1,44 @@
+.section-heading {
+  margin-bottom: 3rem;
+}
+
+.section-heading.align-center {
+  text-align: center;
+}
+
+.section-heading.align-left {
+  text-align: left;
+}
+
+.section-heading-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+}
+
+.align-left .section-heading-title {
+  align-items: flex-start;
+}
+
+.section-heading-title .line-indent {
+  padding-left: 1.5em;
+}
+
+.heading-dark {
+  color: var(--brown-dark);
+}
+
+.heading-orange {
+  color: var(--orange);
+}
+
+@media (max-width: 768px) {
+  .section-heading {
+    margin-bottom: 2rem;
+  }
+
+  .section-heading-title .line-indent {
+    padding-left: 0.75em;
+  }
+}

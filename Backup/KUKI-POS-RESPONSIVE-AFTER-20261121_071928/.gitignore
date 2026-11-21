@@ -1,0 +1,15 @@
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+*.log
+.metadata
+**/local.properties
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+.idea/
+.vscode/
+.DS_Store

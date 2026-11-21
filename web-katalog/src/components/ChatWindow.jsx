@@ -43,6 +43,12 @@ const LIFECYCLE_SYSTEM_TEXTS = [
   'Percakapan ini telah selesai.',
 ]
 
+const HANDOVER_SYSTEM_PREFIXES = [
+  'Permintaan handover ke admin:',
+  'Laporan prioritas tinggi diteruskan ke Admin:',
+  'Laporan ditingkatkan ke prioritas tinggi:',
+]
+
 function isLifecycleSystemMessage(rawMessage) {
   const text = String(
     rawMessage?.text ??
@@ -52,7 +58,10 @@ function isLifecycleSystemMessage(rawMessage) {
       '',
   ).trim()
 
-  return LIFECYCLE_SYSTEM_TEXTS.some((item) => text === item)
+  return (
+    LIFECYCLE_SYSTEM_TEXTS.some((item) => text === item) ||
+    HANDOVER_SYSTEM_PREFIXES.some((prefix) => text.startsWith(prefix))
+  )
 }
 
 function ChatWindow({

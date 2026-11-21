@@ -831,6 +831,18 @@ html.lenis body {
     radial-gradient(ellipse 62% 48% at 50% 100%, var(--cream) 0 100%, transparent 101%);
 }
 
+.bakers-state {
+  margin: 0;
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--cream);
+  font-size: 1rem;
+}
+
+.bakers-state-error {
+  color: var(--orange);
+}
+
 /* ---------- Animasi: reveal saat scroll ---------- */
 .reveal {
   opacity: 0;

@@ -1,22 +1,24 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Aapi\MutasiStokController;
 use App\Http\Controllers\AdminChatController;
+use App\Http\Controllers\Api\AdminBakerController;
+use App\Http\Controllers\Api\BakerController;
+use App\Http\Controllers\Api\KukiLocationController;
+use App\Http\Controllers\Api\LaporanInventarisController;
+use App\Http\Controllers\Api\LaporanPenjualanController;
+use App\Http\Controllers\Api\MutasiStokController;
+use App\Http\Controllers\Api\ProduksiHarianController;
+use App\Http\Controllers\Api\ProdukVarianController;
+use App\Http\Controllers\Api\StockOpnameController;
+use App\Http\Controllers\Api\TestimonialCommentController;
+use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\kategoriController;
 use App\Http\Controllers\ManagementDashboardController;
 use App\Http\Controllers\produkController;
 use App\Http\Controllers\PushSubscriptionController;
-use App\Http\Controllers\Api\TestimonialController;
-use App\Http\Controllers\Api\TestimonialCommentController;
-use App\Http\Controllers\Api\ProdukVarianController;
-use App\Http\Controllers\Api\ProduksiHarianController;
-use App\Http\Controllers\Api\LaporanInventarisController;
-use App\Http\Controllers\Api\LaporanPenjualanController;
-use App\Http\Controllers\Api\KukiLocationController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +40,9 @@ Route::get('/produk/{produk}/varian', [ProdukVarianController::class, 'index']);
 Route::get('/kategori', [kategoriController::class, 'index']);
 Route::get('/kategori/{id}', [kategoriController::class, 'show']);
 
+// Bakers
+Route::get('/bakers', [BakerController::class, 'index']);
+
 // Testimonial
 Route::get('/testimonial', [TestimonialController::class, 'index']);
 Route::get('/testimonial/{testimonial}', [TestimonialController::class, 'show']);
@@ -53,7 +58,6 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // Lokasi Kuki (Leaflet): publik, key HeiGIT diproses hanya oleh Laravel.
 Route::get('/public/kuki-map/geocode', [KukiLocationController::class, 'geocode'])->middleware('throttle:10,1');
 Route::post('/public/kuki-map/route', [KukiLocationController::class, 'route'])->middleware('throttle:10,1');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -111,15 +115,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
         });
 
-        // Varian Produk 
+        // Varian Produk
         Route::get('/admin/produk/{produk}/varian', [ProdukVarianController::class, 'adminIndex']);
         Route::post('/admin/produk/{produk}/varian', [ProdukVarianController::class, 'store']);
         Route::put('/admin/produk/{produk}/varian/{varian}', [ProdukVarianController::class, 'update']);
         Route::delete('/admin/produk/{produk}/varian/{varian}', [ProdukVarianController::class, 'destroy']);
 
+        // CMS Bakers
+        Route::get('/admin/bakers', [AdminBakerController::class, 'index']);
+        Route::post('/admin/bakers', [AdminBakerController::class, 'store']);
+        Route::post('/admin/bakers/reorder', [AdminBakerController::class, 'reorder']);
+        Route::put('/admin/bakers/{baker}', [AdminBakerController::class, 'update']);
+        Route::delete('/admin/bakers/{baker}', [AdminBakerController::class, 'destroy']);
+        Route::patch('/admin/bakers/{baker}/publikasi', [AdminBakerController::class, 'publication']);
+        Route::post('/admin/bakers/{baker}/foto', [AdminBakerController::class, 'uploadFoto']);
+        Route::delete('/admin/bakers/{baker}/foto', [AdminBakerController::class, 'deleteFoto']);
+
     });
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -136,7 +149,6 @@ Route::prefix('management')
         Route::get('/laporan-penjualan', [LaporanPenjualanController::class, 'index']);
         Route::get('/laporan-penjualan/export', [LaporanPenjualanController::class, 'export']);
     });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -170,16 +182,15 @@ Route::prefix('admin/testimonial')
 Route::get('/admin/mutasi-stok', [MutasiStokController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
 Route::post('/admin/mutasi-stok/koreksi', [MutasiStokController::class, 'koreksi'])->middleware(['auth:sanctum', 'can:manage-admin']);
 
-// STOCK OPNAME 
-Route::get('/admin/opname-stok', [\App\Http\Controllers\Api\StockOpnameController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
-Route::get('/admin/opname-stok/ringkasan-pengeluaran', [\App\Http\Controllers\Api\StockOpnameController::class, 'ringkasanPengeluaran'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
-Route::get('/admin/opname-stok/{opnameStok}', [\App\Http\Controllers\Api\StockOpnameController::class, 'show'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
-Route::post('/admin/opname-stok', [\App\Http\Controllers\Api\StockOpnameController::class, 'store'])->middleware(['auth:sanctum', 'can:manage-admin']);
-Route::put('/admin/opname-stok/{opnameStok}', [\App\Http\Controllers\Api\StockOpnameController::class, 'update'])->middleware(['auth:sanctum', 'can:manage-admin']);
-Route::post('/admin/opname-stok/{opnameStok}/selesai', [\App\Http\Controllers\Api\StockOpnameController::class, 'selesai'])->middleware(['auth:sanctum', 'can:manage-admin']);
-Route::post('/admin/opname-stok/{opnameStok}/batalkan', [\App\Http\Controllers\Api\StockOpnameController::class, 'batalkan'])->middleware(['auth:sanctum', 'can:manage-admin']);
-Route::post('/admin/opname-stok/pengeluaran', [\App\Http\Controllers\Api\StockOpnameController::class, 'pengeluaran'])->middleware(['auth:sanctum', 'can:manage-admin']);
-
+// STOCK OPNAME
+Route::get('/admin/opname-stok', [StockOpnameController::class, 'index'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::get('/admin/opname-stok/ringkasan-pengeluaran', [StockOpnameController::class, 'ringkasanPengeluaran'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::get('/admin/opname-stok/{opnameStok}', [StockOpnameController::class, 'show'])->middleware(['auth:sanctum', 'can:view-management-dashboard']);
+Route::post('/admin/opname-stok', [StockOpnameController::class, 'store'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::put('/admin/opname-stok/{opnameStok}', [StockOpnameController::class, 'update'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::post('/admin/opname-stok/{opnameStok}/selesai', [StockOpnameController::class, 'selesai'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::post('/admin/opname-stok/{opnameStok}/batalkan', [StockOpnameController::class, 'batalkan'])->middleware(['auth:sanctum', 'can:manage-admin']);
+Route::post('/admin/opname-stok/pengeluaran', [StockOpnameController::class, 'pengeluaran'])->middleware(['auth:sanctum', 'can:manage-admin']);
 
 /*
 |--------------------------------------------------------------------------
@@ -189,4 +200,4 @@ Route::post('/admin/opname-stok/pengeluaran', [\App\Http\Controllers\Api\StockOp
 | middleware PosAuthenticate. Grup lama di bawah ini dihapus karena gate
 | manage-pos tidak pernah didefinisikan dan method controller tidak ada.
  */
-require __DIR__ . '/pos.php';
+require __DIR__.'/pos.php';

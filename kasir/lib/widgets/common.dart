@@ -19,14 +19,18 @@ void showError(BuildContext context, Object error) {
 Future<int?> askAmount(BuildContext context, {required String title, String initial = '0', bool allowZero = true}) async {
   var typedAmount = initial;
   final result = await showDialog<int>(context: context, builder: (ctx) => AlertDialog(
+    scrollable: true,
     title: Text(title),
-    content: TextFormField(initialValue: initial, autofocus: true, keyboardType: TextInputType.number,
-      decoration: const InputDecoration(labelText: 'Jumlah (rupiah)'),
-      onChanged: (value) => typedAmount = value,
-      onFieldSubmitted: (input) {
-        final value = int.tryParse(input);
-        if (value != null && (allowZero ? value >= 0 : value > 0)) Navigator.pop(ctx, value);
-      }),
+    content: SizedBox(
+      width: KukiSpace.width(ctx, 34, min: 260, max: 420),
+      child: TextFormField(initialValue: initial, autofocus: true, keyboardType: TextInputType.number,
+        decoration: const InputDecoration(labelText: 'Jumlah (rupiah)'),
+        onChanged: (value) => typedAmount = value,
+        onFieldSubmitted: (input) {
+          final value = int.tryParse(input);
+          if (value != null && (allowZero ? value >= 0 : value > 0)) Navigator.pop(ctx, value);
+        }),
+    ),
     actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
       FilledButton(onPressed: () {
         final value = int.tryParse(typedAmount);

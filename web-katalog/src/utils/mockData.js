@@ -854,13 +854,6 @@ export const products = [
 
 export const featuredProducts = products.slice(0, 4)
 
-export const bakers = [
-  { id: 1, name: 'Raka Wijaya', role: 'Head Pastry Chef' },
-  { id: 2, name: 'Nadia Kusuma', role: 'Pastry & Sourdough' },
-  { id: 3, name: 'Bagas Pratama', role: 'Pastry Assistant' },
-  { id: 4, name: 'Sinta Larasati', role: 'Cake Artist & Educator' },
-]
-
 export const formatRupiah = (harga) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',

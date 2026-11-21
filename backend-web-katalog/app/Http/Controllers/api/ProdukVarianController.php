@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\produk;
 use App\Models\ProdukVarian;
+use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -59,6 +60,8 @@ class ProdukVarianController extends Controller
             'aktif' => $data['aktif'] ?? true,
         ]);
 
+        KukiAssistantService::forgetCatalogContext();
+
         return response()->json([
             'success' => true,
             'message' => 'Varian berhasil ditambahkan.',
@@ -86,6 +89,8 @@ class ProdukVarianController extends Controller
         $data['barcode'] = $barcode;
         $varian->update($data);
 
+        KukiAssistantService::forgetCatalogContext();
+
         return response()->json([
             'success' => true,
             'message' => 'Varian berhasil diperbarui.',
@@ -97,6 +102,8 @@ class ProdukVarianController extends Controller
     {
         $this->ensureBelongsToProduct($produk, $varian);
         $varian->delete();
+
+        KukiAssistantService::forgetCatalogContext();
 
         return response()->json([
             'success' => true,

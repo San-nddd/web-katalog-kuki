@@ -56,6 +56,7 @@ class _PosShellState extends State<PosShell> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
+          resizeToAvoidBottomInset: true,
           drawer: Drawer(
             width: KukiSpace.width(context, 19, min: 200, max: 300),
             backgroundColor: KukiColors.paper,
@@ -92,9 +93,11 @@ class _PosShellState extends State<PosShell> {
                               ),
                             ),
                             SizedBox(width: KukiSpace.tight(context)),
-                            Expanded(
+                            Flexible(
                               child: Text(
                                 titles[selected],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -116,14 +119,18 @@ class _PosShellState extends State<PosShell> {
                                     : KukiColors.peach,
                               ),
                             SizedBox(width: KukiSpace.normal(context)),
-                            if (constraints.maxWidth >= 760)
-                              Text(
-                                DateFormat(
-                                  'dd MMM yyyy',
-                                ).format(DateTime.now()),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: KukiColors.muted,
+                            if (constraints.maxWidth >= 900)
+                              Flexible(
+                                child: Text(
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(DateTime.now()),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: KukiColors.muted,
+                                  ),
                                 ),
                               ),
                             SizedBox(width: KukiSpace.tight(context)),
@@ -142,11 +149,15 @@ class _PosShellState extends State<PosShell> {
                                     )
                                   : const Icon(Icons.sync_rounded),
                             ),
-                            Text(
-                              '${ctrl.pending} tertunda · ${ctrl.unresolved} belum selesai',
-                              style: const TextStyle(
-                                color: KukiColors.muted,
-                                fontSize: 12,
+                            Flexible(
+                              child: Text(
+                                '${ctrl.pending} tertunda · ${ctrl.unresolved} belum selesai',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: KukiColors.muted,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ],

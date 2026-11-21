@@ -26,7 +26,7 @@ export async function downloadLaporanPenjualanCsv(dari, sampai) {
 
   const response = await fetch(
     `${API_BASE_URL}/management/laporan-penjualan/export?${params}`,
-    { headers: { Accept: 'text/csv, application/json', Authorization: `Bearer ${token}` } },
+    { headers: { Accept: 'application/json, text/csv', Authorization: `Bearer ${token}` } },
   )
   if (!response.ok) {
     const data = await response.json().catch(() => null)

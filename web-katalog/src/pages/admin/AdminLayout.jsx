@@ -367,6 +367,7 @@ function AdminLayout({ title, children }) {
           <span className="admin-nav-group">KATALOG</span>
           <NavLink to="/admin/produk">{copy.products}</NavLink>
           <NavLink to="/admin/kategori">{copy.categories}</NavLink>
+          <NavLink to="/admin/bakers">Bakers</NavLink>
           <span className="admin-nav-group">OPERASIONAL</span>
           <NavLink to="/admin/produksi-harian">Produksi Harian</NavLink>
           <NavLink to="/admin/mutasi-stok">Riwayat Mutasi Stok</NavLink>

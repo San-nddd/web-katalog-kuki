@@ -5,12 +5,8 @@ namespace App\Services;
 use App\Models\Obrolan;
 use App\Models\PesanObrolan;
 use App\Models\produk;
-use App\Models\User;
-use App\Notifications\HandoverRequestedNotification;
-use App\Notifications\CustomerNewMessageNotification;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class KukiAssistantService
 {
@@ -19,20 +15,25 @@ class KukiAssistantService
     public const ERROR_REPLY =
         'Maaf, Kuki Assistant sedang mengalami kendala. Silakan coba lagi.';
 
-    private const MAX_REPLY_LENGTH = 4000;
-private const CATALOG_CACHE_KEY = 'kuki:ai:catalog_context';
+    public const CATALOG_CACHE_KEY = 'kuki:ai:catalog_context';
 
-private const CATALOG_CACHE_TTL = 300; // 5 menit
+    private const MAX_REPLY_LENGTH = 4000;
+
+    private const CATALOG_CACHE_TTL = 60;
+
     private const HISTORY_LIMIT = 12;
 
     private const CATALOG_LIMIT = 60;
 
-    private const HANDOVER_CONNECTING_MESSAGE =
-        'Sedang menghubungkan Anda ke Admin...';
-
     public function __construct(
-        private readonly OpenRouterService $llm
-    ) {
+        private readonly OpenRouterService $llm,
+        private readonly SafetyReportDetector $safety,
+        private readonly HandoverService $handover
+    ) {}
+
+    public static function forgetCatalogContext(): void
+    {
+        Cache::forget(self::CATALOG_CACHE_KEY);
     }
 
     /**
@@ -115,131 +116,53 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
             'pesan' => $message,
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Cek apakah chat sudah masuk jalur Admin
-        |--------------------------------------------------------------------------
-        |
-        | membutuhkan_admin:
-        | Customer sedang menunggu Admin.
-        |
-        | ditangani:
-        | Admin sudah mengambil / membalas chat.
-        |
-        | Dalam dua kondisi ini:
-        |
-        | - pesan Customer tetap disimpan
-        | - Admin mendapat Web Push
-        | - OpenRouter TIDAK dipanggil
-        | - AI TIDAK membalas
-        |
-        */
-
         $sedangDitanganiAdmin = in_array(
             $obrolan->status_handover,
             [
-                'membutuhkan_admin',
-                'ditangani',
+                HandoverService::HANDOVER_MENUNGGU,
+                HandoverService::HANDOVER_DITANGANI,
             ],
             true
         );
 
         if ($sedangDitanganiAdmin) {
-            /*
-            |--------------------------------------------------------------------------
-            | CUSTOMER_NEW_MESSAGE Web Push
-            |--------------------------------------------------------------------------
-            |
-            | Maksimal satu push per obrolan setiap 10 detik.
-            |
-            */
-
-            try {
-                $cooldownSeconds = 10;
-
-                $cacheKey =
-                    'customer_message_push_'.$obrolan->id;
-
-                /*
-                 * cache()->add() hanya berhasil jika key
-                 * belum ada.
-                 *
-                 * Artinya request berikutnya selama cooldown
-                 * tidak akan menghasilkan push baru.
-                 */
-                $bolehKirimPush = cache()->add(
-                    $cacheKey,
-                    true,
-                    now()->addSeconds($cooldownSeconds)
-                );
-
-                if ($bolehKirimPush) {
-                    $admins = User::whereHas(
-                        'pushSubscriptions'
-                    )->get();
-
-                    Log::info(
-                        'CUSTOMER NEW MESSAGE PUSH DEBUG',
-                        [
-                            'obrolan_id' => $obrolan->id,
-                            'pesan_id' => $pesanUser->id,
-                            'jumlah_admin' => $admins->count(),
-                        ]
-                    );
-
-                    foreach ($admins as $admin) {
-                        $admin->notify(
-                            new CustomerNewMessageNotification(
-                                $obrolan->id,
-                                $pesanUser->id,
-                                $message
-                            )
-                        );
-                    }
-
-                    Log::info(
-                        'CUSTOMER NEW MESSAGE PUSH TERKIRIM',
-                        [
-                            'obrolan_id' => $obrolan->id,
-                            'pesan_id' => $pesanUser->id,
-                        ]
-                    );
-                } else {
-                    Log::info(
-                        'CUSTOMER NEW MESSAGE PUSH COOLDOWN',
-                        [
-                            'obrolan_id' => $obrolan->id,
-                            'pesan_id' => $pesanUser->id,
-                        ]
-                    );
-                }
-            } catch (\Throwable $e) {
-                Log::error(
-                    'CUSTOMER NEW MESSAGE PUSH GAGAL',
-                    [
-                        'message' => $e->getMessage(),
-                        'obrolan_id' => $obrolan->id,
-                        'pesan_id' => $pesanUser->id,
-                    ]
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | STOP AI
-            |--------------------------------------------------------------------------
-            |
-            | Return di sini sangat penting.
-            |
-            | Setelah handover terjadi:
-            | OpenRouter tidak boleh dipanggil lagi.
-            |
-            */
+            $this->handover->notifyCustomerMessage($obrolan, $pesanUser);
 
             return [
                 'session_id' => $sessionId,
                 'reply' => null,
                 'needs_admin' => true,
+                'status' => $this->handover->lifecycleStatus($obrolan),
+                'product_context' => $this->productContext($product),
+                'error' => false,
+            ];
+        }
+
+        $laporan = $this->safety->detect($message);
+
+        if ($laporan !== null) {
+            $reply = $this->safetyReply($laporan);
+
+            $obrolan->pesan()->create([
+                'tipe_pengirim' => 'bot',
+                'pesan' => $reply,
+            ]);
+
+            $this->handover->start(
+                $obrolan,
+                $laporan['label'].': '.$this->ringkasPesan($message),
+                HandoverService::PRIORITY_HIGH
+            );
+
+            return [
+                'session_id' => $sessionId,
+                'reply' => $reply,
+                'needs_admin' => true,
+                'prioritas' => HandoverService::PRIORITY_HIGH,
+                'safety_handover' => true,
+                'butuh_medis' => $laporan['butuh_medis'],
+                'kategori_laporan' => $laporan['kategori'],
+                'status' => $this->handover->lifecycleStatus($obrolan),
                 'product_context' => $this->productContext($product),
                 'error' => false,
             ];
@@ -265,31 +188,26 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
             ->reverse()
             ->map(
                 fn (PesanObrolan $pesan) => [
-                    'role' =>
-                        $pesan->tipe_pengirim === 'user'
+                    'role' => $pesan->tipe_pengirim === 'user'
                             ? 'user'
                             : 'bot',
-                    'text' =>
-                        $pesan->tipe_pengirim === 'bot'
+                    'text' => $pesan->tipe_pengirim === 'bot'
                             ? $this->sanitizeInternalModelMetadata($pesan->pesan)
                             : $pesan->pesan,
                 ]
             )
             ->filter(
-                fn (array $turn) =>
-                    trim((string) $turn['text']) !== ''
+                fn (array $turn) => trim((string) $turn['text']) !== ''
             )
             ->slice(0, -1)
             ->values()
             ->all();
-
 
         $rawReply = $this->llm->generate(
             $this->systemPrompt($product),
             $history,
             $message
         );
-
 
         if (
             $rawReply !== null &&
@@ -367,93 +285,11 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
             'pesan' => $reply,
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | HANDOVER_REQUESTED
-        |--------------------------------------------------------------------------
-        */
-
         if ($needsAdmin) {
-            $obrolan->update([
-                'status_handover' => 'membutuhkan_admin',
-                'status' => 'menunggu',
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Web Push HANDOVER_REQUESTED
-            |--------------------------------------------------------------------------
-            |
-            | Cooldown 15 detik per obrolan.
-            |
-            */
-
-            try {
-                $cooldownSeconds = 15;
-
-                $lastPushAt = cache()->get(
-                    'handover_push_'.$obrolan->id
-                );
-
-                $bolehKirimPush =
-                    ! $lastPushAt ||
-                    now()->diffInSeconds(
-                        $lastPushAt
-                    ) >= $cooldownSeconds;
-
-                if ($bolehKirimPush) {
-                    $admins = User::whereHas(
-                        'pushSubscriptions'
-                    )->get();
-
-                    Log::info(
-                        'AI HANDOVER PUSH DEBUG',
-                        [
-                            'obrolan_id' => $obrolan->id,
-                            'jumlah_admin' => $admins->count(),
-                        ]
-                    );
-
-                    foreach ($admins as $admin) {
-                        $admin->notify(
-                            new HandoverRequestedNotification(
-                                $obrolan->id,
-                                'Ada customer yang meminta bantuan Admin.'
-                            )
-                        );
-                    }
-
-                    cache()->put(
-                        'handover_push_'.$obrolan->id,
-                        now(),
-                        now()->addSeconds(
-                            $cooldownSeconds
-                        )
-                    );
-
-                    Log::info(
-                        'AI HANDOVER PUSH TERKIRIM',
-                        [
-                            'obrolan_id' => $obrolan->id,
-                        ]
-                    );
-                } else {
-                    Log::info(
-                        'AI HANDOVER PUSH COOLDOWN',
-                        [
-                            'obrolan_id' => $obrolan->id,
-                        ]
-                    );
-                }
-            } catch (\Throwable $e) {
-                Log::error(
-                    'AI HANDOVER PUSH GAGAL',
-                    [
-                        'message' => $e->getMessage(),
-                        'obrolan_id' => $obrolan->id,
-                    ]
-                );
-            }
+            $this->handover->start(
+                $obrolan,
+                'Ada customer yang meminta bantuan Admin.'
+            );
         }
 
         /*
@@ -611,6 +447,31 @@ private const CATALOG_CACHE_TTL = 300; // 5 menit
         );
     }
 
+    private function safetyReply(array $laporan): string
+    {
+        $reply = 'Mohon maaf atas pengalaman ini. Kami memahami hal ini bisa membuat Anda tidak nyaman, '
+            .'dan laporan Anda kami catat sebagai prioritas tinggi untuk ditindaklanjuti tim Kuki.';
+
+        if ($laporan['butuh_medis']) {
+            $reply .= ' Jika Anda mengalami reaksi alergi, sesak, atau keluhan kesehatan, '
+                .'segera cari bantuan medis darurat.';
+        }
+
+        $reply .= ' Kami belum dapat menyimpulkan penyebabnya sebelum pemeriksaan, '
+            .'dan belum dapat menjanjikan tindakan tertentu tanpa konfirmasi Admin.';
+
+        return $reply;
+    }
+
+    private function ringkasPesan(string $message): string
+    {
+        if (mb_strlen($message) <= 160) {
+            return $message;
+        }
+
+        return mb_substr($message, 0, 157).'...';
+    }
+
     /**
      * Deteksi kebutuhan handover ke admin.
      */
@@ -690,6 +551,13 @@ ATURAN WAJIB:
 15. Jika pengguna menanyakan tentang produk yang tidak ada di katalog, jawab bahwa produk tersebut tidak tersedia. Kemudian lanjutkan dengan rekomendasi produk lain yang relevan dari katalog.
 16. Jika pengguna bilang ingin memesan produk, segera alihkan ke admin dengan jawaban yang sopan dan akhiri dengan marker [[HANDOVER]].
 17. Jika pengguna memilih atau menanyakan lokasi toko anda harus menambahkan kalimat " klik tombol diatas untuk melihat peta lokasi toko kami" di akhir jawaban selain dari alamat tertulisnya.
+18. Pahami bahasa informal, typo, singkatan, ejaan alternatif, dan kalimat tidak langsung. Jangan mengoreksi ejaan pelanggan secara tidak perlu; minta klarifikasi hanya jika informasi penting benar-benar ambigu.
+19. Jawab pertanyaan harga, varian, dan ketersediaan HANYA dari data katalog dan varian aktif pada konteks. Jika varian aktif tersedia, sebutkan nama, harga, dan stoknya sesuai konteks.
+20. Untuk pertanyaan pemesanan atau pembelian, arahkan ke Admin dengan marker [[HANDOVER]]. Jangan menjanjikan ketersediaan, pengiriman, atau harga di luar konteks.
+21. Untuk keluhan pesanan atau kualitas makanan seperti keterlambatan, salah item, rasa, tekstur, atau kesegaran, tanggapi dengan empati dan jangan menyalahkan pelanggan. Arahkan ke Admin bila dibutuhkan konfirmasi.
+22. Untuk laporan benda asing, serangga, jamur, oli, bahan kimia, keracunan, alergi, atau keluhan kesehatan, minta maaf dengan sopan, jangan meremehkan, jangan mengarang penyebab, jangan menyatakan produk aman tanpa pemeriksaan, jangan menjanjikan kompensasi atau pengembalian uang, dan akhiri jawaban dengan marker [[HANDOVER]] agar Admin segera menangani.
+23. Untuk reaksi alergi berat, sesak napas, atau kondisi kesehatan serius, anjurkan pelanggan segera mencari bantuan medis darurat.
+24. Jangan meminta data pribadi yang tidak diperlukan untuk menjawab pertanyaan atau menangani laporan.
 PROMPT;
 
         /*
@@ -743,7 +611,7 @@ PROMPT;
         } else {
             $prompt .=
                 "\nPengguna tidak sedang membuka halaman "
-                ."produk tertentu. Jawab berdasarkan daftar "
+                .'produk tertentu. Jawab berdasarkan daftar '
                 ."katalog di bawah.\n";
         }
 
@@ -819,58 +687,101 @@ PROMPT;
                 .$product->barcode;
         }
 
+        $baris = array_merge($baris, $this->variantLines($product));
+
         return implode(
             "\n",
             $baris
         )."\n";
     }
 
+    private function variantLines(produk $product): array
+    {
+        $varians = $product->relationLoaded('varian')
+            ? $product->varian
+            : $product->varian()
+                ->where('aktif', true)
+                ->orderBy('id')
+                ->get();
+
+        $baris = [];
+
+        foreach ($varians as $varian) {
+            if (! (bool) $varian->aktif) {
+                continue;
+            }
+
+            $baris[] = sprintf(
+                '  - Varian: %s | Rp %s | Stok: %d | %s',
+                $varian->nama_varian,
+                number_format((float) $varian->harga, 0, ',', '.'),
+                (int) $varian->stok,
+                (int) $varian->stok > 0 ? 'Tersedia' : 'Habis'
+            );
+        }
+
+        return $baris;
+    }
+
     /**
      * Daftar produk untuk konteks AI.
      */
-   private function catalogContext(): string
-{
-    return Cache::remember(
-        self::CATALOG_CACHE_KEY,
-        now()->addSeconds(self::CATALOG_CACHE_TTL),
-        function () {
-            $produk = produk::with('kategori')
-                ->orderBy('nama_produk')
-                ->limit(self::CATALOG_LIMIT)
-                ->get();
+    private function catalogContext(): string
+    {
+        return Cache::remember(
+            self::CATALOG_CACHE_KEY,
+            now()->addSeconds(self::CATALOG_CACHE_TTL),
+            function () {
+                $produk = produk::with([
+                    'kategori',
+                    'varian' => fn ($query) => $query
+                        ->where('aktif', true)
+                        ->orderBy('id'),
+                ])
+                    ->orderBy('nama_produk')
+                    ->limit(self::CATALOG_LIMIT)
+                    ->get();
 
-            if ($produk->isEmpty()) {
-                return "- Belum ada data produk pada katalog.\n";
+                if ($produk->isEmpty()) {
+                    return "- Belum ada data produk pada katalog.\n";
+                }
+
+                return $produk
+                    ->map(function (produk $item) {
+                        $stok = (int) $item->stok;
+
+                        $ketersediaan =
+                            $stok > 0
+                                ? 'Tersedia'
+                                : 'Habis';
+
+                        $baris = sprintf(
+                            '- %s | %s | Rp %s | Stok: %d | %s',
+                            $item->nama_produk,
+                            $item->kategori?->nama ?: '-',
+                            number_format(
+                                (float) $item->harga_produk,
+                                0,
+                                ',',
+                                '.'
+                            ),
+                            $stok,
+                            $ketersediaan
+                        );
+
+                        $varian = $this->variantLines($item);
+
+                        if ($varian !== []) {
+                            $baris .= "\n".implode("\n", $varian);
+                        }
+
+                        return $baris;
+                    })
+                    ->implode("\n")
+                    ."\n";
             }
-
-            return $produk
-                ->map(function (produk $item) {
-                    $stok = (int) $item->stok;
-
-                    $ketersediaan =
-                        $stok > 0
-                            ? 'Tersedia'
-                            : 'Habis';
-
-                    return sprintf(
-                        '- %s | %s | Rp %s | Stok: %d | %s',
-                        $item->nama_produk,
-                        $item->kategori?->nama ?: '-',
-                        number_format(
-                            (float) $item->harga_produk,
-                            0,
-                            ',',
-                            '.'
-                        ),
-                        $stok,
-                        $ketersediaan
-                    );
-                })
-                ->implode("\n")
-                ."\n";
-        }
-    );
-}
+        );
+    }
 
     /**
      * Cegah reply tidak sengaja menggunakan aksara Arab.

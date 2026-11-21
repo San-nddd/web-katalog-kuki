@@ -18,14 +18,38 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController server = TextEditingController(
     text: widget.controller.api.baseUrl,
   );
+  final serverNode = FocusNode();
+  final kodeNode = FocusNode();
+  final pinNode = FocusNode();
   bool working = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _focusAndShow(widget.controller.locked ? pinNode : kodeNode);
+    });
+  }
 
   @override
   void dispose() {
     kode.dispose();
     server.dispose();
     pin.dispose();
+    serverNode.dispose();
+    kodeNode.dispose();
+    pinNode.dispose();
     super.dispose();
+  }
+
+  void _focusAndShow(FocusNode node) {
+    if (!node.hasFocus) node.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      node.requestFocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    });
   }
 
   Future<void> login() async {
@@ -68,35 +92,47 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    resizeToAvoidBottomInset: true,
     body: SafeArea(
       child: LayoutBuilder(
         builder: (ctx, size) {
-          final compact = size.maxHeight < 500;
+          final keyboardBottom = MediaQuery.viewInsetsOf(ctx).bottom;
+          final compact = size.maxHeight < 500 || keyboardBottom > 0;
           final wide = size.maxWidth >= 800 && !compact;
           return Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: KukiSpace.of(size.maxWidth, 98, min: 320, max: 1250),
-                maxHeight: KukiSpace.of(size.maxHeight, 96, min: 400, max: 760),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.only(
+                bottom: keyboardBottom + KukiSpace.normal(ctx),
               ),
-              child: Padding(
-                padding: KukiSpace.all(
-                  ctx,
-                  percent: compact ? 1 : 1.7,
-                  min: compact ? 8 : 12,
-                  max: compact ? 14 : 28,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: KukiSpace.of(
+                    size.maxWidth,
+                    98,
+                    min: 320,
+                    max: 1250,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    if (wide) ...[
-                      Expanded(flex: 11, child: _brandPanel(ctx)),
-                      SizedBox(width: KukiSpace.loose(ctx)),
+                child: Padding(
+                  padding: KukiSpace.all(
+                    ctx,
+                    percent: compact ? 1 : 1.7,
+                    min: compact ? 8 : 12,
+                    max: compact ? 14 : 28,
+                  ),
+                  child: Row(
+                    children: [
+                      if (wide) ...[
+                        Expanded(flex: 11, child: _brandPanel(ctx)),
+                        SizedBox(width: KukiSpace.loose(ctx)),
+                      ],
+                      Expanded(
+                        flex: 10,
+                        child: _loginPanel(ctx, compact: compact),
+                      ),
                     ],
-                    Expanded(
-                      flex: 10,
-                      child: _loginPanel(ctx, compact: compact),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -114,6 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
@@ -141,10 +178,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-        const Spacer(),
-        const Text(
+        SizedBox(height: KukiSpace.loose(context)),
+        Text(
           'Where Crumbs\nBecome Art.',
-          style: TextStyle(
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
             color: KukiColors.cream,
             fontSize: 45,
             fontWeight: FontWeight.w800,
@@ -152,11 +191,17 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         SizedBox(height: KukiSpace.normal(context)),
-        const Text(
+        Text(
           'POS untuk pelayanan yang lebih cepat, rapi, dan menyenangkan.',
-          style: TextStyle(color: KukiColors.peach, fontSize: 15, height: 1.6),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: KukiColors.peach,
+            fontSize: 15,
+            height: 1.6,
+          ),
         ),
-        const Spacer(),
+        SizedBox(height: KukiSpace.loose(context)),
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -199,149 +244,167 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: KukiColors.line),
       ),
-      child: Center(
-        child: SingleChildScrollView(
-          padding: KukiSpace.symmetric(
-            context,
-            horizontalPercent: compact ? 1.6 : 2.7,
-            verticalPercent: compact ? 2 : 3.8,
-            min: compact ? 10 : 14,
-            max: compact ? 20 : 40,
+      child: Padding(
+        padding: KukiSpace.symmetric(
+          context,
+          horizontalPercent: compact ? 1.6 : 2.7,
+          verticalPercent: compact ? 2 : 3.8,
+          min: compact ? 10 : 14,
+          max: compact ? 20 : 40,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: KukiSpace.width(context, 33, min: 300, max: 440),
           ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: KukiSpace.width(context, 33, min: 300, max: 440),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 25,
-                  backgroundColor: KukiColors.cream,
-                  child: Icon(
-                    ctrl.locked
-                        ? Icons.lock_outline
-                        : Icons.storefront_outlined,
-                    color: KukiColors.cocoa,
-                    size: 26,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: KukiColors.cream,
+                child: Icon(
+                  ctrl.locked ? Icons.lock_outline : Icons.storefront_outlined,
+                  color: KukiColors.cocoa,
+                  size: 26,
+                ),
+              ),
+              SizedBox(height: KukiSpace.loose(context)),
+              Text(
+                ctrl.locked ? 'Buka kunci kasir' : 'Masuk ke Kasir',
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: KukiColors.cocoa,
+                ),
+              ),
+              SizedBox(height: KukiSpace.tight(context)),
+              Text(
+                ctrl.locked
+                    ? 'Gunakan PIN yang tersimpan di tablet ini.'
+                    : 'Masukkan akun kasir Kuki Bakehouse.',
+                style: const TextStyle(fontSize: 13, color: KukiColors.muted),
+              ),
+              SizedBox(height: KukiSpace.loose(context)),
+              if (ctrl.locked) ...[
+                TextField(
+                  controller: pin,
+                  focusNode: pinNode,
+                  autofocus: true,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 8,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.done,
+                  onTap: () => _focusAndShow(pinNode),
+                  onSubmitted: (_) => unlock(),
+                  decoration: const InputDecoration(
+                    labelText: 'PIN perangkat',
+                    counterText: '',
                   ),
                 ),
-                SizedBox(height: KukiSpace.loose(context)),
-                Text(
-                  ctrl.locked ? 'Buka kunci kasir' : 'Masuk ke Kasir',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: KukiColors.cocoa,
+                SizedBox(height: KukiSpace.normal(context)),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: unlock,
+                    child: const Text('Buka POS'),
                   ),
                 ),
                 SizedBox(height: KukiSpace.tight(context)),
-                Text(
-                  ctrl.locked
-                      ? 'Gunakan PIN yang tersimpan di tablet ini.'
-                      : 'Masukkan akun kasir Kuki Bakehouse.',
-                  style: const TextStyle(fontSize: 13, color: KukiColors.muted),
+                Center(
+                  child: TextButton(
+                    onPressed: () async {
+                      try {
+                        await ctrl.logout();
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        showError(context, e);
+                      }
+                    },
+                    child: const Text('Masuk dengan akun lain'),
+                  ),
+                ),
+              ] else ...[
+                TextField(
+                  controller: server,
+                  focusNode: serverNode,
+                  keyboardType: TextInputType.url,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  textInputAction: TextInputAction.next,
+                  onTap: () => _focusAndShow(serverNode),
+                  onSubmitted: (_) => _focusAndShow(kodeNode),
+                  decoration: const InputDecoration(
+                    labelText: 'Alamat server POS',
+                    hintText: 'http://192.168.0.103:8000',
+                  ),
+                ),
+                SizedBox(height: KukiSpace.normal(context)),
+                TextField(
+                  controller: kode,
+                  focusNode: kodeNode,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.characters,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  textInputAction: TextInputAction.next,
+                  onTap: () => _focusAndShow(kodeNode),
+                  onSubmitted: (_) => _focusAndShow(pinNode),
+                  decoration: const InputDecoration(
+                    labelText: 'Kode pegawai',
+                    hintText: 'Contoh: KASIR01',
+                  ),
+                ),
+                SizedBox(height: KukiSpace.normal(context)),
+                TextField(
+                  controller: pin,
+                  focusNode: pinNode,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 8,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.done,
+                  onTap: () => _focusAndShow(pinNode),
+                  onSubmitted: (_) => login(),
+                  decoration: const InputDecoration(
+                    labelText: 'PIN',
+                    hintText: 'Contoh: 12345678',
+                    counterText: '',
+                  ),
                 ),
                 SizedBox(height: KukiSpace.loose(context)),
-                if (ctrl.locked) ...[
-                  TextField(
-                    controller: pin,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    onSubmitted: (_) => unlock(),
-                    decoration: const InputDecoration(
-                      labelText: 'PIN perangkat',
-                    ),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: working ? null : login,
+                    child: working
+                        ? const CircularProgressIndicator()
+                        : const Text('Masuk ke POS'),
                   ),
+                ),
+                if (!kIsWeb) ...[
                   SizedBox(height: KukiSpace.normal(context)),
                   SizedBox(
                     width: double.infinity,
-                    child: FilledButton(
-                      onPressed: unlock,
-                      child: const Text('Buka POS'),
-                    ),
-                  ),
-                  SizedBox(height: KukiSpace.tight(context)),
-                  Center(
-                    child: TextButton(
-                      onPressed: () async {
-                        try {
-                          await ctrl.logout();
-                        } catch (e) {
-                          if (!mounted) return;
-                          showError(this.context, e);
-                        }
-                      },
-                      child: const Text('Masuk dengan akun lain'),
-                    ),
-                  ),
-                ] else ...[
-                  TextField(
-                    controller: server,
-                    decoration: const InputDecoration(
-                      labelText: 'Alamat server POS',
-                      hintText: 'http://192.168.0.103:8000',
+                    child: OutlinedButton.icon(
+                      onPressed: working ? null : startDemo,
+                      icon: const Icon(Icons.preview_outlined),
+                      label: const Text('Coba mode DEMO'),
                     ),
                   ),
                   SizedBox(height: KukiSpace.normal(context)),
-                  TextField(
-                    controller: kode,
-                    textCapitalization: TextCapitalization.characters,
-                    autocorrect: false,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Kode pegawai',
-                      hintText: 'Contoh: KASIR01',
+                  const Text(
+                    'DEMO menggunakan database terpisah. Transaksi simulasi tidak dikirim ke Laravel.',
+                    style: TextStyle(
+                      color: KukiColors.muted,
+                      fontSize: 11,
+                      height: 1.5,
                     ),
                   ),
-                  SizedBox(height: KukiSpace.normal(context)),
-                  TextField(
-                    controller: pin,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    maxLength: 8,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      labelText: 'PIN',
-                      hintText: 'Contoh: 12345678',
-                      counterText: '',
-                    ),
-                    onSubmitted: (_) => login(),
-                  ),
-                  SizedBox(height: KukiSpace.loose(context)),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: working ? null : login,
-                      child: working
-                          ? const CircularProgressIndicator()
-                          : const Text('Masuk ke POS'),
-                    ),
-                  ),
-                  if (!kIsWeb) ...[
-                    SizedBox(height: KukiSpace.normal(context)),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: working ? null : startDemo,
-                        icon: const Icon(Icons.preview_outlined),
-                        label: const Text('Coba mode DEMO'),
-                      ),
-                    ),
-                    SizedBox(height: KukiSpace.normal(context)),
-                    const Text(
-                      'DEMO menggunakan database terpisah. Transaksi simulasi tidak dikirim ke Laravel.',
-                      style: TextStyle(
-                        color: KukiColors.muted,
-                        fontSize: 11,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
                 ],
               ],
-            ),
+            ],
           ),
         ),
       ),

@@ -67,14 +67,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         title: Text(title),
-        content: TextFormField(
-          initialValue: initial,
-          autofocus: true,
-          maxLines: title.contains('Catatan') ? 3 : 1,
-          decoration: InputDecoration(hintText: title),
-          onChanged: (value) => typedText = value,
-          onFieldSubmitted: (value) => Navigator.pop(ctx, value),
+        content: SizedBox(
+          width: KukiSpace.width(ctx, 36, min: 280, max: 480),
+          child: TextFormField(
+            initialValue: initial,
+            autofocus: true,
+            maxLines: title.contains('Catatan') ? 3 : 1,
+            decoration: InputDecoration(hintText: title),
+            onChanged: (value) => typedText = value,
+            onFieldSubmitted: (value) => Navigator.pop(ctx, value),
+          ),
         ),
         actions: [
           TextButton(
@@ -115,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return LayoutBuilder(
       builder: (context, size) {
-        final wide = size.maxWidth >= 740;
+        final wide = size.maxWidth >= 900;
         return Padding(
           padding: KukiSpace.all(context, percent: 1.4, min: 10, max: 26),
           child: wide
@@ -125,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(child: _catalog(ctrl, categories, filtered)),
                     SizedBox(width: KukiSpace.loose(context)),
                     SizedBox(
-                      width: KukiSpace.of(size.maxWidth, 25, min: 250, max: 340),
+                      width: KukiSpace.of(size.maxWidth, 24, min: 280, max: 360),
                       child: _cart(ctrl),
                     ),
                   ],
@@ -320,121 +324,126 @@ class _RegisterScreenState extends State<RegisterScreen> {
     PosController ctrl,
     List<String> categories,
     List<Product> filtered,
-  ) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _orderStrip(ctrl),
-      const SizedBox(height: 20),
-      Row(
-        children: [
-          const Expanded(
-            child: Text(
-              'Menu Produk',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: KukiColors.cocoa,
-              ),
-            ),
-          ),
-          Text(
-            '${filtered.length} produk',
-            style: const TextStyle(fontSize: 11, color: KukiColors.muted),
-          ),
-        ],
-      ),
-      const SizedBox(height: 10),
-      Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 46,
-              child: TextField(
-                controller: search,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search, size: 20),
-                  hintText: 'Cari produk atau SKU',
-                  isDense: true,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          IconButton.filledTonal(
-            tooltip: 'Barcode kamera',
-            onPressed: cameraScan,
-            icon: const Icon(Icons.qr_code_scanner),
-          ),
-          IconButton.filledTonal(
-            tooltip: 'Scanner USB / Bluetooth',
-            onPressed: hidScanner,
-            icon: const Icon(Icons.keyboard_outlined),
-          ),
-        ],
-      ),
-      const SizedBox(height: 10),
-      SizedBox(
-        height: 43,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
+  ) => NestedScrollView(
+    headerSliverBuilder: (context, _) => [
+      SliverToBoxAdapter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final name in categories)
-              Padding(
-                padding: const EdgeInsets.only(right: 7),
-                child: ChoiceChip(
-                  label: Text(name),
-                  selected: category == name,
-                  onSelected: (_) => setState(() => category = name),
+            _orderStrip(ctrl),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Menu Produk',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: KukiColors.cocoa,
+                    ),
+                  ),
                 ),
+                Text(
+                  '${filtered.length} produk',
+                  style: const TextStyle(fontSize: 11, color: KukiColors.muted),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 46,
+                    child: TextField(
+                      controller: search,
+                      onChanged: (_) => setState(() {}),
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search, size: 20),
+                        hintText: 'Cari produk atau SKU',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                IconButton.filledTonal(
+                  tooltip: 'Barcode kamera',
+                  onPressed: cameraScan,
+                  icon: const Icon(Icons.qr_code_scanner),
+                ),
+                IconButton.filledTonal(
+                  tooltip: 'Scanner USB / Bluetooth',
+                  onPressed: hidScanner,
+                  icon: const Icon(Icons.keyboard_outlined),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 43,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  for (final name in categories)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 7),
+                      child: ChoiceChip(
+                        label: Text(name),
+                        selected: category == name,
+                        onSelected: (_) => setState(() => category = name),
+                      ),
+                    ),
+                ],
               ),
+            ),
+            const SizedBox(height: 10),
           ],
         ),
       ),
-      const SizedBox(height: 10),
-      Expanded(
-        child: LayoutBuilder(
-          builder: (_, box) => RefreshIndicator(
-            onRefresh: () async {
-              if (ctrl.demo) return;
-              try {
-                await ctrl.refreshCatalog();
-              } catch (e) {
-                if (mounted) showError(context, e);
-              }
-            },
-            child: filtered.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      SizedBox(
-                        height: box.maxHeight,
-                        child: const Center(
-                          child: Text('Belum ada produk pada kategori ini.'),
-                        ),
-                      ),
-                    ],
-                  )
-                    : GridView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.all(KukiSpace.normal(context)),
-                    itemCount: filtered.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: (box.maxWidth /
-                              KukiSpace.of(box.maxWidth, 14, min: 150, max: 190))
-                          .floor()
-                          .clamp(2, 5)
-                          .toInt(),
-                      childAspectRatio: .90,
-                      crossAxisSpacing: KukiSpace.of(box.maxWidth, 1.1, min: 8, max: 18),
-                      mainAxisSpacing: KukiSpace.of(box.maxWidth, 1.1, min: 8, max: 18),
-                    ),
-                    itemBuilder: (_, i) => _productCard(filtered[i]),
-                  ),
-          ),
-        ),
-      ),
     ],
+    body: LayoutBuilder(
+      builder: (context, box) => RefreshIndicator(
+        onRefresh: () async {
+          if (ctrl.demo) return;
+          try {
+            await ctrl.refreshCatalog();
+          } catch (e) {
+            if (!context.mounted) return;
+            showError(context, e);
+          }
+        },
+        child: filtered.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: box.maxHeight,
+                    child: const Center(
+                      child: Text('Belum ada produk pada kategori ini.'),
+                    ),
+                  ),
+                ],
+              )
+            : GridView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.all(KukiSpace.normal(context)),
+                itemCount: filtered.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: (box.maxWidth /
+                          KukiSpace.of(box.maxWidth, 14, min: 150, max: 190))
+                      .floor()
+                      .clamp(2, 5)
+                      .toInt(),
+                  childAspectRatio: .90,
+                  crossAxisSpacing: KukiSpace.of(box.maxWidth, 1.1, min: 8, max: 18),
+                  mainAxisSpacing: KukiSpace.of(box.maxWidth, 1.1, min: 8, max: 18),
+                ),
+                itemBuilder: (_, i) => _productCard(filtered[i]),
+              ),
+      ),
+    ),
   );
 
   Widget _productCard(Product p) => Material(
@@ -652,91 +661,107 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   itemBuilder: (_, i) {
                     final line = order.lines[i];
                     final imageUrl = line.product.imageUrl?.trim();
-                    return Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: KukiColors.cream,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: imageUrl == null || imageUrl.isEmpty
-                                ? const Icon(
-                                    Icons.bakery_dining_outlined,
-                                    size: 24,
-                                    color: KukiColors.mocha,
-                                  )
-                                : Image.network(
-                                    imageUrl,
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => const Icon(
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: KukiColors.cream,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: imageUrl == null || imageUrl.isEmpty
+                                  ? const Icon(
                                       Icons.bakery_dining_outlined,
                                       size: 24,
                                       color: KukiColors.mocha,
+                                    )
+                                  : Image.network(
+                                      imageUrl,
+                                      width: 44,
+                                      height: 44,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) => const Icon(
+                                        Icons.bakery_dining_outlined,
+                                        size: 24,
+                                        color: KukiColors.mocha,
+                                      ),
                                     ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                line.product.name,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                money(line.total),
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: KukiColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _qtyButton(Icons.remove, () async {
-                          try {
-                            await ctrl.changeQuantity(line.product.id, -1);
-                          } catch (e) {
-                            if (mounted) showError(context, e);
-                          }
-                        }),
-                        SizedBox(
-                          width: 22,
-                          child: Center(
-                            child: Text(
-                              '${line.quantity}',
-                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
-                        ),
-                        _qtyButton(Icons.add, () async {
-                          try {
-                            await ctrl.changeQuantity(line.product.id, 1);
-                          } catch (e) {
-                            if (mounted) showError(context, e);
-                          }
-                        }),
-                        _qtyButton(Icons.delete_outline, () async {
-                          try {
-                            await ctrl.removeLine(line.product.id);
-                          } catch (e) {
-                            if (mounted) showError(context, e);
-                          }
-                        }),
-                      ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  line.product.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  money(line.total),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: KukiColors.muted,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    _qtyButton(Icons.remove, () async {
+                                      try {
+                                        await ctrl.changeQuantity(
+                                          line.product.id,
+                                          -1,
+                                        );
+                                      } catch (e) {
+                                        if (mounted) showError(context, e);
+                                      }
+                                    }),
+                                    SizedBox(
+                                      width: 24,
+                                      child: Center(
+                                        child: Text(
+                                          '${line.quantity}',
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                    ),
+                                    _qtyButton(Icons.add, () async {
+                                      try {
+                                        await ctrl.changeQuantity(
+                                          line.product.id,
+                                          1,
+                                        );
+                                      } catch (e) {
+                                        if (mounted) showError(context, e);
+                                      }
+                                    }),
+                                    const SizedBox(width: 4),
+                                    _qtyButton(Icons.delete_outline, () async {
+                                      try {
+                                        await ctrl.removeLine(line.product.id);
+                                      } catch (e) {
+                                        if (mounted) showError(context, e);
+                                      }
+                                    }),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -871,22 +896,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
+          scrollable: true,
           title: const Text('Pembayaran berhasil disimpan'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Transaksi: ${result.uuid.substring(0, 8)}'),
-              Text('Total: ${money(result.total)}'),
-              if (result.method == 'cash')
-                Text('Kembalian: ${money(result.change)}'),
-              const SizedBox(height: 9),
-              const Text(
-                'Struk dikirim ke printer Bluetooth/USB yang dipilih. '
-                'Status sinkronisasi tersedia pada menu Riwayat.',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
+          content: SizedBox(
+            width: KukiSpace.width(dialogContext, 36, min: 280, max: 480),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Transaksi: ${result.uuid.substring(0, 8)}'),
+                Text('Total: ${money(result.total)}'),
+                if (result.method == 'cash')
+                  Text('Kembalian: ${money(result.change)}'),
+                const SizedBox(height: 9),
+                const Text(
+                  'Struk dikirim ke printer Bluetooth/USB yang dipilih. '
+                  'Status sinkronisasi tersedia pada menu Riwayat.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1069,9 +1098,10 @@ class _HidBarcodeDialogState extends State<_HidBarcodeDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    scrollable: true,
     title: const Text('Scan barcode / SKU'),
     content: SizedBox(
-      width: KukiSpace.width(context, 31, min: 300, max: 430),
+      width: KukiSpace.width(context, 31, min: 280, max: 430),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

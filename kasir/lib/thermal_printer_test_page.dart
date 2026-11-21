@@ -87,80 +87,91 @@ class _KukiPrinterSettingsPageState extends State<KukiPrinterSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('Printer Thermal Kuki')),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text(
-            'Gunakan halaman ini hanya untuk memilih printer dan lebar kertas. '
-            'Struk dicetak dari transaksi yang tersimpan, bukan dari teks pengujian.',
-          ),
-          const SizedBox(height: 8),
-          Text(status),
-          const SizedBox(height: 8),
-          Row(children: [
-            Expanded(child: FilledButton.icon(
-              onPressed: findBluetooth,
-              icon: const Icon(Icons.bluetooth_searching),
-              label: const Text('Cari Bluetooth'),
-            )),
-            const SizedBox(width: 8),
-            Expanded(child: OutlinedButton.icon(
-              onPressed: findUsb,
-              icon: const Icon(Icons.usb),
-              label: const Text('Cari USB OTG'),
-            )),
-          ]),
-          Row(children: [
-            const Text('Lebar kertas: '),
-            DropdownButton<int>(
-              value: widget.controller.receiptWidth,
-              items: const [
-                DropdownMenuItem(value: 58, child: Text('58 mm')),
-                DropdownMenuItem(value: 80, child: Text('80 mm')),
-              ],
-              onChanged: busy ? null : (n) {
-                if (n != null) unawaited(setWidth(n));
-              },
-            ),
-          ]),
-          if (busy) const LinearProgressIndicator(),
-          Expanded(child: ListView(children: [
-            if (bluetooth.isNotEmpty) const ListTile(title: Text('Bluetooth dipasangkan')),
-            ...bluetooth.map((p) => ListTile(
-              leading: const Icon(Icons.bluetooth),
-              title: Text(p.name),
-              subtitle: Text(p.macAdress),
-              trailing: service.transport == KukiPrinterTransport.bluetooth &&
-                      service.bluetoothAddress == p.macAdress
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-              onTap: busy ? null : () => connectBluetooth(p),
-            )),
-            if (usb.isNotEmpty) const ListTile(title: Text('Printer USB OTG')),
-            ...usb.map((p) => ListTile(
-              leading: const Icon(Icons.usb),
-              title: Text(p.name),
-              subtitle: Text('VID ${p.vendorId} / PID ${p.productId} / ID ${p.deviceId}'),
-              trailing: service.transport == KukiPrinterTransport.usb &&
-                      service.usbDeviceId == p.deviceId
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-              onTap: busy ? null : () => connectUsb(p),
-            )),
-            if (bluetooth.isEmpty && usb.isEmpty)
-              const ListTile(
-                title: Text('Belum ada printer ditemukan'),
-                subtitle: Text('Aktifkan Bluetooth atau colokkan printer melalui OTG data.'),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Gunakan halaman ini hanya untuk memilih printer dan lebar kertas. '
+                'Struk dicetak dari transaksi yang tersimpan, bukan dari teks pengujian.',
               ),
-          ])),
-          Text('Terpilih: ${service.printerName ?? '-'}'),
-          OutlinedButton.icon(
-            onPressed: service.transport == null || busy ? null : disconnect,
-            icon: const Icon(Icons.link_off),
-            label: const Text('Putuskan Printer'),
+              const SizedBox(height: 8),
+              Text(status),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(child: FilledButton.icon(
+                  onPressed: findBluetooth,
+                  icon: const Icon(Icons.bluetooth_searching),
+                  label: const Text('Cari Bluetooth'),
+                )),
+                const SizedBox(width: 8),
+                Expanded(child: OutlinedButton.icon(
+                  onPressed: findUsb,
+                  icon: const Icon(Icons.usb),
+                  label: const Text('Cari USB OTG'),
+                )),
+              ]),
+              Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                const Text('Lebar kertas: '),
+                DropdownButton<int>(
+                  value: widget.controller.receiptWidth,
+                  items: const [
+                    DropdownMenuItem(value: 58, child: Text('58 mm')),
+                    DropdownMenuItem(value: 80, child: Text('80 mm')),
+                  ],
+                  onChanged: busy ? null : (n) {
+                    if (n != null) unawaited(setWidth(n));
+                  },
+                ),
+              ]),
+              if (busy) const LinearProgressIndicator(),
+              ListView(
+                shrinkWrap: true,
+                primary: false,
+                children: [
+                  if (bluetooth.isNotEmpty) const ListTile(title: Text('Bluetooth dipasangkan')),
+                  ...bluetooth.map((p) => ListTile(
+                    leading: const Icon(Icons.bluetooth),
+                    title: Text(p.name),
+                    subtitle: Text(p.macAdress),
+                    trailing: service.transport == KukiPrinterTransport.bluetooth &&
+                            service.bluetoothAddress == p.macAdress
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : null,
+                    onTap: busy ? null : () => connectBluetooth(p),
+                  )),
+                  if (usb.isNotEmpty) const ListTile(title: Text('Printer USB OTG')),
+                  ...usb.map((p) => ListTile(
+                    leading: const Icon(Icons.usb),
+                    title: Text(p.name),
+                    subtitle: Text('VID ${p.vendorId} / PID ${p.productId} / ID ${p.deviceId}'),
+                    trailing: service.transport == KukiPrinterTransport.usb &&
+                            service.usbDeviceId == p.deviceId
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : null,
+                    onTap: busy ? null : () => connectUsb(p),
+                  )),
+                  if (bluetooth.isEmpty && usb.isEmpty)
+                    const ListTile(
+                      title: Text('Belum ada printer ditemukan'),
+                      subtitle: Text('Aktifkan Bluetooth atau colokkan printer melalui OTG data.'),
+                    ),
+                ],
+              ),
+              Text('Terpilih: ${service.printerName ?? '-'}'),
+              OutlinedButton.icon(
+                onPressed: service.transport == null || busy ? null : disconnect,
+                icon: const Icon(Icons.link_off),
+                label: const Text('Putuskan Printer'),
+              ),
+            ],
           ),
-        ]),
+        ),
       ),
     );
   }

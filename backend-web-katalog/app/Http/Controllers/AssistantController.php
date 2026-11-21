@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Obrolan;
 use App\Models\PesanObrolan;
-use App\Notifications\HandoverRequestedNotification;
+use App\Services\HandoverService;
 use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,19 +12,11 @@ use Illuminate\Support\Facades\Log;
 
 class AssistantController extends Controller
 {
-    private const HANDOVER_CONNECTING_MESSAGE = 'Sedang menghubungkan Anda ke Admin...';
+    public function __construct(
+        private readonly KukiAssistantService $assistant,
+        private readonly HandoverService $handover
+    ) {}
 
-    private const HANDOVER_TIMEOUT_MESSAGE = 'Admin sedang belum dapat merespons langsung. Pesan Anda sudah masuk dan akan ditanggapi secepatnya.';
-
-    public function __construct(private readonly KukiAssistantService $assistant) {}
-
-    /**
-     * Terima pesan pengguna.
-     *
-     * AI hanya boleh dipanggil saat lifecycle masih AI_ACTIVE.
-     * Setelah handover dimulai, endpoint ini tetap dipakai untuk menyimpan
-     * pesan user, tetapi OpenRouter tidak dipanggil lagi.
-     */
     public function chat(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -39,16 +31,22 @@ class AssistantController extends Controller
             $obrolan = $sessionId ? $this->latestOpenConversation($sessionId) : null;
 
             if ($obrolan) {
-                $this->applyHandoverTimeoutIfNeeded($obrolan);
+                $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
                 $obrolan->refresh();
 
-                $lifecycle = $this->lifecycleStatus($obrolan);
+                $lifecycle = $this->handover->lifecycleStatus($obrolan);
 
-                if (in_array($lifecycle, ['HANDOVER_PENDING', 'WAITING_ADMIN', 'ADMIN_ACTIVE'], true)) {
+                if (in_array($lifecycle, [
+                    'HANDOVER_PENDING',
+                    'WAITING_ADMIN',
+                    'ADMIN_ACTIVE',
+                ], true)) {
                     $pesan = $obrolan->pesan()->create([
                         'tipe_pengirim' => 'user',
                         'pesan' => $validated['message'],
                     ]);
+
+                    $this->handover->notifyCustomerMessage($obrolan, $pesan);
 
                     return response()->json([
                         'success' => true,
@@ -56,8 +54,9 @@ class AssistantController extends Controller
                         'data' => [
                             'reply' => null,
                             'status' => $lifecycle,
+                            'prioritas' => $obrolan->prioritas,
                             'ai_locked' => true,
-                            'handover_expires_at' => $this->handoverExpiresAt($obrolan),
+                            'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
                             'message' => [
                                 'id' => $pesan->id,
                                 'sender' => 'user',
@@ -69,10 +68,6 @@ class AssistantController extends Controller
                 }
             }
 
-            /*
-             * Tidak ada conversation aktif / masih AI_ACTIVE.
-             * Biarkan service existing menangani create conversation + OpenRouter.
-             */
             $result = $this->assistant->chat(
                 $sessionId,
                 $validated['message'],
@@ -87,11 +82,12 @@ class AssistantController extends Controller
                 $latest = $this->latestOpenConversation($sessionId);
 
                 if ($latest) {
-                    $this->applyHandoverTimeoutIfNeeded($latest);
+                    $this->handover->applyHandoverTimeoutIfNeeded($latest);
                     $latest->refresh();
 
-                    $result['status'] = $this->lifecycleStatus($latest);
-                    $result['handover_expires_at'] = $this->handoverExpiresAt($latest);
+                    $result['status'] = $this->handover->lifecycleStatus($latest);
+                    $result['handover_expires_at'] = $this->handover->handoverExpiresAt($latest);
+                    $result['prioritas'] = $latest->prioritas;
                 }
             }
 
@@ -107,10 +103,6 @@ class AssistantController extends Controller
         }
     }
 
-    /**
-     * Ambil riwayat conversation terbaru untuk session.
-     * Closed conversation tetap dapat dibaca sampai user memulai conversation baru.
-     */
     public function obrolan(string $sessionId): JsonResponse
     {
         $obrolan = Obrolan::where('session_id', $sessionId)
@@ -125,7 +117,7 @@ class AssistantController extends Controller
             ], 404);
         }
 
-        $this->applyHandoverTimeoutIfNeeded($obrolan);
+        $this->handover->applyHandoverTimeoutIfNeeded($obrolan);
         $obrolan->refresh();
 
         $messages = $obrolan->pesan()
@@ -147,24 +139,15 @@ class AssistantController extends Controller
             'data' => [
                 'id' => $obrolan->id,
                 'session_id' => $obrolan->session_id,
-                'status' => $this->lifecycleStatus($obrolan),
-                'handover_expires_at' => $this->handoverExpiresAt($obrolan),
+                'status' => $this->handover->lifecycleStatus($obrolan),
+                'prioritas' => $obrolan->prioritas,
+                'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
                 'messages' => $messages,
                 'pesan' => $messages,
             ],
         ]);
     }
 
-    /**
-     * User meminta bantuan Admin.
-     *
-     * Existing schema dipertahankan:
-     * - status_handover = membutuhkan_admin
-     * - status = menunggu
-     *
-     * Lifecycle HANDOVER_PENDING / WAITING_ADMIN dihitung dari timestamp
-     * system-message handover sehingga tidak perlu destructive migration.
-     */
     public function handover(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -174,10 +157,6 @@ class AssistantController extends Controller
 
         $sessionId = $validated['session_id'] ?? null;
 
-        $reason = $validated['reason']
-            ?? 'Pengguna meminta bantuan admin manusia';
-
-        // Session wajib ada
         if (! $sessionId) {
             return response()->json([
                 'success' => false,
@@ -186,11 +165,7 @@ class AssistantController extends Controller
             ], 400);
         }
 
-        // ✅ Cari obrolan DULU
-        $obrolan = Obrolan::where(
-            'session_id',
-            $sessionId
-        )->first();
+        $obrolan = Obrolan::where('session_id', $sessionId)->first();
 
         if (! $obrolan) {
             return response()->json([
@@ -200,46 +175,22 @@ class AssistantController extends Controller
             ], 404);
         }
 
-        // Simpan pesan sistem handover
-        $obrolan->pesan()->create([
-            'tipe_pengirim' => 'system',
-            'pesan' => 'Permintaan handover ke admin: '.$reason,
-        ]);
+        $this->handover->start(
+            $obrolan,
+            $validated['reason'] ?? 'Pengguna meminta bantuan admin manusia'
+        );
 
-        // Update status
-        $obrolan->update([
-            'status_handover' => 'membutuhkan_admin',
-            'status' => 'menunggu',
-        ]);
-
-        // ✅ Baru kirim Web Push
-        try {
-            $admins = User::whereHas(
-                'pushSubscriptions'
-            )->get();
-
-            if ($admins->isNotEmpty()) {
-                Notification::send(
-                    $admins,
-                    new HandoverRequestedNotification(
-                        $obrolan->id,
-                        'Ada customer yang meminta bantuan Admin.'
-                    )
-                );
-            }
-        } catch (\Throwable $e) {
-            Log::error(
-                'Gagal mengirim Web Push handover: '
-                .$e->getMessage()
-            );
-        }
+        $obrolan->refresh();
 
         return response()->json([
             'success' => true,
-            'message' => 'Permintaan handover ke admin berhasil dikirim.',
+            'message' => 'Permintaan handover ke admin berhasil dicatat.',
             'data' => [
                 'session_id' => $sessionId,
-                'status_handover' => 'membutuhkan_admin',
+                'status' => $this->handover->lifecycleStatus($obrolan),
+                'status_handover' => $obrolan->status_handover,
+                'prioritas' => $obrolan->prioritas,
+                'handover_expires_at' => $this->handover->handoverExpiresAt($obrolan),
             ],
         ]);
     }
@@ -250,86 +201,6 @@ class AssistantController extends Controller
             ->where('status', '!=', 'selesai')
             ->latest('id')
             ->first();
-    }
-
-    private function applyHandoverTimeoutIfNeeded(Obrolan $obrolan): void
-    {
-        if ($obrolan->status_handover !== 'membutuhkan_admin') {
-            return;
-        }
-
-        $handoverMessage = $this->handoverRequestMessage($obrolan);
-
-        if (! $handoverMessage) {
-            return;
-        }
-
-        $expiresAt = $handoverMessage->created_at->copy()->addSeconds(15);
-
-        if (now()->lt($expiresAt)) {
-            return;
-        }
-
-        $alreadyNotified = $obrolan->pesan()
-            ->where('tipe_pengirim', 'system')
-            ->where('pesan', self::HANDOVER_TIMEOUT_MESSAGE)
-            ->exists();
-
-        if (! $alreadyNotified) {
-            $obrolan->pesan()->create([
-                'tipe_pengirim' => 'system',
-                'pesan' => self::HANDOVER_TIMEOUT_MESSAGE,
-            ]);
-        }
-    }
-
-    private function lifecycleStatus(Obrolan $obrolan): string
-    {
-        if ($obrolan->status === 'selesai') {
-            return 'CLOSED';
-        }
-
-        if ($obrolan->status_handover === 'ditangani') {
-            return 'ADMIN_ACTIVE';
-        }
-
-        if ($obrolan->status_handover === 'membutuhkan_admin') {
-            $handoverMessage = $this->handoverRequestMessage($obrolan);
-
-            if ($handoverMessage) {
-                $expiresAt = $handoverMessage->created_at->copy()->addSeconds(15);
-
-                return now()->lt($expiresAt)
-                    ? 'HANDOVER_PENDING'
-                    : 'WAITING_ADMIN';
-            }
-
-            return 'WAITING_ADMIN';
-        }
-
-        return 'AI_ACTIVE';
-    }
-
-    private function handoverRequestMessage(Obrolan $obrolan): ?PesanObrolan
-    {
-        return $obrolan->pesan()
-            ->where('tipe_pengirim', 'system')
-            ->where('pesan', self::HANDOVER_CONNECTING_MESSAGE)
-            ->latest('id')
-            ->first();
-    }
-
-    private function handoverExpiresAt(Obrolan $obrolan): ?string
-    {
-        if ($obrolan->status_handover !== 'membutuhkan_admin') {
-            return null;
-        }
-
-        $handoverMessage = $this->handoverRequestMessage($obrolan);
-
-        return $handoverMessage
-            ? $handoverMessage->created_at->copy()->addSeconds(15)->toISOString()
-            : null;
     }
 
     private function normalizeSender(?string $sender): string

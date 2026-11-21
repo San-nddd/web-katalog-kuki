@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MutasiStok;
 use App\Models\produk;
 use App\Models\ProduksiHarian;
+use App\Services\KukiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +61,8 @@ class produkController extends Controller
 
                 return $created;
             });
+
+            KukiAssistantService::forgetCatalogContext();
 
             return response()->json([
                 'success' => true,
@@ -144,6 +147,8 @@ class produkController extends Controller
                 return $locked;
             });
 
+            KukiAssistantService::forgetCatalogContext();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Produk berhasil diperbarui.',
@@ -194,6 +199,8 @@ class produkController extends Controller
         }
 
         $produk->delete();
+
+        KukiAssistantService::forgetCatalogContext();
 
         return response()->json([
             'success' => true,

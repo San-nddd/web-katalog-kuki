@@ -490,6 +490,12 @@ function AdminChatPage() {
                         >
                           {STATUS_LABEL[obrolan.status] || obrolan.status}
                         </span>
+
+                        {obrolan.prioritas === 'tinggi' && (
+                          <span className="admin-badge admin-badge-warning">
+                            {'Prioritas tinggi'}
+                          </span>
+                        )}
                       </td>
 
                       <td>
@@ -567,6 +573,12 @@ function AdminChatPage() {
                   {STATUS_LABEL[selectedObrolan?.status] ||
                     selectedObrolan?.status}
                 </span>
+
+                {selectedObrolan?.prioritas === 'tinggi' && (
+                  <span className="admin-badge admin-badge-warning">
+                    {'Prioritas tinggi'}
+                  </span>
+                )}
 
                 {status === 'HANDOVER_PENDING' && (
                   <span className="admin-badge admin-badge-warning">

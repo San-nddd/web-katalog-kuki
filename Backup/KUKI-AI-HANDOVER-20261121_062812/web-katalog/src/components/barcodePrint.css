@@ -1,0 +1,49 @@
+/* Hanya komponen pratinjau barcode; tidak mengganti gaya Admin yang sudah ada. */
+.kuki-barcode-preview {
+  border: 1px solid rgba(127, 127, 127, 0.28);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.kuki-barcode-preview-title { display: block; margin-bottom: 12px; }
+.kuki-barcode-printable {
+  box-sizing: border-box;
+  width: min(100%, 560px);
+  padding: 12px;
+  background: #fff;
+  color: #111;
+  border-radius: 8px;
+}
+.kuki-barcode-product-name {
+  font: 600 14px/1.4 Arial, sans-serif;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.kuki-barcode-printable svg { display: block; width: 100%; height: auto; }
+.kuki-barcode-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.kuki-barcode-help { font-size: 0.875rem; opacity: 0.85; }
+
+/* Berlaku hanya saat tombol Cetak Barcode pada komponen ini ditekan. */
+@media print {
+  @page { margin: 10mm; }
+  body.kuki-print-barcode * { visibility: hidden !important; }
+  body.kuki-print-barcode .kuki-barcode-printable,
+  body.kuki-print-barcode .kuki-barcode-printable * { visibility: visible !important; }
+  body.kuki-print-barcode .kuki-barcode-printable {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 90mm;
+    padding: 3mm;
+    border-radius: 0;
+    margin: 0;
+    break-inside: avoid;
+  }
+}

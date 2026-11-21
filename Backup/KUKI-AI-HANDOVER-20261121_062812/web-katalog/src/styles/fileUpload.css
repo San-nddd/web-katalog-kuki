@@ -1,0 +1,96 @@
+/* Kuki Bakehouse — gaya global untuk input upload standar.
+   Variabel warna mengikuti section(s).css. Diimpor sekali dari src/main.jsx.
+   Tidak mengubah mekanisme pemilihan, pengeditan, ataupun upload file. */
+
+:root {
+  --kuki-upload-brown: var(--brown-dark, #321e16);
+  --kuki-upload-cream: var(--cream, #fff6d9);
+  --kuki-upload-orange: var(--orange, #ffb87c);
+  --kuki-upload-orange-dark: var(--orange-dark, #df8b50);
+}
+
+/* Untuk semua input file biasa yang masih memakai tombol native browser.
+   Jangan terapkan pada input tersembunyi milik komponen custom. */
+input[type="file"]:not(.kuki-photo-hidden-input):not(.kuki-file-upload-hidden):not([class*="sr-only"]):not([class*="hidden"]) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1.5px solid rgba(90, 62, 46, .28);
+  border-radius: 12px;
+  background: var(--cream-card, #fff9ef);
+  color: var(--kuki-upload-brown);
+  font: inherit;
+  font-size: .86rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+input[type="file"]:not(.kuki-photo-hidden-input):not(.kuki-file-upload-hidden):not([class*="sr-only"]):not([class*="hidden"])::file-selector-button {
+  margin-right: .85rem;
+  padding: .7rem 1rem;
+  border: 1.5px solid var(--kuki-upload-brown);
+  border-radius: 9px;
+  background: var(--kuki-upload-orange);
+  color: var(--kuki-upload-brown);
+  font: inherit;
+  font-size: .83rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-shadow: 2px 2px 0 rgba(50,30,22,.18);
+}
+
+input[type="file"]:not(.kuki-photo-hidden-input):not(.kuki-file-upload-hidden):not([class*="sr-only"]):not([class*="hidden"])::-webkit-file-upload-button {
+  margin-right: .85rem;
+  padding: .7rem 1rem;
+  border: 1.5px solid var(--kuki-upload-brown);
+  border-radius: 9px;
+  background: var(--kuki-upload-orange);
+  color: var(--kuki-upload-brown);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+input[type="file"]:not(.kuki-photo-hidden-input):not(.kuki-file-upload-hidden):not([class*="sr-only"]):not([class*="hidden"]):hover:not(:disabled)::file-selector-button {
+  background: var(--kuki-upload-orange-dark);
+  transform: translateY(-1px);
+}
+
+input[type="file"]:not(.kuki-photo-hidden-input):not(.kuki-file-upload-hidden):not([class*="sr-only"]):not([class*="hidden"]):focus-visible {
+  outline: 3px solid var(--kuki-upload-orange-dark);
+  outline-offset: 3px;
+}
+
+input[type="file"]:disabled { opacity: .55; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  input[type="file"]::file-selector-button { transition: none; transform: none; }
+}
+
+/* Komponen pilihan untuk form baru: sepenuhnya custom, tanpa teks native browser. */
+.kuki-file-upload { display: grid; justify-items: start; gap: .55rem; min-width: 0; }
+.kuki-file-upload__button {
+  display: inline-flex; align-items: center; gap: .8rem;
+  padding: .8rem 1.1rem; min-height: 48px;
+  border-radius: 12px; border: 1.5px solid var(--kuki-upload-brown);
+  background: var(--kuki-upload-orange); color: var(--kuki-upload-brown);
+  box-shadow: 3px 3px 0 rgba(50,30,22,.16);
+  cursor: pointer; font-family: inherit;
+  transition: background .18s ease, transform .18s ease;
+}
+.kuki-file-upload__button:hover:not(.is-disabled) { background: var(--kuki-upload-orange-dark); transform: translateY(-1px); }
+.kuki-file-upload__button.is-disabled { opacity: .55; cursor: not-allowed; }
+.kuki-file-upload__icon { font-size: 1.3rem; font-weight: 850; line-height: 1; }
+.kuki-file-upload__copy { display: grid; gap: .1rem; }
+.kuki-file-upload__copy strong { font-size: .9rem; font-weight: 850; }
+.kuki-file-upload__copy small { font-size: .72rem; opacity: .85; }
+.kuki-file-upload__filename { font-size: .78rem; color: #755f50; overflow-wrap: anywhere; }
+.kuki-file-upload-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0;
+  margin: -1px; border: 0; opacity: 0; overflow: hidden;
+  clip-path: inset(50%);
+}
+.kuki-file-upload:focus-within .kuki-file-upload__button { outline: 3px solid var(--kuki-upload-orange-dark); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .kuki-file-upload__button { transition: none; } .kuki-file-upload__button:hover:not(.is-disabled) { transform: none; } }

@@ -13,6 +13,7 @@ const PALET = {
   latar: 'F6F3EF', garis: 'DED7CF', putih: 'FFFFFF',
   sunting: 'FFF3D4', teks: '252525', hijau: '27734D',
 }
+const FONT = { utama: 'Calibri', judul: 'Calibri' }
 const limitBaris = 20000 // Pengamanan memori browser, bukan limit di server.
 
 async function bacaLogoKuki() {
@@ -136,7 +137,7 @@ function namaBerkas(laporan, tipe) {
 }
 
 function selTeks(cell, { bold = false, color = PALET.teks, size = 10 } = {}) {
-  cell.font = { name: 'Aptos', size, bold, color: { argb: `FF${color}` } }
+  cell.font = { name: FONT.utama, size, bold, color: { argb: `FF${color}` } }
   cell.alignment = { vertical: 'middle', wrapText: true }
 }
 function garisBawah(cell, color = PALET.garis) {
@@ -147,33 +148,33 @@ function judulSheet(sheet, lastCol, judul, subjudul, logoId) {
   const titleEndCol = String.fromCharCode(64 + lastColNumber - 1)
   sheet.mergeCells(`A1:${titleEndCol}2`)
   sheet.getCell('A1').value = judul
-  sheet.getCell('A1').font = { name: 'Aptos Display', size: 18, bold: true, color: { argb: `FF${PALET.putih}` } }
+  sheet.getCell('A1').font = { name: FONT.judul, size: 18, bold: true, color: { argb: `FF${PALET.putih}` } }
   sheet.getCell('A1').alignment = { vertical: 'middle', indent: 1 }
   for (let row = 1; row <= 2; row += 1) {
-    sheet.getRow(row).height = row === 1 ? 23 : 18
-    for (let i = 1; i <= sheet.columnCount; i += 1) {
+    sheet.getRow(row).height = row === 1 ? 30 : 22
+    for (let i = 1; i <= lastColNumber; i += 1) {
       sheet.getRow(row).getCell(i).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${PALET.gelap}` } }
     }
   }
   sheet.mergeCells(`A3:${lastCol}3`)
   sheet.getCell('A3').value = subjudul
   sheet.getRow(3).height = 24
-  sheet.getCell('A3').font = { name: 'Aptos', size: 10, color: { argb: `FF${PALET.cokelat}` } }
+  sheet.getCell('A3').font = { name: FONT.utama, size: 10, color: { argb: `FF${PALET.cokelat}` } }
   sheet.getCell('A3').alignment = { vertical: 'middle', indent: 1 }
   sheet.addImage(logoId, {
-    tl: { col: lastColNumber - 1, row: 0.1 },
+    tl: { col: lastColNumber - 1, row: 0 },
     ext: { width: 42, height: 42 },
   })
 }
 
-function hiasTabel(sheet, headerRow, endRow, cols, inputColumns = []) {
+function hiasTabel(sheet, headerRow, endRow, cols, inputColumns = [], freezeRows = headerRow, printTitle = `${headerRow}:${headerRow}`) {
   const hdr = sheet.getRow(headerRow)
   hdr.height = 34
   for (let i = 1; i <= cols; i += 1) {
     const cell = hdr.getCell(i)
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${PALET.cokelat}` } }
     selTeks(cell, { bold: true, color: PALET.putih, size: 10 })
-    cell.alignment = { vertical: 'middle', wrapText: true, indent: 1 }
+    cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
   }
   for (let n = headerRow + 1; n <= endRow; n += 1) {
     const row = sheet.getRow(n)
@@ -187,16 +188,16 @@ function hiasTabel(sheet, headerRow, endRow, cols, inputColumns = []) {
     }
   }
   // Excel filter pada tabel asli, baris kepala dikunci agar tetap terlihat.
-  sheet.views = [{ state: 'frozen', ySplit: headerRow, showGridLines: false }]
+  sheet.views = [{ state: 'frozen', ySplit: freezeRows, showGridLines: false }]
   sheet.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
-  sheet.printTitleRows = `${headerRow}:${headerRow}`
+  sheet.printTitleRows = printTitle
 }
 
 function tambahTabel(sheet, nama, ref, kepala, rows) {
   sheet.addTable({
     name: nama, ref,
     headerRow: true, totalsRow: false,
-    style: { theme: 'TableStyleMedium2', showRowStripes: true },
+    style: { theme: 'TableStyleMedium2', showRowStripes: false },
     columns: kepala.map((name) => ({ name })),
     rows,
   })
@@ -248,15 +249,23 @@ export async function downloadLaporanInventarisExcel(laporan) {
       selTeks(cell, { bold: col === 4, size: 11 })
     })
   })
-  ringkasan.mergeCells('A16:H16')
+  ringkasan.mergeCells('A16:D16')
   ringkasan.getCell('A16').value = 'RINCIAN MUTASI PER JENIS'
   selTeks(ringkasan.getCell('A16'), { bold: true, color: PALET.cokelat })
+  ringkasan.mergeCells('E16:H16')
+  ringkasan.getCell('E16').value = 'CATATAN PERHITUNGAN'
+  selTeks(ringkasan.getCell('E16'), { bold: true, color: PALET.cokelat })
+  ringkasan.mergeCells('E17:H18')
+  const ringkasanCatatan = ringkasan.getCell('E17')
+  ringkasanCatatan.value = 'Angka berasal dari laporan server. Koreksi resmi tetap dicatat melalui aplikasi, bukan dengan mengedit file ini.'
+  selTeks(ringkasanCatatan, { size: 10, color: PALET.cokelat })
+  ringkasanCatatan.alignment = { vertical: 'middle', wrapText: true, indent: 1 }
   const jenis = (laporan.mutasi.berdasarkan_jenis || []).map((x) => [NAMA_JENIS[x.jenis] || x.jenis, Number(x.kejadian) || 0, Number(x.masuk) || 0, Number(x.keluar) || 0])
   ringkasan.getCell('A18').value = 'Jenis'
   ringkasan.getCell('B18').value = 'Kejadian'
   ringkasan.getCell('C18').value = 'Masuk'
   ringkasan.getCell('D18').value = 'Keluar'
-  hiasTabel(ringkasan, 18, 18 + jenis.length, 4)
+  hiasTabel(ringkasan, 18, 18 + jenis.length, 4, [], 3, '1:3')
   jenis.forEach((values, i) => {
     const row = ringkasan.getRow(19 + i)
     values.forEach((v, j) => { row.getCell(j + 1).value = v; if (j) row.getCell(j + 1).numFmt = '#,##0' })
@@ -265,7 +274,7 @@ export async function downloadLaporanInventarisExcel(laporan) {
   ringkasan.mergeCells(`A${catatanRow}:H${catatanRow + 1}`)
   const catatan = ringkasan.getCell(`A${catatanRow}`)
   catatan.value = 'CATATAN: Stok saat ini adalah posisi saat laporan dibuka, bukan saldo historis periode. Angka produksi sudah masuk dalam mutasi masuk. Perubahan pada file Excel TIDAK memperbarui stok di aplikasi; koreksi resmi dibuat melalui menu Riwayat Mutasi Stok atau Stock Opname oleh Admin.'
-  catatan.font = { name: 'Aptos', size: 10, italic: true, color: { argb: `FF${PALET.cokelat}` } }
+  catatan.font = { name: FONT.utama, size: 10, italic: true, color: { argb: `FF${PALET.cokelat}` } }
   catatan.alignment = { wrapText: true, vertical: 'middle', indent: 1 }
   ringkasan.getRow(catatanRow).height = 24
   ringkasan.getRow(catatanRow + 1).height = 24
@@ -287,7 +296,7 @@ export async function downloadLaporanInventarisExcel(laporan) {
   tambahTabel(mutasiSheet, 'TabelRiwayatMutasiKuki', 'A7', mutasiHeader, mutasiRows)
   hiasTabel(mutasiSheet, 7, 7 + mutasi.length, 10)
   mutasiSheet.getColumn('A').numFmt = '#,##0'
-  ;['F', 'G', 'H'].forEach((col) => { mutasiSheet.getColumn(col).numFmt = '#,##0;[Red](#,##0);–' })
+  ;['F', 'G', 'H'].forEach((col) => { mutasiSheet.getColumn(col).numFmt = '#,##0;[Red](#,##0);0' })
   mutasiSheet.printOptions = { horizontalCentered: true }
 
   // Sheet 3: formulir usulan koreksi DI EXCEL, dengan kalkulasi selisih otomatis.
@@ -308,9 +317,9 @@ export async function downloadLaporanInventarisExcel(laporan) {
   for (let i = 0; i < mutasi.length; i += 1) {
     const r = i + 8
     koreksiSheet.getCell(`G${r}`).value = { formula: `IF(ISNUMBER(F${r}),F${r}-E${r},"")` }
-    koreksiSheet.getCell(`G${r}`).numFmt = '#,##0;[Red](#,##0);–'
-    koreksiSheet.getCell(`F${r}`).numFmt = '#,##0;[Red](#,##0);–'
-    koreksiSheet.getCell(`E${r}`).numFmt = '#,##0;[Red](#,##0);–'
+    koreksiSheet.getCell(`G${r}`).numFmt = '#,##0;[Red](#,##0);0'
+    koreksiSheet.getCell(`F${r}`).numFmt = '#,##0;[Red](#,##0);0'
+    koreksiSheet.getCell(`E${r}`).numFmt = '#,##0;[Red](#,##0);0'
     koreksiSheet.getCell(`F${r}`).dataValidation = {
       type: 'whole', operator: 'between', formulae: [-1000000000, 1000000000],
       allowBlank: true, showErrorMessage: true, errorTitle: 'Angka tidak valid',
@@ -326,7 +335,7 @@ export async function downloadLaporanInventarisExcel(laporan) {
   const catatanKoreksi = koreksiSheet.getCell(`A${9 + mutasi.length}`)
   catatanKoreksi.value = 'PENTING: Sheet ini untuk usulan / dokumentasi, bukan alat mengganti histori mutasi atau stok produk. Koreksi yang benar harus dicatat sebagai transaksi koreksi baru melalui halaman Admin; riwayat asli tetap dipertahankan.'
   catatanKoreksi.alignment = { wrapText: true, vertical: 'middle' }
-  catatanKoreksi.font = { name: 'Aptos', size: 10, italic: true, color: { argb: `FF${PALET.cokelat}` } }
+  catatanKoreksi.font = { name: FONT.utama, size: 10, italic: true, color: { argb: `FF${PALET.cokelat}` } }
   koreksiSheet.getRow(9 + mutasi.length).height = 26
   koreksiSheet.getRow(10 + mutasi.length).height = 24
 

@@ -15,6 +15,14 @@ class Obrolan extends Model
         'product_id',
         'status_handover',
         'status',
+        'prioritas',
+        'handover_started_at',
+        'handover_notified_at',
+    ];
+
+    protected $casts = [
+        'handover_started_at' => 'datetime',
+        'handover_notified_at' => 'datetime',
     ];
 
     public function pesan(): HasMany

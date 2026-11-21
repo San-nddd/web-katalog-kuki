@@ -152,7 +152,7 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
     if (getSessionId() !== sessionId) return
 
     if (!result) throw new Error('Permintaan handover belum mendapat konfirmasi server.')
-    setStatus(result.status || 'HANDOVER_PENDING')
+    setStatus(result.status ?? 'WAITING_ADMIN')
     setHandoverExpiresAt(result.handover_expires_at ?? null)
     setShowHandover(false)
 
@@ -262,7 +262,7 @@ function KukiAssistant({ product = null, open: controlledOpen, onOpenChange }) {
         reason: 'Pengguna meminta bantuan admin manusia melalui tombol handover',
       })
 
-      setStatus(result.status || 'HANDOVER_PENDING')
+      setStatus(result.status ?? 'WAITING_ADMIN')
       setHandoverExpiresAt(result.handover_expires_at ?? null)
       setShowHandover(false)
 

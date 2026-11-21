@@ -219,26 +219,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (cancelCtx) => AlertDialog(
+        scrollable: true,
         title: Text(jenis == 'retur' ? 'Catat retur' : 'Void transaksi'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              jenis == 'retur'
-                  ? 'Stok produk akan dikembalikan dan transaksi tidak dihitung dalam laporan.'
-                  : 'Transaksi dibatalkan, stok dikembalikan, dan riwayat tetap disimpan.',
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Alasan (minimal 5 karakter)',
-                border: OutlineInputBorder(),
+        content: SizedBox(
+          width: KukiSpace.width(cancelCtx, 36, min: 280, max: 480),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                jenis == 'retur'
+                    ? 'Stok produk akan dikembalikan dan transaksi tidak dihitung dalam laporan.'
+                    : 'Transaksi dibatalkan, stok dikembalikan, dan riwayat tetap disimpan.',
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Alasan (minimal 5 karakter)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -273,13 +277,31 @@ class _HistoryScreenState extends State<HistoryScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: const Row(
       children: [
-        SizedBox(width: 115, child: Text('ID TRANSAKSI')),
-        SizedBox(width: 160, child: Text('TANGGAL')),
-        SizedBox(width: 120, child: Text('KASIR')),
-        SizedBox(width: 110, child: Text('PEMBAYARAN')),
-        SizedBox(width: 105, child: Text('STATUS')),
-        Expanded(child: Text('TOTAL')),
-        SizedBox(width: 65, child: Text('AKSI')),
+        SizedBox(
+          width: 115,
+          child: Text('ID TRANSAKSI', maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        SizedBox(
+          width: 160,
+          child: Text('TANGGAL', maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        SizedBox(
+          width: 120,
+          child: Text('KASIR', maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        SizedBox(
+          width: 110,
+          child: Text('PEMBAYARAN', maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        SizedBox(
+          width: 105,
+          child: Text('STATUS', maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        Expanded(child: Text('TOTAL', maxLines: 1, overflow: TextOverflow.ellipsis)),
+        SizedBox(
+          width: 65,
+          child: Text('AKSI', maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
       ],
     ),
   );
@@ -318,6 +340,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               width: 160,
               child: Text(
                 DateFormat('dd/MM/yyyy  HH:mm').format(sale.createdAt),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 12),
               ),
             ),
@@ -332,12 +356,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             SizedBox(
               width: 110,
-              child: Text(method, style: const TextStyle(fontSize: 12)),
+              child: Text(
+                method,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
             ),
             SizedBox(
               width: 105,
               child: Text(
                 status,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12,
                   color: sale.status == 'conflict' || sale.isCancelled
@@ -350,6 +381,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Expanded(
               child: Text(
                 money(sale.total),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
@@ -376,7 +409,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (ctx) => AlertDialog(
         title: Text('Transaksi ${sale.uuid.substring(0, 8)}'),
         content: SizedBox(
-          width: 440,
+          width: KukiSpace.width(ctx, 36, min: 280, max: 520),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -397,6 +430,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ],
                 Text(
                   'UUID: ${sale.uuid}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 11),
                 ),
                 const Divider(),
@@ -437,81 +472,88 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
-          ),
-          if (sale.status == 'conflict' && !widget.controller.demo)
-            TextButton.icon(
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: ctx,
-                  builder: (retryCtx) => AlertDialog(
-                    title: const Text('Kirim ulang transaksi?'),
-                    content: const Text(
-                      'Transaksi dengan ID yang sama akan dikirim ulang ke server. '
-                      'Data lokal tetap disimpan bila gagal.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(retryCtx, false),
-                        child: const Text('Batal'),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Tutup'),
+              ),
+              if (sale.status == 'conflict' && !widget.controller.demo)
+                TextButton.icon(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: ctx,
+                      builder: (retryCtx) => AlertDialog(
+                        title: const Text('Kirim ulang transaksi?'),
+                        content: const Text(
+                          'Transaksi dengan ID yang sama akan dikirim ulang ke server. '
+                          'Data lokal tetap disimpan bila gagal.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(retryCtx, false),
+                            child: const Text('Batal'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(retryCtx, true),
+                            child: const Text('Kirim ulang'),
+                          ),
+                        ],
                       ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(retryCtx, true),
-                        child: const Text('Kirim ulang'),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm != true) return;
-                try {
-                  await widget.controller.retryConflict(sale.uuid);
-                  if (ctx.mounted) Navigator.pop(ctx);
-                } catch (e) {
-                  if (ctx.mounted) showError(ctx, e);
-                }
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Coba lagi'),
-            ),
-          if (widget.controller.canCancel &&
-              sale.transactionStatus == 'completed' &&
-              sale.status == 'synced' &&
-              !widget.controller.demo) ...[
-            TextButton.icon(
-              onPressed: () => _cancel(ctx, sale, 'void'),
-              icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Void'),
-            ),
-            TextButton.icon(
-              onPressed: () => _cancel(ctx, sale, 'retur'),
-              icon: const Icon(Icons.assignment_return_outlined),
-              label: const Text('Retur'),
-            ),
-          ],
-          FilledButton.icon(
-            onPressed: () async {
-              try {
-                await KukiThermalReceipt.printSale(
-                  sale,
-                  paperWidthMm: widget.controller.receiptWidth,
-                );
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(
-                      content: Text('Data struk dikirim ulang. Periksa hasil cetakan.'),
-                    ),
-                  );
-                }
-              } catch (error) {
-                if (ctx.mounted) {
-                  showError(ctx, KukiPrinterErrors.messageFor(error));
-                }
-              }
-            },
-            icon: const Icon(Icons.print_outlined),
-            label: const Text('Cetak Ulang Struk'),
+                    );
+                    if (confirm != true) return;
+                    try {
+                      await widget.controller.retryConflict(sale.uuid);
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    } catch (e) {
+                      if (ctx.mounted) showError(ctx, e);
+                    }
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba lagi'),
+                ),
+              if (widget.controller.canCancel &&
+                  sale.transactionStatus == 'completed' &&
+                  sale.status == 'synced' &&
+                  !widget.controller.demo) ...[
+                TextButton.icon(
+                  onPressed: () => _cancel(ctx, sale, 'void'),
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: const Text('Void'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _cancel(ctx, sale, 'retur'),
+                  icon: const Icon(Icons.assignment_return_outlined),
+                  label: const Text('Retur'),
+                ),
+              ],
+              FilledButton.icon(
+                onPressed: () async {
+                  try {
+                    await KukiThermalReceipt.printSale(
+                      sale,
+                      paperWidthMm: widget.controller.receiptWidth,
+                    );
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(
+                          content: Text('Data struk dikirim ulang. Periksa hasil cetakan.'),
+                        ),
+                      );
+                    }
+                  } catch (error) {
+                    if (ctx.mounted) {
+                      showError(ctx, KukiPrinterErrors.messageFor(error));
+                    }
+                  }
+                },
+                icon: const Icon(Icons.print_outlined),
+                label: const Text('Cetak Ulang Struk'),
+              ),
+            ],
           ),
         ],
       ),

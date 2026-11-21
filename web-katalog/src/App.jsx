@@ -11,6 +11,7 @@ import ProdukAdminPage from './pages/admin/ProdukAdminPage'
 import ProduksiHarianPage from './pages/admin/ProduksiHarianPage'
 import ProdukFormPage from './pages/admin/ProdukFormPage'
 import KategoriAdminPage from './pages/admin/KategoriAdminPage'
+import BakerAdminPage from './pages/admin/BakerAdminPage'
 import ChatAdminPage from './pages/admin/ChatAdminPage'
 import TestimonialAdminPage from './pages/admin/TestimonialAdminPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
@@ -92,6 +93,14 @@ function App() {
           element={
             <AdminRoute>
               <KategoriAdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/bakers"
+          element={
+            <AdminRoute>
+              <BakerAdminPage />
             </AdminRoute>
           }
         />

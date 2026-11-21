@@ -297,9 +297,10 @@ class _ReportScreenState extends State<ReportScreen> {
               final cash = methods
                   .where((item) => item['metode_bayar'] == 'tunai')
                   .fold<int>(0, (sum, item) => sum + asInt(item['total']));
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Wrap(
                     spacing: 12,
                     runSpacing: 12,
@@ -418,9 +419,10 @@ class _ReportScreenState extends State<ReportScreen> {
                         ),
                     ],
                   ),
-                ],
+                 ],
+                ),
               );
-            },
+             },
           ),
         ),
       ],

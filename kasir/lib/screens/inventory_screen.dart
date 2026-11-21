@@ -69,11 +69,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   decoration: const BoxDecoration(color: KukiColors.cream,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(11))),
                   child: const Row(children: [
-                    SizedBox(width: 155, child: Text('SKU')),
-                    Expanded(child: Text('PRODUK')),
-                    SizedBox(width: 125, child: Text('KATEGORI')),
-                    SizedBox(width: 90, child: Text('STOK')),
-                    SizedBox(width: 130, child: Text('HARGA')),
+                    SizedBox(width: 155, child: Text('SKU', maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Expanded(child: Text('PRODUK', maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    SizedBox(width: 125, child: Text('KATEGORI', maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    SizedBox(width: 90, child: Text('STOK', maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    SizedBox(width: 130, child: Text('HARGA', maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ])),
                 Expanded(child: products.isEmpty
                   ? const Center(child: Text('Tidak ada produk untuk filter ini.'))
@@ -87,15 +87,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         child: Padding(padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Row(children: [
                             SizedBox(width: 155, child: Text(p.sku.isEmpty ? '-' : p.sku,
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 12))),
-                            Expanded(child: Text(p.name, style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 12))),
+                            Expanded(child: Text(p.name,
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 12))),
                             SizedBox(width: 125, child: Text(p.categoryName,
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 12))),
-                            SizedBox(width: 90, child: Text('${p.stock}', style: TextStyle(
-                              color: isLow ? Colors.deepOrange : KukiColors.cocoa,
-                              fontWeight: FontWeight.w700, fontSize: 12))),
+                            SizedBox(width: 90, child: Text('${p.stock}',
+                              maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(
+                                color: isLow ? Colors.deepOrange : KukiColors.cocoa,
+                                fontWeight: FontWeight.w700, fontSize: 12))),
                             SizedBox(width: 130, child: Text(money(p.price),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 12))),
                           ]),
                         ),
