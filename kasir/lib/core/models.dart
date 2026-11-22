@@ -6,6 +6,19 @@ final _rupiah = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDig
 String money(int amount) => _rupiah.format(amount);
 const uuid = Uuid();
 
+final RegExp _draftLabelPattern = RegExp(r'^Pesanan\s+\d+$');
+bool isDefaultDraftLabel(String value) =>
+    _draftLabelPattern.hasMatch(value.trim());
+
+String noteWithCustomer(String note, String customer) {
+  final cleanedNote = note.trim();
+  final cleanedCustomer = customer.trim();
+  if (cleanedCustomer.isEmpty) return cleanedNote;
+  final customerPart = 'Pesanan: $cleanedCustomer';
+  if (cleanedNote.split(' | ').contains(customerPart)) return cleanedNote;
+  return [if (cleanedNote.isNotEmpty) cleanedNote, customerPart].join(' | ');
+}
+
 int asInt(dynamic value) {
   if (value is int) return value;
   if (value is num) return value.round();
@@ -101,25 +114,40 @@ class CartLine {
 class OrderDraft {
   final String id;
   String name;
+  String customerName;
   final List<CartLine> lines;
   int discount;
   String note;
   String orderType;
   String tableNumber;
   OrderDraft({required this.id, required this.name, List<CartLine>? lines,
-    this.discount = 0, this.note = '', this.orderType = 'takeaway', this.tableNumber = ''})
-    : lines = lines ?? [];
+    this.discount = 0, this.note = '', this.orderType = 'takeaway', this.tableNumber = '', String? customerName})
+    : customerName = customerName ?? (isDefaultDraftLabel(name) ? '' : name),
+      lines = lines ?? [];
   int get subtotal => lines.fold(0, (sum, item) => sum + item.total);
   int get total => (subtotal - discount).clamp(0, subtotal).toInt();
   int get itemCount => lines.fold(0, (sum, item) => sum + item.quantity);
+  String get saleNote => [
+    'Tipe: ${orderType == 'dine_in' ? 'Makan di tempat' : 'Bawa pulang'}',
+    if (tableNumber.isNotEmpty) 'Meja: $tableNumber',
+    if (customerName.isNotEmpty) 'Pesanan: $customerName',
+    if (note.isNotEmpty) 'Catatan: $note',
+  ].join(' | ');
   String serialize() => jsonEncode({
-    'id': id, 'name': name, 'lines': lines.map((e) => e.toJson()).toList(),
+    'id': id, 'name': name, 'customer_name': customerName,
+    'lines': lines.map((e) => e.toJson()).toList(),
     'discount': discount, 'note': note, 'order_type': orderType, 'table_number': tableNumber,
   });
   factory OrderDraft.parse(String value) {
     final json = unwrapMap(jsonDecode(value));
+    final rawName = asText(json['name']);
+    final storedCustomer = asText(json['customer_name']);
     return OrderDraft(
-      id: asText(json['id']), name: asText(json['name']),
+      id: asText(json['id']),
+      name: rawName.isEmpty ? 'Pesanan 1' : rawName,
+      customerName: storedCustomer.isNotEmpty
+          ? storedCustomer
+          : (isDefaultDraftLabel(rawName) ? '' : rawName),
       discount: asInt(json['discount']), note: asText(json['note']),
       orderType: asText(json['order_type']).isEmpty ? 'takeaway' : asText(json['order_type']),
       tableNumber: asText(json['table_number']),

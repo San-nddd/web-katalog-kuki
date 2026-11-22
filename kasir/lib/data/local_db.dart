@@ -262,12 +262,7 @@ class LocalDb {
         'uuid': uid, 'created_at': time.toIso8601String(), 'cashier': cashier,
         'cashier_id': cashierId.isEmpty ? null : cashierId, 'shift_id': shiftId, 'method': method, 'status': 'pending', 'transaction_status': 'completed',
         'subtotal': draft.subtotal, 'discount': draft.discount, 'total': draft.total,
-        'paid': paid, 'verified': method == 'cash' || verified ? 1 : 0, 'note': [
-          'Tipe: ${draft.orderType == 'dine_in' ? 'Makan di tempat' : 'Bawa pulang'}',
-          if (draft.tableNumber.isNotEmpty) 'Meja: ${draft.tableNumber}',
-          if (draft.name.isNotEmpty) 'Pesanan: ${draft.name}',
-          if (draft.note.isNotEmpty) 'Catatan: ${draft.note}',
-        ].join(' | '),
+        'paid': paid, 'verified': method == 'cash' || verified ? 1 : 0, 'note': draft.saleNote,
       });
       for (final line in draft.lines) {
         await txn.insert('sale_lines', {

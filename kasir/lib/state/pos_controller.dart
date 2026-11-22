@@ -86,6 +86,32 @@ class PosController extends ChangeNotifier {
   bool get canCancel =>
       !demo && ['admin', 'owner'].contains(role.toLowerCase().trim());
 
+  OrderDraft createDraft() {
+    final highest = drafts.fold<int>(0, (value, item) {
+      final match = RegExp(r'^Pesanan\s+(\d+)$').firstMatch(item.name.trim());
+      final number = match == null ? 0 : int.tryParse(match.group(1)!) ?? 0;
+      return number > value ? number : value;
+    });
+    return OrderDraft(id: uuid.v4(), name: 'Pesanan ${highest + 1}');
+  }
+
+  Future<void> normalizeDraftLabels() async {
+    for (var i = 0; i < drafts.length; i++) {
+      final label = 'Pesanan ${i + 1}';
+      if (drafts[i].name == label) continue;
+      drafts[i].name = label;
+      if (!kIsWeb) await local.saveDraft(drafts[i]);
+    }
+  }
+
+  Future<void> finishPaidDraft(OrderDraft order) async {
+    drafts.removeWhere((item) => item.id == order.id);
+    final replacement = createDraft();
+    drafts.add(replacement);
+    activeDraftId = replacement.id;
+    if (!kIsWeb) await local.saveDraft(replacement);
+  }
+
   Future<void> init() async {
     try {
       if (!kIsWeb) await local.open();
@@ -420,10 +446,11 @@ class PosController extends ChangeNotifier {
     products = await local.products();
     drafts = await local.loadDrafts();
     if (drafts.isEmpty) {
-      final first = OrderDraft(id: uuid.v4(), name: 'Pesanan 1');
+      final first = createDraft();
       drafts.add(first);
       await local.saveDraft(first);
     }
+    await normalizeDraftLabels();
     activeDraftId = drafts.first.id;
     final shift = await local.openShift(
       cashierId: cashierId,
@@ -450,7 +477,7 @@ class PosController extends ChangeNotifier {
   Future<void> _loadWebData() async {
     products = await api.catalog();
     if (drafts.isEmpty) {
-      final first = OrderDraft(id: uuid.v4(), name: 'Pesanan 1');
+      final first = createDraft();
       drafts = [first];
       activeDraftId = first.id;
     }
@@ -713,7 +740,10 @@ class PosController extends ChangeNotifier {
       discount: 0,
       total: asInt(value['total']),
       paid: asInt(value['dibayar']),
-      note: asText(value['catatan']),
+      note: noteWithCustomer(
+        asText(value['catatan']),
+        asText(value['nama_pelanggan']),
+      ),
       lines: lines,
       transactionStatus: asText(value['status_transaksi']).isEmpty
           ? 'completed'
@@ -969,10 +999,7 @@ class PosController extends ChangeNotifier {
 
   Future<void> addDraft() async {
     if (drafts.length >= 6) throw StateError('Maksimum 6 pesanan aktif');
-    final value = OrderDraft(
-      id: uuid.v4(),
-      name: 'Pesanan ${drafts.length + 1}',
-    );
+    final value = createDraft();
     drafts.add(value);
     activeDraftId = value.id;
     if (!kIsWeb) await local.saveDraft(value);
@@ -1053,13 +1080,13 @@ class PosController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> renameDraft(String name) async {
-    final cleaned = name.trim();
-    if (cleaned.isEmpty) throw StateError('Nama pelanggan tidak boleh kosong');
-    draft.name = cleaned;
+  Future<void> setCustomerName(String name) async {
+    draft.customerName = name.trim();
     if (!kIsWeb) await local.saveDraft(draft);
     notifyListeners();
   }
+
+  Future<void> renameDraft(String name) => setCustomerName(name);
 
   Future<void> setOrderType(String type) async {
     if (type != 'takeaway' && type != 'dine_in') return;
@@ -1130,16 +1157,11 @@ class PosController extends ChangeNotifier {
           verified: apiMethod == 'tunai' || verified,
           orderType: order.orderType,
           table: order.tableNumber,
-          customer: order.name,
+          customer: order.customerName,
           note: order.note,
         );
         final sale = _saleFromApi(result);
-        drafts.removeWhere((item) => item.id == order.id);
-        if (drafts.isEmpty) {
-          final replacement = OrderDraft(id: uuid.v4(), name: 'Pesanan 1');
-          drafts.add(replacement);
-        }
-        activeDraftId = drafts.first.id;
+        await finishPaidDraft(order);
         try {
           await refreshCatalog();
           await refreshHistory(page: historyPage);
@@ -1161,11 +1183,7 @@ class PosController extends ChangeNotifier {
         paid: paid,
         verified: method == 'cash' || verified,
       );
-      drafts.removeWhere((d) => d.id == order.id);
-      final replacement = OrderDraft(id: uuid.v4(), name: order.name);
-      drafts.add(replacement);
-      activeDraftId = replacement.id;
-      await local.saveDraft(replacement);
+      await finishPaidDraft(order);
       await refreshHistory();
       products = await local.products();
       // Tunggu dialog pembayaran menutup sebelum sinkronisasi.

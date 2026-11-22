@@ -1,0 +1,47 @@
+.kuki-sales-controls .admin-card-head > div {
+  min-width: 0;
+}
+
+.kuki-sales-controls .management-data-note {
+  margin: 6px 0 0;
+}
+
+.kuki-sales-note {
+  margin-top: 12px;
+  color: var(--kb-muted, var(--muted-cream));
+  font-size: 0.82rem;
+}
+
+.kuki-sales-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kuki-sales-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--kb-muted, var(--muted-cream));
+  font-size: 0.85rem;
+}
+
+.kuki-sales-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .kuki-sales-controls .admin-card-head {
+    align-items: flex-start;
+  }
+
+  .kuki-sales-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .kuki-sales-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,13 @@
+.kuki-varian-toolbar,
+.kuki-varian-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kuki-varian-toolbar { flex-wrap: wrap; }
+.kuki-varian-row-actions { flex-wrap: nowrap; white-space: nowrap; }
+.kuki-varian-row-actions .admin-btn { flex-shrink: 0; }
+.kuki-varian-checkbox { display: flex; flex-direction: row; align-items: center; gap: 10px; }
+.kuki-varian-checkbox input[type="checkbox"] { width: auto; min-width: 17px; height: 17px; margin: 0; }
+.kuki-varian-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .85em; }

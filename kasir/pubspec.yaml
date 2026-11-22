@@ -40,3 +40,17 @@ flutter:
   assets:
     - assets/images/
     - assets/branding/
+
+  fonts:
+    - family: DM Sans
+      fonts:
+        - asset: assets/fonts/DM Sans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/DM Sans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/DM Sans-Bold.ttf
+          weight: 700
+    - family: Lilita One
+      fonts:
+        - asset: assets/fonts/LilitaOne-Regular.ttf
+          weight: 400

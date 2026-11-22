@@ -78,7 +78,7 @@ class _PosShellState extends State<PosShell> {
                           max: 28,
                         ),
                         decoration: const BoxDecoration(
-                          color: Colors.white,
+                          color: KukiColors.paper,
                           border: Border(
                             bottom: BorderSide(color: KukiColors.line),
                           ),
@@ -98,11 +98,7 @@ class _PosShellState extends State<PosShell> {
                                 titles[selected],
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: KukiColors.cocoa,
-                                ),
+                                style: KukiText.headlineMedium,
                               ),
                             ),
                             if (ctrl.demo)
@@ -126,12 +122,9 @@ class _PosShellState extends State<PosShell> {
                                     'dd MMM yyyy',
                                   ).format(DateTime.now()),
                                   maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: KukiColors.muted,
-                                  ),
-                                ),
+                                 overflow: TextOverflow.ellipsis,
+                                 style: KukiText.bodySmall,
+                               ),
                               ),
                             SizedBox(width: KukiSpace.tight(context)),
                             IconButton(
@@ -154,10 +147,7 @@ class _PosShellState extends State<PosShell> {
                                 '${ctrl.pending} tertunda · ${ctrl.unresolved} belum selesai',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: KukiColors.muted,
-                                  fontSize: 12,
-                                ),
+                                 style: KukiText.bodySmall,
                               ),
                             ),
                           ],
@@ -200,15 +190,7 @@ class _PosShellState extends State<PosShell> {
               ),
               SizedBox(width: KukiSpace.tight(context)),
               const Expanded(
-                child: Text(
-                  'KUKI',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: KukiColors.cocoa,
-                    letterSpacing: .4,
-                  ),
-                ),
+                child: Text('KUKI', style: KukiText.displaySmall),
               ),
             ],
           ),
@@ -218,12 +200,7 @@ class _PosShellState extends State<PosShell> {
           padding: EdgeInsets.symmetric(horizontal: KukiSpace.tight(context)),
           child: Text(
             'KASIR AKTIF',
-            style: TextStyle(
-              color: KukiColors.muted.withValues(alpha: .85),
-              fontSize: 10,
-              letterSpacing: 1.4,
-              fontWeight: FontWeight.w700,
-            ),
+            style: KukiText.labelSmall.copyWith(letterSpacing: 1.4),
           ),
         ),
         SizedBox(height: KukiSpace.tight(context)),
@@ -233,8 +210,8 @@ class _PosShellState extends State<PosShell> {
             vertical: KukiSpace.height(context, 1.4, min: 8, max: 14),
           ),
           decoration: BoxDecoration(
-            color: KukiColors.paper,
-            borderRadius: BorderRadius.circular(11),
+            color: KukiColors.cream,
+            borderRadius: BorderRadius.circular(KukiRadius.md),
             border: Border.all(color: KukiColors.line),
           ),
           child: Row(
@@ -246,10 +223,7 @@ class _PosShellState extends State<PosShell> {
                   ctrl.cashierName.isEmpty
                       ? 'K'
                       : ctrl.cashierName[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: KukiColors.cocoa,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: KukiText.titleSmall,
                 ),
               ),
               SizedBox(width: KukiSpace.tight(context)),
@@ -261,19 +235,13 @@ class _PosShellState extends State<PosShell> {
                       ctrl.cashierName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
+                      style: KukiText.titleSmall,
                     ),
                     Text(
                       ctrl.shiftOpen
                           ? 'Shift sedang aktif'
                           : 'Shift belum dibuka',
-                      style: const TextStyle(
-                        color: KukiColors.muted,
-                        fontSize: 10,
-                      ),
+                      style: KukiText.labelSmall,
                     ),
                   ],
                 ),
@@ -287,14 +255,9 @@ class _PosShellState extends State<PosShell> {
             left: KukiSpace.normal(context),
             bottom: KukiSpace.tight(context),
           ),
-          child: const Text(
+          child: Text(
             'MENU',
-            style: TextStyle(
-              color: KukiColors.muted,
-              fontSize: 10,
-              letterSpacing: 1.4,
-              fontWeight: FontWeight.w700,
-            ),
+            style: KukiText.labelSmall.copyWith(letterSpacing: 1.4),
           ),
         ),
         Expanded(
@@ -306,9 +269,9 @@ class _PosShellState extends State<PosShell> {
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Material(
                   color: active ? KukiColors.cocoa : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(KukiRadius.sm),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(KukiRadius.sm),
                     onTap: () => navigate(index, closeDrawer: inDrawer),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
@@ -320,15 +283,16 @@ class _PosShellState extends State<PosShell> {
                           Icon(
                             icons[index],
                             size: 19,
-                            color: active ? Colors.white : KukiColors.muted,
+                            color: active ? KukiColors.cream : KukiColors.muted,
                           ),
                           SizedBox(width: KukiSpace.normal(context)),
                           Expanded(
                             child: Text(
                               titles[index],
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: active ? Colors.white : KukiColors.cocoa,
+                              style: KukiText.labelLarge.copyWith(
+                                color: active
+                                    ? KukiColors.cream
+                                    : KukiColors.muted,
                                 fontWeight: active
                                     ? FontWeight.w700
                                     : FontWeight.w500,
@@ -353,10 +317,7 @@ class _PosShellState extends State<PosShell> {
           ),
           child: Text(
             'Where Crumbs Become Art',
-            style: TextStyle(
-              fontSize: 11,
-              color: KukiColors.muted.withValues(alpha: .85),
-            ),
+            style: KukiText.labelSmall,
           ),
         ),
       ],
@@ -376,15 +337,12 @@ class _StatusTag extends StatelessWidget {
     ),
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(7),
+      border: Border.all(color: KukiColors.line),
+      borderRadius: BorderRadius.circular(KukiRadius.pill),
     ),
     child: Text(
       text,
-      style: const TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w800,
-        color: KukiColors.cocoa,
-      ),
+      style: KukiText.labelSmall.copyWith(color: KukiColors.cocoa),
     ),
   );
 }

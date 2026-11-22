@@ -68,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         scrollable: true,
-        title: Text(title),
+        title: Text(title, style: KukiText.headlineSmall),
         content: SizedBox(
           width: KukiSpace.width(ctx, 36, min: 280, max: 480),
           child: TextFormField(
@@ -166,18 +166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Row(
         children: [
           const Expanded(
-            child: Text(
-              'Order List',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: KukiColors.cocoa,
-              ),
-            ),
+            child: Text('Order List', style: KukiText.section),
           ),
           Text(
             '${ctrl.drafts.length} pesanan aktif',
-            style: const TextStyle(color: KukiColors.muted, fontSize: 11),
+            style: KukiText.bodySmall,
           ),
           SizedBox(width: KukiSpace.tight(context)),
           OutlinedButton.icon(
@@ -210,15 +203,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return SizedBox(
               width: KukiSpace.width(context, 14, min: 140, max: 200),
               child: Material(
-                color: active ? KukiColors.cream : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: active ? KukiColors.cream : KukiColors.paper,
+                borderRadius: BorderRadius.circular(KukiRadius.md),
                 child: InkWell(
                   onTap: () => ctrl.selectDraft(order.id),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(KukiRadius.md),
                   child: Container(
                     padding: EdgeInsets.all(KukiSpace.normal(context)),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(KukiRadius.md),
                       border: Border.all(
                         color: active ? KukiColors.caramel : KukiColors.line,
                         width: active ? 1.5 : 1,
@@ -242,10 +235,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 order.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
+                                style: KukiText.titleSmall,
                               ),
                             ),
                             if (ctrl.drafts.length > 1)
@@ -294,8 +284,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const Spacer(),
                         Text(
                           '${order.itemCount} item · ${money(order.total)}',
-                          style: const TextStyle(
-                            fontSize: 11,
+                          style: KukiText.labelMedium.copyWith(
                             color: KukiColors.mocha,
                           ),
                         ),
@@ -303,10 +292,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           active
                               ? 'Sedang dikerjakan'
                               : 'Ditahan · ketuk untuk melanjutkan',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: KukiColors.muted,
-                          ),
+                          style: KukiText.labelSmall,
                         ),
                       ],
                     ),
@@ -335,18 +321,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Row(
               children: [
                 const Expanded(
-                  child: Text(
-                    'Menu Produk',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: KukiColors.cocoa,
-                    ),
-                  ),
+                  child: Text('Menu Produk', style: KukiText.section),
                 ),
                 Text(
                   '${filtered.length} produk',
-                  style: const TextStyle(fontSize: 11, color: KukiColors.muted),
+                  style: KukiText.bodySmall,
                 ),
               ],
             ),
@@ -447,15 +426,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   );
 
   Widget _productCard(Product p) => Material(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12),
+    color: KukiColors.paper,
+    borderRadius: BorderRadius.circular(KukiRadius.md),
     child: InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(KukiRadius.md),
       onTap: p.stock <= 0 ? null : () => add(p),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: KukiColors.line),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(KukiRadius.md),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,13 +447,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: const BoxDecoration(
                       color: KukiColors.cream,
                       borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(11),
+                        top: Radius.circular(KukiRadius.md),
                       ),
                     ),
                     child: p.imageUrl?.isNotEmpty == true
                         ? ClipRRect(
                             borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(11),
+                              top: Radius.circular(KukiRadius.md),
                             ),
                             child: Image.network(
                               p.imageUrl!,
@@ -502,7 +481,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(KukiSpace.normal(context)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -510,27 +489,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     p.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
+                    style: KukiText.titleSmall,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     money(p.price),
-                    style: const TextStyle(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: KukiText.displaySmall.copyWith(
+                      fontSize: 18,
                       color: KukiColors.mocha,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     'Stok ${p.stock}',
-                    style: TextStyle(
-                      fontSize: 10,
+                    style: KukiText.bodySmall.copyWith(
                       color: p.stock <= p.minimumStock
-                          ? Colors.deepOrange
+                          ? KukiColors.danger
                           : KukiColors.muted,
                     ),
                   ),
@@ -544,14 +520,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   );
 
   Widget _pill(String label, Color color) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(KukiRadius.pill),
     ),
     child: Text(
       label,
-      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+      style: KukiText.labelSmall.copyWith(color: KukiColors.cocoa),
     ),
   );
 
@@ -559,35 +535,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final order = ctrl.draft;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: KukiColors.paper,
         border: Border.all(color: KukiColors.line),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(KukiRadius.md),
       ),
       child: ListView(
-        padding: const EdgeInsets.all(13),
+        padding: EdgeInsets.all(KukiSpace.normal(context)),
         children: [
           Row(
             children: [
               const Expanded(
-                child: Text(
-                  'Detail Pesanan',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
+                child: Text('Detail Pesanan', style: KukiText.section),
               ),
               IconButton(
-                tooltip: 'Edit nama pesanan',
+                tooltip: 'Edit nama pelanggan',
                 onPressed: () => editText(
-                  title: 'Nama pelanggan / pesanan',
-                  initial: order.name,
-                  save: ctrl.renameDraft,
+                  title: 'Nama pelanggan',
+                  initial: order.customerName,
+                  save: ctrl.setCustomerName,
                 ),
                 icon: const Icon(Icons.edit_outlined, size: 18),
               ),
             ],
           ),
           Text(
-            order.name,
-            style: const TextStyle(color: KukiColors.muted, fontSize: 12),
+            order.customerName.isEmpty
+                ? 'Belum ada nama pelanggan'
+                : order.customerName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.bodySmall,
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
@@ -629,14 +606,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Row(
             children: [
               const Expanded(
-                child: Text(
-                  'Keranjang',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                ),
+                child: Text('Keranjang', style: KukiText.section),
               ),
               Text(
                 '${order.itemCount} item',
-                style: const TextStyle(color: KukiColors.muted, fontSize: 11),
+                style: KukiText.bodySmall,
               ),
             ],
           ),
@@ -648,7 +622,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Text(
                       'Pilih produk untuk memulai pesanan.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: KukiColors.muted),
+                      style: KukiText.bodySmall,
                     ),
                   ),
                 )
@@ -671,10 +645,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             height: 44,
                             decoration: BoxDecoration(
                               color: KukiColors.cream,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(KukiRadius.xs),
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(KukiRadius.xs),
                               child: imageUrl == null || imageUrl.isEmpty
                                   ? const Icon(
                                       Icons.bakery_dining_outlined,
@@ -703,16 +677,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   line.product.name,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: KukiText.titleSmall,
                                 ),
                                 Text(
                                   money(line.total),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: KukiColors.muted,
+                                  style: KukiText.labelMedium.copyWith(
+                                    color: KukiColors.mocha,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -729,11 +699,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       }
                                     }),
                                     SizedBox(
-                                      width: 24,
+                                      width: 28,
                                       child: Center(
                                         child: Text(
                                           '${line.quantity}',
-                                          style: const TextStyle(fontSize: 12),
+                                          style: KukiText.labelLarge,
                                         ),
                                       ),
                                     ),
@@ -789,7 +759,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const Expanded(
                   child: Text(
                     'Diskon',
-                    style: TextStyle(color: KukiColors.muted, fontSize: 12),
+                    style: KukiText.bodySmall,
                   ),
                 ),
                 TextButton(
@@ -833,7 +803,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               padding: EdgeInsets.only(top: 5),
               child: Text(
                 'Shift harus dibuka sebelum bertransaksi.',
-                style: TextStyle(fontSize: 10, color: KukiColors.muted),
+                style: KukiText.labelSmall,
               ),
             ),
         ],
@@ -852,6 +822,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       style: IconButton.styleFrom(
         backgroundColor: KukiColors.paper,
         side: const BorderSide(color: KukiColors.line),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(KukiRadius.xs),
+        ),
       ),
       icon: Icon(icon),
     ),
@@ -865,19 +838,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
-                  fontSize: strong ? 14 : 12,
-                  fontWeight: strong ? FontWeight.w800 : FontWeight.w400,
-                  color: strong ? KukiColors.cocoa : KukiColors.muted,
-                ),
+                style: strong ? KukiText.titleSmall : KukiText.bodySmall,
               ),
             ),
             Text(
               amount,
-              style: TextStyle(
-                fontSize: strong ? 17 : 12,
-                fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
-              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: strong
+                  ? KukiText.displaySmall.copyWith(
+                      fontSize: 20,
+                      color: KukiColors.brownDeep,
+                    )
+                  : KukiText.labelMedium,
             ),
           ],
         ),
@@ -904,15 +878,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Transaksi: ${result.uuid.substring(0, 8)}'),
-                Text('Total: ${money(result.total)}'),
+                Text(
+                  'Transaksi: ${result.uuid.substring(0, 8)}',
+                  style: KukiText.bodySmall,
+                ),
+                Text(
+                  'Total: ${money(result.total)}',
+                  style: KukiText.labelLarge,
+                ),
                 if (result.method == 'cash')
-                  Text('Kembalian: ${money(result.change)}'),
+                  Text(
+                    'Kembalian: ${money(result.change)}',
+                    style: KukiText.labelMedium.copyWith(
+                      color: KukiColors.success,
+                    ),
+                  ),
                 const SizedBox(height: 9),
                 const Text(
                   'Struk dikirim ke printer Bluetooth/USB yang dipilih. '
                   'Status sinkronisasi tersedia pada menu Riwayat.',
-                  style: TextStyle(fontSize: 12),
+                  style: KukiText.bodySmall,
                 ),
               ],
             ),
@@ -1006,7 +991,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
           children: [
             Text(
               money(total),
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
+              style: KukiText.amount,
             ),
             const SizedBox(height: 12),
             SegmentedButton<String>(
@@ -1029,10 +1014,16 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text('Kembalian: ${money(paid > total ? paid - total : 0)}'),
+              Text(
+                'Kembalian: ${money(paid > total ? paid - total : 0)}',
+                style: paid > total
+                    ? KukiText.labelMedium.copyWith(color: KukiColors.success)
+                    : KukiText.labelSmall,
+              ),
             ] else ...[
-              const Text(
+              Text(
                 'Pembayaran ini dicatat MANUAL. Tidak ada verifikasi otomatis dari bank/gateway.',
+                style: KukiText.bodyMedium.copyWith(color: KukiColors.danger),
               ),
               CheckboxListTile(
                 value: confirmed,
@@ -1040,6 +1031,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                 onChanged: (v) => setState(() => confirmed = v ?? false),
                 title: const Text(
                   'Saya sudah memverifikasi pembayaran secara langsung',
+                  style: KukiText.bodyMedium,
                 ),
               ),
             ],
@@ -1108,6 +1100,7 @@ class _HidBarcodeDialogState extends State<_HidBarcodeDialog> {
           const Text(
             'Hubungkan scanner USB atau Bluetooth sebagai keyboard. '
             'Pindai kode ke kolom ini; scanner biasanya mengirim Enter otomatis.',
+            style: KukiText.bodyMedium,
           ),
           const SizedBox(height: 14),
           TextField(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../core/theme.dart';
 
 class CameraScanner extends StatefulWidget {
   const CameraScanner({super.key});
@@ -13,7 +14,15 @@ class _CameraScannerState extends State<CameraScanner> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Scan barcode produk')),
     body: Column(children: [
-      const Padding(padding: EdgeInsets.all(16), child: Text('Arahkan kamera ke barcode Code 128 / EAN.')),
+      Container(
+        width: double.infinity,
+        color: KukiColors.paper,
+        padding: KukiSpace.all(context),
+        child: const Text(
+          'Arahkan kamera ke barcode Code 128 / EAN.',
+          style: KukiText.bodyMedium,
+        ),
+      ),
       Expanded(child: MobileScanner(onDetect: (capture) {
         if (found || capture.barcodes.isEmpty) return;
         final value = capture.barcodes.first.rawValue;

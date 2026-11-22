@@ -47,6 +47,7 @@ class SettingsScreen extends StatelessWidget {
               subtitle: Text('${controller.receiptWidth} mm'),
               trailing: DropdownButton<int>(
                 value: controller.receiptWidth,
+                style: KukiText.labelMedium,
                 items: const [
                   DropdownMenuItem(value: 58, child: Text('58 mm')),
                   DropdownMenuItem(value: 80, child: Text('80 mm')),
@@ -171,8 +172,11 @@ class SettingsScreen extends StatelessWidget {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Keluar dari POS?'),
-                        content: const Text(
-                          'Pastikan shift sudah ditutup dan transaksi tertunda ditangani. Data lokal tidak dihapus.',
+                        content: SingleChildScrollView(
+                          child: Text(
+                            'Pastikan shift sudah ditutup dan transaksi tertunda ditangani. Data lokal tidak dihapus.',
+                            style: KukiText.bodyMedium,
+                          ),
                         ),
                         actions: [
                           TextButton(
@@ -200,7 +204,7 @@ class SettingsScreen extends StatelessWidget {
       SizedBox(height: KukiSpace.tight(context)),
       const Text(
         'PENTING: QRIS/transfer dicatat manual dan wajib diverifikasi kasir. Cetak struk memakai printer thermal Bluetooth/USB yang dipilih.',
-        style: TextStyle(fontSize: 12, color: KukiColors.muted),
+        style: KukiText.bodySmall,
       ),
     ],
   );
@@ -220,12 +224,14 @@ class SettingsScreen extends StatelessWidget {
             : 'Ditutup ${time(shift.closedAt)}',
       ),
       trailing: shift.conflicts
-          ? const Icon(Icons.warning_amber_rounded, color: Colors.orange)
+          ? const Icon(Icons.warning_amber_rounded, color: KukiColors.danger)
           : Icon(
               shift.closedAt.isEmpty
                   ? Icons.play_circle_outline
                   : Icons.check_circle_outline,
-              color: shift.closedAt.isEmpty ? null : Colors.green,
+              color: shift.closedAt.isEmpty
+                  ? KukiColors.orangeDark
+                  : KukiColors.success,
             ),
     );
   }
@@ -236,12 +242,14 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Buat / ganti PIN perangkat'),
-        content: TextFormField(
-          keyboardType: TextInputType.number,
-          obscureText: true,
-          maxLength: 6,
-          onChanged: (value) => typedPin = value,
-          decoration: const InputDecoration(labelText: 'PIN 4–6 angka'),
+        content: SingleChildScrollView(
+          child: TextFormField(
+            keyboardType: TextInputType.number,
+            obscureText: true,
+            maxLength: 6,
+            onChanged: (value) => typedPin = value,
+            decoration: const InputDecoration(labelText: 'PIN 4–6 angka'),
+          ),
         ),
         actions: [
           TextButton(

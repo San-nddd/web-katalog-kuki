@@ -146,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
     padding: KukiSpace.all(context, percent: 2.8, min: 18, max: 44),
     decoration: BoxDecoration(
       color: KukiColors.cocoa,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(KukiRadius.lg),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 40,
               decoration: BoxDecoration(
                 color: KukiColors.cream,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(KukiRadius.sm),
               ),
               child: const Icon(
                 Icons.bakery_dining_outlined,
@@ -167,12 +167,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             SizedBox(width: KukiSpace.normal(context)),
-            const Text(
+            Text(
               'KUKI BAKEHOUSE',
-              style: TextStyle(
+              style: KukiText.titleMedium.copyWith(
                 color: KukiColors.cream,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
                 letterSpacing: 1,
               ),
             ),
@@ -183,43 +181,34 @@ class _LoginScreenState extends State<LoginScreen> {
           'Where Crumbs\nBecome Art.',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: KukiColors.cream,
-            fontSize: 45,
-            fontWeight: FontWeight.w800,
-            height: 1.12,
-          ),
+          style: KukiText.displayMedium.copyWith(color: KukiColors.cream),
         ),
         SizedBox(height: KukiSpace.normal(context)),
         Text(
           'POS untuk pelayanan yang lebih cepat, rapi, dan menyenangkan.',
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: KukiColors.peach,
-            fontSize: 15,
-            height: 1.6,
-          ),
+          style: KukiText.onDark,
         ),
         SizedBox(height: KukiSpace.loose(context)),
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: EdgeInsets.all(KukiSpace.section(context)),
           decoration: BoxDecoration(
             color: KukiColors.mocha,
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(KukiRadius.md),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.point_of_sale_outlined,
                 color: KukiColors.cream,
                 size: 32,
               ),
-              SizedBox(width: 12),
+              SizedBox(width: KukiSpace.normal(context)),
               Expanded(
                 child: Text(
                   'Katalog · Pesanan · Pembayaran · Riwayat',
-                  style: TextStyle(color: KukiColors.cream, fontSize: 13),
+                  style: KukiText.onDark,
                 ),
               ),
             ],
@@ -230,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
           kIsWeb
               ? 'Mode pengembangan Chrome'
               : 'Tablet POS  ·  Android & iPadOS',
-          style: TextStyle(color: KukiColors.peach, fontSize: 11),
+          style: KukiText.captionOnDark.copyWith(fontSize: 11),
         ),
       ],
     ),
@@ -240,8 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final ctrl = widget.controller;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        color: KukiColors.paper,
+        borderRadius: BorderRadius.circular(KukiRadius.lg),
         border: Border.all(color: KukiColors.line),
       ),
       child: Padding(
@@ -272,36 +261,41 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: KukiSpace.loose(context)),
               Text(
                 ctrl.locked ? 'Buka kunci kasir' : 'Masuk ke Kasir',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: KukiColors.cocoa,
-                ),
+                style: KukiText.displaySmall,
               ),
               SizedBox(height: KukiSpace.tight(context)),
               Text(
                 ctrl.locked
                     ? 'Gunakan PIN yang tersimpan di tablet ini.'
                     : 'Masukkan akun kasir Kuki Bakehouse.',
-                style: const TextStyle(fontSize: 13, color: KukiColors.muted),
+                style: KukiText.bodySmall,
               ),
               if (ctrl.sessionExpired) ...[
                 SizedBox(height: KukiSpace.normal(context)),
                 Container(
                   padding: KukiSpace.all(context, percent: 1, min: 10, max: 14),
                   decoration: BoxDecoration(
-                    color: KukiColors.peach,
-                    borderRadius: BorderRadius.circular(12),
+                    color: KukiColors.dangerSurface,
+                    borderRadius: BorderRadius.circular(KukiRadius.md),
+                    border: Border.all(color: KukiColors.peach),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.timer_off_outlined, size: 20),
+                      const Icon(
+                        Icons.timer_off_outlined,
+                        size: 20,
+                        color: KukiColors.danger,
+                      ),
                       SizedBox(width: KukiSpace.tight(context)),
                       const Expanded(
                         child: Text(
                           'Sesi kasir habis. Masuk ulang untuk melanjutkan sinkronisasi; data transaksi lokal tetap tersimpan.',
-                          style: TextStyle(fontSize: 12, height: 1.4),
+                          style: TextStyle(
+                            color: KukiColors.inkSoft,
+                            fontSize: 12,
+                            height: 1.45,
+                          ),
                         ),
                       ),
                     ],
@@ -402,7 +396,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: FilledButton(
                     onPressed: working ? null : login,
                     child: working
-                        ? const CircularProgressIndicator()
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: KukiColors.cocoa,
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Text('Masuk ke POS'),
                   ),
                 ),
@@ -419,11 +420,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: KukiSpace.normal(context)),
                   const Text(
                     'DEMO menggunakan database terpisah. Transaksi simulasi tidak dikirim ke Laravel.',
-                    style: TextStyle(
-                      color: KukiColors.muted,
-                      fontSize: 11,
-                      height: 1.5,
-                    ),
+                    style: KukiText.labelSmall,
                   ),
                 ],
               ],

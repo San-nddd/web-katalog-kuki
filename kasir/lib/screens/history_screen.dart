@@ -110,8 +110,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: KukiColors.paper,
+                borderRadius: BorderRadius.circular(KukiRadius.md),
                 border: Border.all(color: KukiColors.line),
               ),
               clipBehavior: Clip.antiAlias,
@@ -129,6 +129,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ? const Center(
                                   child: Text(
                                     'Belum ada transaksi untuk filter ini.',
+                                    style: KukiText.bodyMedium,
                                   ),
                                 )
                               : ListView.separated(
@@ -156,10 +157,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     kIsWeb
                                         ? '${widget.controller.historyTotal} transaksi · halaman ${widget.controller.historyPage} dari ${widget.controller.historyLastPage}'
                                         : '${data.length} transaksi ditampilkan',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: KukiColors.muted,
-                                    ),
+                                    style: KukiText.labelSmall,
                                   ),
                                 ),
                               ),
@@ -220,7 +218,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (cancelCtx) => AlertDialog(
         scrollable: true,
-        title: Text(jenis == 'retur' ? 'Catat retur' : 'Void transaksi'),
+        title: Text(
+          jenis == 'retur' ? 'Catat retur' : 'Void transaksi',
+          style: KukiText.headlineSmall,
+        ),
         content: SizedBox(
           width: KukiSpace.width(cancelCtx, 36, min: 280, max: 480),
           child: Column(
@@ -231,27 +232,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 jenis == 'retur'
                     ? 'Stok produk akan dikembalikan dan transaksi tidak dihitung dalam laporan.'
                     : 'Transaksi dibatalkan, stok dikembalikan, dan riwayat tetap disimpan.',
+                style: KukiText.bodyMedium,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: KukiSpace.normal(cancelCtx)),
               TextField(
                 controller: reasonController,
                 maxLines: 3,
                 decoration: const InputDecoration(
                   labelText: 'Alasan (minimal 5 karakter)',
-                  border: OutlineInputBorder(),
                 ),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(cancelCtx, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(cancelCtx, true),
-            child: Text(jenis == 'retur' ? 'Catat Retur' : 'Void'),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: KukiSpace.tight(cancelCtx),
+            runSpacing: KukiSpace.tight(cancelCtx),
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(cancelCtx, false),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(cancelCtx, true),
+                child: Text(jenis == 'retur' ? 'Catat Retur' : 'Void'),
+              ),
+            ],
           ),
         ],
       ),
@@ -279,28 +287,65 @@ class _HistoryScreenState extends State<HistoryScreen> {
       children: [
         SizedBox(
           width: 115,
-          child: Text('ID TRANSAKSI', maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(
+            'ID TRANSAKSI',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
         ),
         SizedBox(
           width: 160,
-          child: Text('TANGGAL', maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(
+            'TANGGAL',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
         ),
         SizedBox(
           width: 120,
-          child: Text('KASIR', maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(
+            'KASIR',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
         ),
         SizedBox(
           width: 110,
-          child: Text('PEMBAYARAN', maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(
+            'PEMBAYARAN',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
         ),
         SizedBox(
           width: 105,
-          child: Text('STATUS', maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(
+            'STATUS',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
         ),
-        Expanded(child: Text('TOTAL', maxLines: 1, overflow: TextOverflow.ellipsis)),
+        Expanded(
+          child: Text(
+            'TOTAL',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
+        ),
         SizedBox(
           width: 65,
-          child: Text('AKSI', maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(
+            'AKSI',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: KukiText.labelSmall,
+          ),
         ),
       ],
     ),
@@ -320,6 +365,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final status = sale.isCancelled
         ? '$syncStatus · ${sale.transactionStatus.toUpperCase()}'
         : syncStatus;
+    final statusColor = sale.isCancelled || sale.status == 'conflict'
+        ? KukiColors.danger
+        : sale.status == 'pending'
+        ? KukiColors.orangeDark
+        : KukiColors.success;
     return SizedBox(
       height: 55,
       child: Padding(
@@ -330,10 +380,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               width: 115,
               child: Text(
                 sale.uuid.substring(0, 8).toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: KukiText.titleSmall,
               ),
             ),
             SizedBox(
@@ -342,7 +389,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 DateFormat('dd/MM/yyyy  HH:mm').format(sale.createdAt),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12),
+                style: KukiText.bodySmall,
               ),
             ),
             SizedBox(
@@ -351,7 +398,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 sale.cashier,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12),
+                style: KukiText.bodySmall,
               ),
             ),
             SizedBox(
@@ -360,7 +407,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 method,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12),
+                style: KukiText.bodySmall,
               ),
             ),
             SizedBox(
@@ -369,12 +416,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 status,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: sale.status == 'conflict' || sale.isCancelled
-                      ? Colors.red.shade800
-                      : KukiColors.mocha,
-                  fontWeight: FontWeight.w600,
+                style: KukiText.bodySmall.copyWith(
+                  color: statusColor,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -383,17 +427,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 money(sale.total),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
+                style: KukiText.titleSmall,
               ),
             ),
             SizedBox(
               width: 65,
               child: IconButton(
                 tooltip: 'Detail & cetak struk',
-                icon: const Icon(Icons.open_in_new, size: 18),
+                icon: const Icon(
+                  Icons.open_in_new,
+                  size: 20,
+                  color: KukiColors.brownDeep,
+                ),
                 onPressed: () => _details(context, sale),
               ),
             ),
@@ -407,7 +452,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Transaksi ${sale.uuid.substring(0, 8)}'),
+        title: Text(
+          'Transaksi ${sale.uuid.substring(0, 8)}',
+          style: KukiText.headlineSmall,
+        ),
         content: SizedBox(
           width: KukiSpace.width(ctx, 36, min: 280, max: 520),
           child: SingleChildScrollView(
@@ -415,24 +463,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Kasir: ${sale.cashier}'),
-                Text('Status sinkron: ${sale.status}'),
-                Text('Status transaksi: ${sale.transactionStatus}'),
+                Text('Kasir: ${sale.cashier}', style: KukiText.bodyMedium),
+                Text(
+                  'Status sinkron: ${sale.status}',
+                  style: KukiText.bodyMedium.copyWith(
+                    color: sale.status == 'synced'
+                        ? KukiColors.success
+                        : sale.status == 'conflict'
+                        ? KukiColors.danger
+                        : KukiColors.orangeDark,
+                  ),
+                ),
+                Text(
+                  'Status transaksi: ${sale.transactionStatus}',
+                  style: KukiText.bodyMedium.copyWith(
+                    color: sale.isCancelled
+                        ? KukiColors.danger
+                        : KukiColors.success,
+                  ),
+                ),
                 if (sale.isCancelled) ...[
                   if (sale.voidedBy != null)
-                    Text('Dibatalkan oleh: ${sale.voidedBy}'),
+                    Text(
+                      'Dibatalkan oleh: ${sale.voidedBy}',
+                      style: KukiText.bodyMedium,
+                    ),
                   if (sale.voidedAt != null)
                     Text(
                       'Waktu: ${DateFormat('dd/MM/yyyy HH:mm').format(sale.voidedAt!)}',
+                      style: KukiText.bodyMedium,
                     ),
                   if (sale.voidReason != null)
-                    Text('Alasan: ${sale.voidReason}'),
+                    Text(
+                      'Alasan: ${sale.voidReason}',
+                      style: KukiText.bodyMedium,
+                    ),
                 ],
                 Text(
                   'UUID: ${sale.uuid}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11),
+                  style: KukiText.labelSmall,
                 ),
                 const Divider(),
                 for (final line in sale.lines)
@@ -447,25 +518,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       money(
                         asInt(line['quantity']) * asInt(line['unit_price']),
                       ),
+                      style: KukiText.titleSmall,
                     ),
                   ),
                 const Divider(),
-                Text('Subtotal: ${money(sale.subtotal)}'),
-                Text('Diskon: ${money(sale.discount)}'),
+                Text('Subtotal: ${money(sale.subtotal)}', style: KukiText.bodyMedium),
+                Text('Diskon: ${money(sale.discount)}', style: KukiText.bodyMedium),
                 Text(
                   'Total: ${money(sale.total)}',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: KukiText.titleMedium,
                 ),
-                if (sale.note.isNotEmpty) Text('Keterangan: ${sale.note}'),
+                if (sale.note.isNotEmpty)
+                  Text('Keterangan: ${sale.note}', style: KukiText.bodyMedium),
                 if (sale.error?.isNotEmpty ?? false)
                   Text(
                     'Konflik: ${sale.error}',
-                    style: const TextStyle(color: Colors.red),
+                    style: KukiText.bodyMedium.copyWith(
+                      color: KukiColors.danger,
+                    ),
                   ),
                 if (sale.status == 'conflict')
                   const Text(
                     'Periksa server, lalu gunakan tombol Coba lagi. '
                     'Jangan membuat transaksi baru dengan detail yang sama.',
+                    style: KukiText.bodySmall,
                   ),
               ],
             ),
@@ -474,8 +550,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         actions: [
           Wrap(
             alignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 4,
+            spacing: KukiSpace.tight(ctx),
+            runSpacing: KukiSpace.tight(ctx),
             children: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -487,19 +563,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     final confirm = await showDialog<bool>(
                       context: ctx,
                       builder: (retryCtx) => AlertDialog(
-                        title: const Text('Kirim ulang transaksi?'),
+                        scrollable: true,
+                        title: const Text(
+                          'Kirim ulang transaksi?',
+                          style: KukiText.headlineSmall,
+                        ),
                         content: const Text(
                           'Transaksi dengan ID yang sama akan dikirim ulang ke server. '
                           'Data lokal tetap disimpan bila gagal.',
+                          style: KukiText.bodyMedium,
                         ),
                         actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(retryCtx, false),
-                            child: const Text('Batal'),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(retryCtx, true),
-                            child: const Text('Kirim ulang'),
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: KukiSpace.tight(retryCtx),
+                            runSpacing: KukiSpace.tight(retryCtx),
+                            children: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(retryCtx, false),
+                                child: const Text('Batal'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(retryCtx, true),
+                                child: const Text('Kirim ulang'),
+                              ),
+                            ],
                           ),
                         ],
                       ),

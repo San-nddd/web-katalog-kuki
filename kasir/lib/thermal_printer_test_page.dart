@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
+import '../core/theme.dart';
 import '../services/kuki_thermal_printer.dart';
 import '../state/pos_controller.dart';
 
@@ -91,35 +92,46 @@ class _KukiPrinterSettingsPageState extends State<KukiPrinterSettingsPage> {
       appBar: AppBar(title: const Text('Printer Thermal Kuki')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
+          padding: KukiSpace.all(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Gunakan halaman ini hanya untuk memilih printer dan lebar kertas. '
-                'Struk dicetak dari transaksi yang tersimpan, bukan dari teks pengujian.',
+              Container(
+                padding: KukiSpace.all(context, percent: 1.2, min: 12, max: 16),
+                decoration: BoxDecoration(
+                  color: KukiColors.paper,
+                  border: Border.all(color: KukiColors.line),
+                  borderRadius: BorderRadius.circular(KukiRadius.md),
+                ),
+                child: const Text(
+                  'Gunakan halaman ini hanya untuk memilih printer dan lebar kertas. '
+                  'Struk dicetak dari transaksi yang tersimpan, bukan dari teks pengujian.',
+                  style: KukiText.bodyMedium,
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(status),
-              const SizedBox(height: 8),
+              SizedBox(height: KukiSpace.normal(context)),
+              Text(status, style: KukiText.bodySmall),
+              SizedBox(height: KukiSpace.normal(context)),
               Row(children: [
                 Expanded(child: FilledButton.icon(
                   onPressed: findBluetooth,
                   icon: const Icon(Icons.bluetooth_searching),
                   label: const Text('Cari Bluetooth'),
                 )),
-                const SizedBox(width: 8),
+                SizedBox(width: KukiSpace.normal(context)),
                 Expanded(child: OutlinedButton.icon(
                   onPressed: findUsb,
                   icon: const Icon(Icons.usb),
                   label: const Text('Cari USB OTG'),
                 )),
               ]),
+              SizedBox(height: KukiSpace.tight(context)),
               Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-                const Text('Lebar kertas: '),
+                const Text('Lebar kertas: ', style: KukiText.bodySmall),
                 DropdownButton<int>(
                   value: widget.controller.receiptWidth,
+                  style: KukiText.labelMedium,
                   items: const [
                     DropdownMenuItem(value: 58, child: Text('58 mm')),
                     DropdownMenuItem(value: 80, child: Text('80 mm')),
@@ -141,7 +153,7 @@ class _KukiPrinterSettingsPageState extends State<KukiPrinterSettingsPage> {
                     subtitle: Text(p.macAdress),
                     trailing: service.transport == KukiPrinterTransport.bluetooth &&
                             service.bluetoothAddress == p.macAdress
-                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        ? const Icon(Icons.check_circle, color: KukiColors.success)
                         : null,
                     onTap: busy ? null : () => connectBluetooth(p),
                   )),
@@ -152,7 +164,7 @@ class _KukiPrinterSettingsPageState extends State<KukiPrinterSettingsPage> {
                     subtitle: Text('VID ${p.vendorId} / PID ${p.productId} / ID ${p.deviceId}'),
                     trailing: service.transport == KukiPrinterTransport.usb &&
                             service.usbDeviceId == p.deviceId
-                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        ? const Icon(Icons.check_circle, color: KukiColors.success)
                         : null,
                     onTap: busy ? null : () => connectUsb(p),
                   )),
@@ -163,7 +175,8 @@ class _KukiPrinterSettingsPageState extends State<KukiPrinterSettingsPage> {
                     ),
                 ],
               ),
-              Text('Terpilih: ${service.printerName ?? '-'}'),
+              Text('Terpilih: ${service.printerName ?? '-'}',
+                  style: KukiText.bodySmall),
               OutlinedButton.icon(
                 onPressed: service.transport == null || busy ? null : disconnect,
                 icon: const Icon(Icons.link_off),

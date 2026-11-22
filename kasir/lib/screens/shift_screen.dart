@@ -23,6 +23,10 @@ class _ShiftScreenState extends State<ShiftScreen> {
             maxWidth: KukiSpace.width(context, 55, min: 320, max: 720),
           ),
           child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(KukiRadius.lg),
+              side: const BorderSide(color: KukiColors.line),
+            ),
             child: Padding(
               padding: KukiSpace.all(context, percent: 1.9, min: 14, max: 36),
               child: Column(
@@ -37,13 +41,17 @@ class _ShiftScreenState extends State<ShiftScreen> {
                   SizedBox(height: KukiSpace.normal(context)),
                   if (ctrl.shiftOpen) ...[
                     const Chip(
-                      label: Text('SHIFT TERBUKA'),
-                      backgroundColor: KukiColors.peach,
+                      label: Text('SHIFT TERBUKA', style: KukiText.labelMedium),
+                      backgroundColor: KukiColors.successSurface,
+                      side: BorderSide(color: KukiColors.success),
                     ),
-                    Text('Kasir: ${ctrl.cashierName}'),
+                    Text(
+                      'Kasir: ${ctrl.cashierName}',
+                      style: KukiText.bodyMedium,
+                    ),
                     Text(
                       'ID: ${ctrl.activeShift}',
-                      style: const TextStyle(fontSize: 11),
+                      style: KukiText.bodySmall,
                     ),
                     SizedBox(height: KukiSpace.normal(context)),
                     FilledButton.icon(
@@ -53,9 +61,11 @@ class _ShiftScreenState extends State<ShiftScreen> {
                         final confirm = await showDialog<bool>(
                           context: context,
                           builder: (ctx) => AlertDialog(
+                            scrollable: true,
                             title: const Text('Tutup shift sekarang?'),
                             content: const Text(
                               'Shift akan ditutup dan transaksi tertunda tetap disinkronkan saat koneksi tersedia.',
+                              style: KukiText.bodyMedium,
                             ),
                             actions: [
                               TextButton(
@@ -82,6 +92,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                       kIsWeb
                           ? 'Buka shift di Laravel sebelum menerima pembayaran.'
                           : 'Buka shift sebelum menerima pembayaran.',
+                      style: KukiText.bodyMedium,
                     ),
                     SizedBox(height: KukiSpace.normal(context)),
                     FilledButton.icon(
@@ -101,10 +112,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                     kIsWeb
                         ? 'API menyimpan waktu buka dan tutup shift.'
                         : 'Catatan: Shift dan transaksi diselaraskan dengan Laravel. Jika sesi habis, masuk ulang; data lokal tetap tersimpan.',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: KukiColors.muted,
-                    ),
+                    style: KukiText.bodySmall,
                   ),
                 ],
               ),

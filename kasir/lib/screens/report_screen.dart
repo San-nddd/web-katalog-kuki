@@ -78,7 +78,7 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               Text(
                 DateFormat('dd MMM yyyy').format(now),
-                style: const TextStyle(fontSize: 12, color: KukiColors.muted),
+                style: KukiText.bodySmall,
               ),
             ],
           ),
@@ -118,14 +118,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ],
           ),
           SizedBox(height: KukiSpace.normal(context)),
-          const Text(
-            'Penjualan per kasir',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: KukiColors.cocoa,
-            ),
-          ),
+          const Text('Penjualan per kasir', style: KukiText.section),
           SizedBox(height: KukiSpace.tight(context)),
           Wrap(
             spacing: KukiSpace.tight(context),
@@ -136,21 +129,15 @@ class _ReportScreenState extends State<ReportScreen> {
             ],
           ),
           SizedBox(height: KukiSpace.loose(context)),
-          const Text(
-            'Produk Terlaris',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: KukiColors.cocoa,
-            ),
-          ),
+          const Text('Produk Terlaris', style: KukiText.section),
           SizedBox(height: KukiSpace.tight(context)),
           Expanded(
             child: Container(
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: KukiColors.paper,
                 border: Border.all(color: KukiColors.line),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(KukiRadius.md),
               ),
               child: Column(
                 children: [
@@ -160,14 +147,25 @@ class _ReportScreenState extends State<ReportScreen> {
                     decoration: const BoxDecoration(
                       color: KukiColors.cream,
                       borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(11),
+                        top: Radius.circular(KukiRadius.md),
                       ),
                     ),
                     child: const Row(
                       children: [
-                        SizedBox(width: 56, child: Text('NO.')),
-                        Expanded(child: Text('NAMA PRODUK')),
-                        SizedBox(width: 100, child: Text('JUMLAH')),
+                        SizedBox(
+                          width: 56,
+                          child: Text('NO.', style: KukiText.labelSmall),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'NAMA PRODUK',
+                            style: KukiText.labelSmall,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 100,
+                          child: Text('JUMLAH', style: KukiText.labelSmall),
+                        ),
                       ],
                     ),
                   ),
@@ -176,6 +174,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         ? const Center(
                             child: Text(
                               'Belum ada transaksi pada periode ini.',
+                              style: KukiText.bodyMedium,
                             ),
                           )
                         : ListView.separated(
@@ -195,25 +194,20 @@ class _ReportScreenState extends State<ReportScreen> {
                                     width: 56,
                                     child: Text(
                                       '${i + 1}',
-                                      style: const TextStyle(
-                                        color: KukiColors.muted,
-                                      ),
+                                      style: KukiText.bodySmall,
                                     ),
                                   ),
                                   Expanded(
                                     child: Text(
                                       ranked[i].key,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: KukiText.titleSmall,
                                     ),
                                   ),
                                   SizedBox(
                                     width: 100,
                                     child: Text(
                                       '${ranked[i].value} terjual',
-                                      style: const TextStyle(fontSize: 12),
+                                      style: KukiText.bodySmall,
                                     ),
                                   ),
                                 ],
@@ -229,7 +223,7 @@ class _ReportScreenState extends State<ReportScreen> {
           Text(
             'Sinkronisasi tertunda: ${widget.controller.pending} · '
             'Data laporan hanya dari transaksi yang tersimpan di perangkat ini.',
-            style: const TextStyle(fontSize: 11, color: KukiColors.muted),
+            style: KukiText.labelSmall,
           ),
         ],
       ),
@@ -237,7 +231,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Widget _buildApiReport(DateTime now) => Padding(
-    padding: const EdgeInsets.all(20),
+    padding: KukiSpace.all(context),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -251,7 +245,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             Text(
               DateFormat('dd MMM yyyy').format(now),
-              style: const TextStyle(fontSize: 12, color: KukiColors.muted),
+              style: KukiText.bodySmall,
             ),
             IconButton(
               tooltip: 'Muat ulang laporan',
@@ -282,7 +276,13 @@ class _ReportScreenState extends State<ReportScreen> {
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Center(
-                  child: Text('Laporan gagal dimuat: ${snapshot.error}'),
+                  child: Text(
+                    'Laporan gagal dimuat: ${snapshot.error}',
+                    style: KukiText.bodyMedium.copyWith(
+                      color: KukiColors.danger,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 );
               }
               if (!snapshot.hasData) {
@@ -302,8 +302,8 @@ class _ReportScreenState extends State<ReportScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                   Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
+                    spacing: KukiSpace.normal(context),
+                    runSpacing: KukiSpace.normal(context),
                     children: [
                       _summary(context,
                         'Total Penjualan',
@@ -330,25 +330,23 @@ class _ReportScreenState extends State<ReportScreen> {
                   SizedBox(height: KukiSpace.loose(context)),
                   const Text(
                     'Penjualan per Metode',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: KukiColors.cocoa,
-                    ),
+                    style: KukiText.section,
                   ),
                   SizedBox(height: KukiSpace.tight(context)),
                   SizedBox(
                     height: KukiSpace.height(context, 22, min: 140, max: 220),
                     child: Container(
+                      clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: KukiColors.paper,
                         border: Border.all(color: KukiColors.line),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(KukiRadius.md),
                       ),
                       child: methods.isEmpty
                           ? const Center(
                               child: Text(
                                 'Belum ada transaksi pada periode ini.',
+                                style: KukiText.bodyMedium,
                               ),
                             )
                           : ListView.separated(
@@ -360,15 +358,15 @@ class _ReportScreenState extends State<ReportScreen> {
                                 return ListTile(
                                   title: Text(
                                     asText(item['metode_bayar']).toUpperCase(),
+                                    style: KukiText.titleSmall,
                                   ),
                                   subtitle: Text(
                                     '${asInt(item['jumlah'])} transaksi',
+                                    style: KukiText.bodySmall,
                                   ),
                                   trailing: Text(
                                     money(asInt(item['total'])),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: KukiText.titleSmall,
                                   ),
                                 );
                               },
@@ -376,14 +374,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     ),
                   ),
                   SizedBox(height: KukiSpace.normal(context)),
-                  const Text(
-                    'Penjualan per kasir',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: KukiColors.cocoa,
-                    ),
-                  ),
+                  const Text('Penjualan per kasir', style: KukiText.section),
                   SizedBox(height: KukiSpace.tight(context)),
                   Wrap(
                     spacing: KukiSpace.tight(context),
@@ -398,14 +389,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     ],
                   ),
                   SizedBox(height: KukiSpace.normal(context)),
-                  const Text(
-                    'Produk terlaris',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: KukiColors.cocoa,
-                    ),
-                  ),
+                  const Text('Produk terlaris', style: KukiText.section),
                   SizedBox(height: KukiSpace.tight(context)),
                   Wrap(
                     spacing: KukiSpace.tight(context),
@@ -438,27 +422,31 @@ class _ReportScreenState extends State<ReportScreen> {
     width: KukiSpace.width(context, 16.4, min: 170, max: 250),
     height: KukiSpace.height(context, 13.8, min: 96, max: 130),
     child: Container(
-      padding: const EdgeInsets.all(15),
+      padding: EdgeInsets.all(KukiSpace.normal(context)),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: KukiColors.paper,
+        borderRadius: BorderRadius.circular(KukiRadius.md),
         border: Border.all(color: KukiColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: KukiColors.mocha, size: 23),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: KukiColors.peach,
+              borderRadius: BorderRadius.circular(KukiRadius.sm),
+            ),
+            child: Icon(icon, color: KukiColors.mocha, size: 20),
+          ),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            style: KukiText.headlineSmall,
           ),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: KukiColors.muted),
-          ),
+          Text(label, style: KukiText.bodySmall),
         ],
       ),
     ),
