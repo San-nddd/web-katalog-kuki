@@ -146,6 +146,25 @@ html {
   letter-spacing: 0.02em;
 }
 
+@media (min-width: 561px) and (max-width: 900px) {
+  .navbar-pill {
+    padding: 0.75rem 2rem;
+  }
+
+  .navbar-links {
+    gap: 1rem;
+  }
+
+  .nav-link {
+    font-size: 1rem;
+  }
+
+  .navbar-logo {
+    width: 64px;
+    height: 64px;
+  }
+}
+
 /* ---------- Mobile: burger + panel menu besar ---------- */
 .navbar-mobile-panel,
 .navbar-mobile-logo,

@@ -1,0 +1,72 @@
+--- a/src/components/KukiAssistant.jsx
++++ b/src/components/KukiAssistant.jsx
+@@ -1,6 +1,7 @@
+ import { useCallback, useEffect, useState } from 'react'
+ import ChatButton from './ChatButton'
+ import ChatWindow from './ChatWindow'
++import { getProduk } from '../services/produkService'
+ import {
+   getSessionId,
+   buatSession,
+@@ -40,6 +41,10 @@
+   const [showHandover, setShowHandover] = useState(false)
+   const [handoverLoading, setHandoverLoading] = useState(false)
+   const [handoverError, setHandoverError] = useState('')
++  const [catalogProducts, setCatalogProducts] = useState([])
++  const [catalogLoading, setCatalogLoading] = useState(false)
++  const [catalogLoaded, setCatalogLoaded] = useState(false)
++  const [conversationVersion, setConversationVersion] = useState(0)
+ 
+   const open = controlledOpen ?? internalOpen
+ 
+@@ -50,6 +55,24 @@
+     },
+     [onOpenChange],
+   )
++
++  // Produk dari Laravel, bukan mock data; gagal muat tidak mengganggu chat.
++  useEffect(() => {
++    if (!open || catalogLoaded) return undefined
++    let active = true
++    setCatalogLoading(true)
++    getProduk()
++      .then((data) => {
++        if (!active) return
++        setCatalogProducts(Array.isArray(data) ? data : [])
++        setCatalogLoaded(true)
++      })
++      .catch((error) => {
++        if (active) console.warn('Katalog untuk chat belum dapat dimuat:', error)
++      })
++      .finally(() => { if (active) setCatalogLoading(false) })
++    return () => { active = false }
++  }, [open, catalogLoaded])
+ 
+   const greeting = {
+     id: 'greeting',
+@@ -228,6 +251,7 @@
+   }
+ 
+   const handleStartNewConversation = () => {
++    setConversationVersion((version) => version + 1)
+     // Ganti session ID terlebih dahulu agar polling berikutnya
+     // tidak mengambil percakapan CLOSED sebelumnya.
+     buatSession()
+@@ -254,6 +278,7 @@
+       {!open && <ChatButton onClick={() => setOpen(true)} />}
+ 
+       <ChatWindow
++        key={conversationVersion}
+         open={open}
+         onClose={() => setOpen(false)}
+         messages={[greeting, ...messages]}
+@@ -267,6 +292,9 @@
+         status={status}
+         handoverExpiresAt={handoverExpiresAt}
+         onStartNewConversation={handleStartNewConversation}
++        catalogProducts={catalogProducts}
++        catalogLoading={catalogLoading}
++        contextProduct={product}
+       />
+     </>
+   )

@@ -70,23 +70,28 @@ function ManagementRoute({ children }) {
 
   if (status === 'memeriksa') {
     return (
-      <main role="status" style={{ padding: '32px', maxWidth: 680, margin: '60px auto' }}>
-        Memeriksa akses Management…
+      <main className="admin-login" role="status">
+        <div className="admin-login-card">
+          <p className="admin-empty">Memeriksa akses Management…</p>
+        </div>
       </main>
     )
   }
 
   return (
-    <main role="alert" style={{ padding: '32px', maxWidth: 680, margin: '60px auto' }}>
-      <h1>{status === 'ditolak' ? 'Akses Management ditolak' : 'Pemeriksaan login gagal'}</h1>
-      <p>{pesan}</p>
-      {status === 'gagal' && (
-        <button type="button" onClick={retryAccessCheck}>
-          Coba lagi
-        </button>
-      )}
-      {' '}
-      <Link to="/admin/login">Halaman Login</Link>
+    <main className="admin-login" role="alert">
+      <div className="admin-login-card">
+        <h1 className="display-font">{status === 'ditolak' ? 'Akses Management ditolak' : 'Pemeriksaan login gagal'}</h1>
+        <p className="admin-alert">{pesan}</p>
+        <div className="admin-form-actions">
+          {status === 'gagal' && (
+            <button type="button" className="admin-btn admin-btn-primary" onClick={retryAccessCheck}>
+              Coba lagi
+            </button>
+          )}
+          <Link className="admin-btn admin-btn-ghost" to="/admin/login">Halaman Login</Link>
+        </div>
+      </div>
     </main>
   )
 }

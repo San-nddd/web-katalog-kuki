@@ -12,6 +12,10 @@
   text-align: center;
 }
 
+body .navbar-spacer + .katalog-hero {
+  padding-top: 2rem;
+}
+
 .katalog-title-wrap {
   position: relative;
   display: inline-block;
@@ -237,11 +241,21 @@
     overflow-x: auto;
     margin-bottom: 2rem;
     padding-bottom: 0.5rem;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--orange) transparent;
   }
 
   .katalog-filter::-webkit-scrollbar {
-    display: none;
+    height: 4px;
+  }
+
+  .katalog-filter::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .katalog-filter::-webkit-scrollbar-thumb {
+    background: var(--orange);
+    border-radius: 999px;
   }
 
   .filter-pill {

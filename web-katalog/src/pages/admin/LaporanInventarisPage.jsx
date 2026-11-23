@@ -134,10 +134,10 @@ function LaporanInventarisPage() {
           <span>Stok, produksi, mutasi, dan stock opname</span>
         </div>
         <form className="kuki-laporan-form" onSubmit={applyFilter}>
-          <label className="admin-field">Tanggal mulai
+          <label className="admin-field"><span>Tanggal mulai</span>
             <input type="date" value={mulai} onChange={(event) => setMulai(event.target.value)} required />
           </label>
-          <label className="admin-field">Tanggal selesai
+          <label className="admin-field"><span>Tanggal selesai</span>
             <input type="date" value={selesai} onChange={(event) => setSelesai(event.target.value)} required />
           </label>
           <button type="submit" className="admin-btn admin-btn-primary" disabled={loading || Boolean(eksporAktif)}>

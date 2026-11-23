@@ -77,6 +77,10 @@ img {
   padding: 5rem 0;
 }
 
+body .navbar-spacer + section.section {
+  padding-top: 2rem;
+}
+
 .display-font {
   font-family: 'Lilita One', 'Arial Narrow', Impact, sans-serif;
   font-weight: 400;

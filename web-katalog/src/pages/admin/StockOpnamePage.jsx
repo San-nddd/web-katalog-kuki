@@ -171,7 +171,7 @@ function StockOpnamePage({ readOnly = false }) {
           <form className="admin-form" onSubmit={buatSesi}>
             <label className="admin-field"><span>Catatan sesi (opsional)</span><input maxLength={1000} value={catatanSesi} onChange={(e) => setCatatanSesi(e.target.value)} placeholder="Contoh: Pengecekan stok setelah tutup toko" /></label>
             <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-              <legend className="admin-field">Pilih produk ({dipilih.length} dipilih)</legend>
+              <legend className="admin-field"><span>Pilih produk ({dipilih.length} dipilih)</span></legend>
               <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
                 {daftarProduk.map((item) => (
                   <label key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>

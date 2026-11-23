@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import '../styles/kukiLocationMap.css'
+import '../styles/kukiLocationTypography.css'
 
 // Hanya memuat Leaflet saat section mendekati viewport.
 const KukiLocationMap = lazy(() => import('./KukiLocationMap'))

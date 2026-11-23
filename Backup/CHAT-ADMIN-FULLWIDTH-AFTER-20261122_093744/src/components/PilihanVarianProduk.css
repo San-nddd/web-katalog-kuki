@@ -1,0 +1,67 @@
+.kuki-varian-public {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 440px;
+  margin-block: 1rem;
+  color: inherit;
+}
+
+.kuki-varian-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.kuki-varian-select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+.kuki-varian-select:focus-visible,
+.kuki-varian-retry:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.kuki-varian-select:disabled {
+  opacity: 0.65;
+}
+
+.kuki-varian-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.85rem;
+}
+
+.kuki-varian-price {
+  font-size: 1.15rem;
+}
+
+.kuki-varian-stock,
+.kuki-varian-code {
+  font-size: 0.85rem;
+}
+
+.kuki-varian-public-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-block: 1rem;
+}
+
+.kuki-varian-retry {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}

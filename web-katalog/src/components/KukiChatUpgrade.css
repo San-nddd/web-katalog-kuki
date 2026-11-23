@@ -135,3 +135,27 @@
   color: #fffaf0 !important; font-weight: 650; text-decoration: none;
 }
 .kuki-chat-v2 .kuki-map-link:hover { background: #825339; }
+
+.chat-window.kuki-chat-v2 .chat-header {
+  min-height: 85px;
+  padding: 1rem .9rem;
+  gap: .7rem;
+}
+
+.chat-window.kuki-chat-v2 .chat-header .kuki-chat-mascot {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+.chat-window.kuki-chat-v2 .chat-header h3 { font-size: 1.22rem; line-height: 1.12; }
+.chat-window.kuki-chat-v2 .chat-header .chat-header-info { gap: .05rem; }
+.chat-window.kuki-chat-v2 .chat-header .kuki-chat-presence { font-size: .68rem; gap: .32rem; }
+.chat-window.kuki-chat-v2 .chat-header .kuki-chat-header-actions { gap: .25rem; }
+.chat-window.kuki-chat-v2 .chat-header .kuki-pin-toggle,
+.chat-window.kuki-chat-v2 .chat-header .chat-close { width: 29px; height: 30px; }
+
+.chat-window.kuki-chat-v2 .chat-body { gap: .65rem; }
+.chat-window.kuki-chat-v2 .chat-input-area { gap: .5rem; padding: .75rem; }
+.chat-window.kuki-chat-v2 .chat-input-area input { height: 42px; border-radius: 999px; padding-left: 1rem; }
+.chat-window.kuki-chat-v2 .chat-input-area .chat-send { width: 42px; height: 42px; border-radius: 12px; }

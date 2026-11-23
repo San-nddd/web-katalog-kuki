@@ -71,7 +71,7 @@ function BellIcon({ width = 22, height = 22 }) {
   )
 }
 
-function AdminLayout({ title, children }) {
+function AdminLayout({ title, children, contentClassName = '' }) {
   const navigate = useNavigate()
   const user = currentUser()
   const [preferences, setPreferences] = useState(() => getAdminPreferences())
@@ -535,7 +535,7 @@ function AdminLayout({ title, children }) {
           </div>
         </header>
 
-        <div className="admin-content">{children}</div>
+        <div className={['admin-content', contentClassName].filter(Boolean).join(' ')}>{children}</div>
 
         {toast && (
           <div

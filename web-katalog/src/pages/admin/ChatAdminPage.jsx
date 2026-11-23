@@ -374,7 +374,7 @@ function AdminChatPage() {
 
   if (isDetail && !selectedObrolan && !loading) {
     return (
-      <AdminLayout title={"Chat Admin"}>
+      <AdminLayout title={"Chat Admin"} contentClassName="admin-content-chat">
         <div className="admin-card admin-chat-not-found">
           <p>{"Obrolan tidak ditemukan"}</p>
           <button
@@ -390,6 +390,7 @@ function AdminChatPage() {
 
   return (
     <AdminLayout
+      contentClassName="admin-content-chat"
       title={
         isDetail
           ? `Chat: ${
@@ -407,7 +408,7 @@ function AdminChatPage() {
       )}
 
       {!isDetail ? (
-        <section className="admin-card">
+        <section className="admin-card admin-chat-page admin-chat-list">
           <div className="admin-card-head">
             <h2 className="display-font">{"Kelola Chat"}</h2>
 
@@ -446,7 +447,7 @@ function AdminChatPage() {
             <p className="admin-empty">{"Belum ada obrolan yang membutuhkan Admin."}</p>
           ) : (
             <div className="admin-table-wrap">
-              <table className="admin-table">
+              <table className="admin-table admin-chat-table">
                 <thead>
                   <tr>
                     <th>{"Pengunjung"}</th>
@@ -529,7 +530,7 @@ function AdminChatPage() {
           )}
         </section>
       ) : (
-        <section className="admin-card">
+        <section className="admin-card admin-chat-page admin-chat-detail">
           <div className="admin-card-head">
             <div className="admin-chat-header">
               <button

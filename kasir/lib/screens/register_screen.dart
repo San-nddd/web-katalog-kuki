@@ -191,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       SizedBox(height: KukiSpace.tight(context)),
       SizedBox(
-        height: KukiSpace.height(context, 11, min: 64, max: 96),
+        height: KukiSpace.height(context, 11, min: 72, max: 96),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: ctrl.drafts.length,
@@ -208,15 +208,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: InkWell(
                   onTap: () => ctrl.selectDraft(order.id),
                   borderRadius: BorderRadius.circular(KukiRadius.md),
-                  child: Container(
-                    padding: EdgeInsets.all(KukiSpace.normal(context)),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(KukiRadius.md),
-                      border: Border.all(
-                        color: active ? KukiColors.caramel : KukiColors.line,
-                        width: active ? 1.5 : 1,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: KukiSpace.normal(context),
+                        vertical: KukiSpace.tight(context),
                       ),
-                    ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(KukiRadius.md),
+                        border: Border.all(
+                          color: active ? KukiColors.caramel : KukiColors.line,
+                          width: active ? 1.5 : 1,
+                        ),
+                      ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -284,6 +287,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const Spacer(),
                         Text(
                           '${order.itemCount} item · ${money(order.total)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: KukiText.labelMedium.copyWith(
                             color: KukiColors.mocha,
                           ),
@@ -292,6 +297,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           active
                               ? 'Sedang dikerjakan'
                               : 'Ditahan · ketuk untuk melanjutkan',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: KukiText.labelSmall,
                         ),
                       ],

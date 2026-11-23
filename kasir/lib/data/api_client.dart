@@ -23,7 +23,7 @@ class LoginResult {
 
 const defaultPosApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://192.168.0.103:8000',
+  defaultValue: 'https://kukibakehouse.smkn1sumedang.sch.id',
 );
 
 class ApiClient {

@@ -78,23 +78,23 @@ function PilihanCetak({ item, onSelesai }) {
 
   return (
     <div className="kuki-produksi-cetak">
-      <label>{"Jumlah label (sisa maks."} {format(item.jumlah_siap_cetak)} {"pcs)"}
+      <label><span>{"Jumlah label (sisa maks."} {format(item.jumlah_siap_cetak)} {"pcs)"}</span>
         <input type="number" min="1" step="1"
           max={Math.min(item.jumlah_siap_cetak, BATAS_CETAK_LABEL)}
           value={jumlah} onChange={(e) => { setJumlah(e.target.value); setBaruBukaPrint(false) }}
           disabled={proses} />
       </label>
-      <label>{"Ukuran stiker"}
+      <label><span>{"Ukuran stiker"}</span>
         <select value={ukuran} disabled={proses} onChange={(e) => { setUkuran(e.target.value); setBaruBukaPrint(false) }}>
           {UKURAN_LABEL.map((opsi) => <option key={opsi.id} value={opsi.id}>{opsi.nama}</option>)}
         </select>
       </label>
-      <label>{"Kerapatan"}
+      <label><span>{"Kerapatan"}</span>
         <select value={kerapatan} disabled={proses} onChange={(e) => { setKerapatan(e.target.value); setBaruBukaPrint(false) }}>
           {KERAPATAN.map((opsi) => <option key={opsi.id} value={opsi.id}>{opsi.nama}</option>)}
         </select>
       </label>
-      <label>{"Media"}
+      <label><span>{"Media"}</span>
         <select value={media} disabled={proses} onChange={(e) => { setMedia(e.target.value); setBaruBukaPrint(false) }}>
           {MODE_CETAK.map((opsi) => <option key={opsi.id} value={opsi.id}>{opsi.nama}</option>)}
         </select>
@@ -204,7 +204,7 @@ export default function ProduksiHarianPage() {
         <div className="admin-card-head"><h2 className="display-font">{"Catat Produksi Hari Ini"}</h2></div>
         <p className="admin-sub">{"Jumlah yang dicatat akan"} <strong>{"menambah stok produk"}</strong>{". Jangan masukkan kembali stok yang sudah dicatat melalui menu Ubah Produk."}</p>
         <form className="admin-form kuki-produksi-form" onSubmit={catat}>
-          <label className="admin-field">{"Produk"}
+          <label className="admin-field"><span>{"Produk"}</span>
             <select value={produkId} onChange={(e) => setProdukId(e.target.value)} disabled={saving || loading} required>
               <option value="">{"Pilih produk dari katalog"}</option>
               {produk.map((item) => <option key={item.id} value={item.id}>
@@ -212,7 +212,7 @@ export default function ProduksiHarianPage() {
               </option>)}
             </select>
           </label>
-          <label className="admin-field">{"Jumlah produksi baru (pcs)"}
+          <label className="admin-field"><span>{"Jumlah produksi baru (pcs)"}</span>
             <input type="number" min="1" max="10000" step="1" value={jumlah} disabled={saving || loading}
               onChange={(e) => setJumlah(e.target.value)} required />
           </label>
@@ -231,7 +231,7 @@ export default function ProduksiHarianPage() {
           }} disabled={loading}>{"Perbarui"}</button>
         </div>
         <div className="kuki-produksi-filter">
-          <label className="admin-field">{"Tanggal pencatatan"}
+          <label className="admin-field"><span>{"Tanggal pencatatan"}</span>
             <input type="date" value={tanggalLihat} onChange={(e) => {
               const tanggal = e.target.value
               setTanggalLihat(tanggal)

@@ -1,0 +1,139 @@
+.hero {
+  background: var(--brown-dark);
+  padding: 5rem 0 6rem;
+  overflow: hidden;
+}
+
+.hero-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.hero-sticker {
+  margin-bottom: 1.5rem;
+}
+
+.hero-title {
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  color: var(--orange);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+
+.hero-title-indent {
+  padding-left: 1em;
+  color: var(--cream);
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  color: var(--muted-dark);
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+  max-width: 34rem;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hero-gallery {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 160px 160px 160px;
+  gap: 1.25rem;
+}
+
+.hero-photo {
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, var(--brown-card) 0%, var(--brown-deep) 100%);
+  border: 1px solid rgba(255, 246, 217, 0.12);
+}
+
+.hero-photo-1 {
+  grid-row: span 2;
+  background: linear-gradient(145deg, #8a3d24 0%, var(--brown-card) 100%);
+}
+
+.hero-photo-2 {
+  background: linear-gradient(145deg, var(--orange) 0%, var(--orange-dark) 100%);
+}
+
+.hero-photo-3 {
+  background: linear-gradient(145deg, var(--cream) 0%, var(--peach) 100%);
+}
+
+.hero-photo-4 {
+  grid-column: span 2;
+  background: linear-gradient(145deg, var(--brown-card) 0%, #3a130a 100%);
+}
+
+.hero-badge {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-6deg);
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.hero-badge-number {
+  font-family: 'Lilita One', 'Arial Narrow', Impact, sans-serif;
+  font-size: 2rem;
+  color: var(--orange-dark);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.hero-badge-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brown-dark);
+  line-height: 1.3;
+}
+
+@media (max-width: 1024px) {
+  .hero-gallery {
+    grid-template-rows: 120px 120px 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem 0 4rem;
+  }
+
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .hero-title-indent {
+    padding-left: 0.5em;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+}

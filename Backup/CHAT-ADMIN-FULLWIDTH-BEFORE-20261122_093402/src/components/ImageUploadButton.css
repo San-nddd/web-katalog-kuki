@@ -1,0 +1,200 @@
+.image-upload-btn-input {
+  display: none;
+}
+
+.image-upload-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--kb-line, var(--brown-dark, #c6a481));
+  border-radius: 10px;
+  background: var(--kb-surface, var(--cream-card));
+  color: var(--kb-text, var(--brown-dark));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.image-upload-btn:hover:not(.disabled):not(.uploading) {
+  background: var(--kb-surface-muted, var(--cream));
+  border-color: var(--kb-focus, var(--orange));
+}
+
+.image-upload-btn:focus-visible {
+  outline: 2px solid var(--kb-focus, var(--orange));
+  outline-offset: 2px;
+}
+
+.image-upload-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.image-upload-btn-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Thumbnail gambar */
+.image-upload-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Icon & label default */
+.image-upload-icon {
+  color: var(--kb-primary, var(--orange));
+  opacity: 0.9;
+}
+
+.image-upload-label {
+  display: none;
+}
+
+.image-upload-btn:hover .image-upload-icon {
+  opacity: 1;
+}
+
+/* Overlay badge saat hover */
+.image-upload-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.3rem 0.4rem;
+  background: color-mix(in srgb, var(--kb-ink, #180803) 78%, transparent);
+  color: var(--kb-primary-ink, #fff9ef);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.image-upload-btn:hover .image-upload-overlay,
+.image-upload-btn:focus-visible .image-upload-overlay {
+  opacity: 1;
+}
+
+/* Loading state */
+.image-upload-btn.uploading {
+  cursor: wait;
+  background: var(--kb-surface-muted, var(--cream));
+}
+
+.image-upload-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kb-primary, var(--orange));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .image-upload-spinner { animation: spin 1s linear infinite; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.image-upload-progress-text {
+  position: absolute;
+  bottom: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--kb-text, var(--brown-dark));
+  background: var(--kb-surface, #fffaf1);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  border: 1px solid var(--kb-line, rgba(0,0,0,0.15));
+}
+
+/* Success state */
+.image-upload-btn.success {
+  background: var(--kb-success-bg, #eaf7e4);
+  border-color: var(--kb-success, #2f5117);
+}
+
+.image-upload-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kb-success, #2f5117);
+}
+
+/* Tooltip */
+.image-upload-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.6rem;
+  background: var(--kb-ink, var(--brown-dark));
+  color: var(--kb-primary-ink, var(--cream));
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: none;
+  border: 1px solid var(--kb-line, transparent);
+}
+
+.image-upload-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--kb-ink, var(--brown-dark));
+}
+
+.image-upload-btn:hover .image-upload-tooltip,
+.image-upload-btn:focus-visible .image-upload-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (max-width: 600px) {
+  .image-upload-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .image-upload-tooltip {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-upload-btn,
+  .image-upload-overlay,
+  .image-upload-tooltip,
+  .image-upload-spinner {
+    transition: none;
+    animation: none;
+  }
+}

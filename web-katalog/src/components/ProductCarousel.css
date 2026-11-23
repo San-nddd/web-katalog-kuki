@@ -239,6 +239,18 @@
   }
 }
 
+@media (min-width: 769px) and (max-width: 900px) {
+  .carousel-prev {
+    margin-right: 0;
+    left: auto;
+  }
+
+  .carousel-next {
+    margin-left: 0;
+    right: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .product-carousel-wrapper {
     gap: 0.35rem;

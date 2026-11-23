@@ -79,7 +79,7 @@ html.lenis body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  text-align: flex-start;
+  text-align: left;
   margin-top: calc(-1 * clamp(1.5rem, 10vw, 11rem)); /* tarik teks ke atas, mendekati foto */
   padding: clamp(4rem, 7vw, 6rem) 1rem clamp(5rem, 8vw, 7rem);
 }
@@ -455,6 +455,10 @@ html.lenis body {
 .section-peach {
   background: var(--peach);
   position: relative;
+}
+
+.home-location-section {
+  padding: 2rem 0;
 }
 
 .section-peach::before,

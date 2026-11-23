@@ -1,0 +1,31 @@
+.kuki-label-overlay {
+  position: fixed; inset: 0; z-index: 99999; background: color-mix(in srgb, var(--kb-ink, #180803) 45%, transparent);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.kuki-label-dialog {
+  box-sizing: border-box; width: min(100%, 430px); max-height: 88vh; overflow: auto;
+  background: var(--kb-surface, #fffdf5); color: var(--kb-text, #201408); border: 1px solid var(--kb-line, #201408);
+  border-radius: 12px; padding: 18px; box-shadow: 0 12px 32px rgba(53,35,30,.14);
+}
+.kuki-label-dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 18px; }
+.kuki-label-close { border: 1px solid var(--kb-line, transparent); background: transparent; font-size: 20px; cursor: pointer; color: inherit; border-radius: 8px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; }
+.kuki-label-form { display: grid; gap: 12px; margin-top: 14px; }
+.kuki-label-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+.kuki-label-form select, .kuki-label-form input { box-sizing: border-box; min-width: 0; width: 100%; min-height: 40px; border: 1px solid var(--kb-line, #857c70); border-radius: 8px; padding: 8px 10px; background: var(--kb-surface, #fff); color: var(--kb-text, #111); font: inherit; }
+.kuki-label-form select:focus, .kuki-label-form input:focus { outline: 2px solid color-mix(in srgb, var(--kb-focus, #d98a00) 35%, transparent); outline-offset: 1px; border-color: var(--kb-focus, #d98a00); }
+.kuki-label-product { font-weight: 700; overflow-wrap: anywhere; }
+.kuki-label-product small { display: block; font-weight: 400; margin-top: 4px; color: var(--kb-muted, inherit); }
+.kuki-label-result { font-size: 12px; background: var(--kb-surface-muted, #f5f0e7); padding: 10px; border-radius: 8px; border: 1px solid var(--kb-line, transparent); }
+.kuki-label-result p { margin: 0 0 6px; }
+.kuki-label-result small { display: block; margin-top: 5px; line-height: 1.5; }
+.kuki-label-error { color: var(--kb-critical, #b8201e); font-weight: 700; }
+.kuki-label-dialog-actions { display: flex; gap: 9px; justify-content: flex-end; margin-top: 16px; align-items: center; }
+
+/* Tambahan khusus pilihan jumlah cetak berdasarkan stok. */
+.kuki-label-stock {background:var(--kb-surface-muted,#fff3d2); border:1px solid var(--kb-line,#ddc88e); padding:9px; border-radius:8px; font-size:13px;}
+.kuki-label-stock small {display:block; font-weight:400; margin-top:4px; line-height:1.4; color:var(--kb-muted,inherit);}
+.kuki-label-choices {border:1px solid var(--kb-line,#d8c8ab); border-radius:8px; padding:9px 10px; margin:0; display:grid; gap:8px;}
+.kuki-label-choices legend {padding:0 4px; font-size:13px; font-weight:700;}
+.kuki-label-choices label {display:flex; align-items:center; gap:8px; font-size:13px;}
+.kuki-label-choices input[type=radio] {width:auto; min-width:0; margin:0; accent-color:var(--kb-primary,#e8a100);}
+.kuki-label-help {font-size:12px; margin:0; color:var(--kb-muted,inherit);}
